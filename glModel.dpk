@@ -1,0 +1,57 @@
+package glModel;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  vcljpg;
+
+contains
+  SkeletonMsa in 'SkeletonMsa.pas',
+  Bone in 'Bone.pas',
+  FileFormats3d in 'FileFormats3d.pas',
+  glBone in 'glBone.pas',
+  glMaterial in 'glMaterial.pas',
+  glmath in 'glmath.pas',
+  glMatrix in 'glMatrix.pas',
+  glMesh in 'glMesh.pas',
+  glmodel in 'glmodel.pas',
+  glQuaternions in 'glQuaternions.pas',
+  glRender in 'glRender.pas',
+  glSkeleton in 'glSkeleton.pas',
+  glvpRender in 'glvpRender.pas',
+  KeyFrame in 'KeyFrame.pas',
+  Material in 'Material.pas',
+  Mesh in 'Mesh.pas',
+  Model3ds in 'Model3ds.pas',
+  Model in 'Model.pas',
+  ModelMsa in 'ModelMsa.pas',
+  ModelObj in 'ModelObj.pas',
+  ModelX in 'ModelX.pas',
+  Render in 'Render.pas',
+  Skeleton in 'Skeleton.pas';
+
+end.
