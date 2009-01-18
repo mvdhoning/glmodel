@@ -30,6 +30,7 @@ uses
   glRender,
   Model,
   Model3ds,
+  ModelObj,
   ModelMsa;
  // Material,
  // glMaterial,

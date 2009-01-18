@@ -24,24 +24,7 @@ program GL3DS_Example;
 
 uses
   Forms,
-  OpenGL15_MainForm in 'OpenGL15_MainForm.pas' {GLForm},
-  Model in 'Model.pas',
-  Material in 'Material.pas',
-  Skeleton in 'Skeleton.pas',
-  Mesh in 'Mesh.pas',
-  glMaterial in 'glMaterial.pas',
-  Bone in 'Bone.pas',
-  KeyFrame in 'KeyFrame.pas',
-  Model3ds in 'Model3ds.pas',
-  ModelMsa in 'ModelMsa.pas',
-  ModelObj in 'ModelObj.pas',
-  glMesh in 'glMesh.pas',
-  glModel in 'glModel.pas',
-  Render in 'Render.pas',
-  SkeletonMsa in 'SkeletonMsa.pas',
-  glBone in 'glBone.pas',
-  ModelFactory in 'ModelFactory.pas',
-  FileFormats3d in 'FileFormats3d.pas';
+  OpenGL15_MainForm in 'OpenGL15_MainForm.pas' {GLForm};
 
 {$R *.res}
 
