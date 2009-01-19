@@ -439,6 +439,9 @@ var
   SaveModel: TBaseModel;
 begin
   SaveModel:= Atype.Create(nil);
+  SaveModel.MeshClass := self.FMeshClass;
+  SaveModel.MaterialClass := self.FMaterialClass;
+  SaveModel.SkeletonClass := self.FSkeletonClass;
   SaveModel.Assign(self);
   SaveModel.SaveToFile(AFileName);
   SaveModel.Free;

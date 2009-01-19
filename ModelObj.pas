@@ -29,6 +29,11 @@ unit ModelObj;
 
 interface
 
+//History
+//Author  Date        Change
+//MvdH    ?           Initial Version Loading of Obj Files
+//MvdH    19-01-2009  Added Saving of Obj files
+
 //TODO: error in next model when calculating normals there?
 
 //TODO: Implement Save Load for WaveFront OBJ Files
@@ -552,7 +557,101 @@ begin
 end;
 
 procedure TObjModel.SaveToStream(stream: Tstream);
+var
+  ms: TStringList;
+  saveloop: Integer;
+  subsaveloop: Integer;
+  tempstring: string;
+  MatStream: TFileStream;
+  mas: TStringList;
 begin
+
+  //save material data
+  mas := TStringList.Create();
+  mas.Add('#Materials: '+IntToStr(FNumMaterials));
+  mas.Add('');
+  for saveloop:=0 to FNumMaterials-1 do
+  begin
+    mas.Add('newmtl '+FMaterial[saveloop].name);
+    mas.Add('Ka'+FloatToStr(FMaterial[saveloop].AmbientRed)+' '+FloatToStr(FMaterial[saveloop].AmbientGreen)+' '+FloatToStr(FMaterial[saveloop].AmbientBlue)+' 1.0');
+    mas.Add('Kd'+FloatToStr(FMaterial[saveloop].DiffuseRed)+' '+FloatToStr(FMaterial[saveloop].DiffuseGreen)+' '+FloatToStr(FMaterial[saveloop].DiffuseBlue)+' '+FloatToStr(FMaterial[saveloop].Transparency));
+    mas.Add('Ks'+FloatToStr(FMaterial[saveloop].SpecularRed)+' '+FloatToStr(FMaterial[saveloop].SpecularGreen)+' '+FloatToStr(FMaterial[saveloop].SpecularBlue)+' 1.0');
+    mas.Add('mapKd '+FMaterial[saveloop].filename);
+  end;
+  mas.Add('');
+
+  MatStream := TFileStream.Create('test.mtl',fmcreate);
+  mas.SaveToStream(MatStream);
+  MatStream.Free;
+  mas.Free;
+
+  //this saves meshes to a wavefront obj file
+  ms:=TStringList.Create;
+
+  ms.Add('# WaveFront Obj File');
+  ms.Add('mtllib test.mtl'); //TODO: should be dynamic
+
+  //save mesh data
+  ms.Add('#Meshes: '+IntToStr(FNumMeshes));
+
+  for saveloop:=0 to FNumMeshes-1 do
+  begin
+    tempstring:=StringReplace(fmesh[saveloop].name, ' ', '_', [rfReplaceAll]);
+
+
+
+    //save vertexes
+    ms.Add('#NumVertex: '+inttostr(fmesh[saveloop].numvertex));
+    for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
+    begin
+      ms.Add('v'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z));
+    end;
+
+    //save vertex uv coords
+    ms.Add('#NumUV: '+inttostr(fmesh[saveloop].NumMappings));
+    for subsaveloop:=0 to fmesh[saveloop].NumMappings -1 do
+    begin
+      ms.Add('vt'+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tv));
+    end;
+
+    //save normals
+    ms.Add(inttostr(fmesh[saveloop].NumNormals));
+    if fmesh[saveloop].NumNormals > 0 then
+    begin
+      for subsaveloop:=0 to fmesh[saveloop].NumNormals -1 do
+      begin
+        ms.Add('vn'+' '+floattostr( fmesh[saveloop].Normals[subsaveloop].x )+' '+floattostr(fmesh[saveloop].Normals[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Normals[subsaveloop].z));
+      end;
+    end;
+
+    //save material
+    if fmesh[saveloop].NumMaterials > 0 then
+       ms.Add('usemtl '+fmesh[saveloop].MatName[0] );
+
+    //save faces (indices)
+    ms.Add(inttostr(fmesh[saveloop].numvertexindices div 3));
+    for subsaveloop:=0 to (fmesh[saveloop].numvertexindices div 3) -1 do
+    begin
+      begin
+        ms.Add('f '
+              +IntToStr(fmesh[saveloop].Face[subsaveloop*3]+1)+'/'
+              +IntToStr(fmesh[saveloop].Map[subsaveloop*3]+1)+'/'
+              +IntToStr(fmesh[saveloop].Normal[subsaveloop*3]+1)
+              +' '
+              +IntToStr(fmesh[saveloop].Face[subsaveloop*3+1]+1)+'/'
+              +IntToStr(fmesh[saveloop].Map[subsaveloop*3+1]+1)+'/'
+              +IntToStr(fmesh[saveloop].Normal[subsaveloop*3+1]+1)
+              +' '
+              +IntToStr(fmesh[saveloop].Face[subsaveloop*3+2]+1)+'/'
+              +IntToStr(fmesh[saveloop].Map[subsaveloop*3+2]+1)+'/'
+              +IntToStr(fmesh[saveloop].Normal[subsaveloop*3+2]+1)
+              );
+      end;
+    end;
+  end;
+
+  ms.SaveToStream(stream);
+  ms.Free;
 end;
 
 initialization

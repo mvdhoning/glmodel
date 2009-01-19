@@ -259,6 +259,9 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
 
   scene1.UpdateTextures; //If this is forgotten disaster happens... FIX ASAP
 
+  //save test
+  scene1.Models[0].SaveToFile('test.obj');
+
 
   //glinit;
     glClearColor(0.0, 0.0, 0.0, 0.0); 	   // Black Background

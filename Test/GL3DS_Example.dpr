@@ -21,6 +21,8 @@ program GL3DS_Example;
 {%TogetherDiagram 'ModelSupport_OpenGL15_Template\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_OpenGL15_Template\Model\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_OpenGL15_Template\OpenGL15_Template\default.txvpck'}
+{%File 'ModelSupport\OpenGL15_MainForm\OpenGL15_MainForm.txvpck'}
+{%File 'ModelSupport\default.txvpck'}
 
 uses
   Forms,
