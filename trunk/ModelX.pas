@@ -22,8 +22,6 @@ unit ModelX;
  * Contributor(s):
  *
  *  M van der Honing
- *  Sascha Willems
- *  Jan Michalowsky
  *
  *)
 
@@ -32,7 +30,7 @@ interface
 uses classes, Model;
 
 type
-  TMsaModel = class(TBaseModel)
+  TDXModel = class(TBaseModel)
     public
       procedure LoadFromFile(AFileName: string); override;
       procedure LoadFromStream(stream: Tstream); override;
@@ -46,38 +44,24 @@ type
 implementation
 
 uses
-  SysUtils, glMath, Skeleton, SkeletonMsa, Mesh, Material;
+  SysUtils, glMath, Mesh, Material;
 
-procedure TMsaModel.LoadFromFile(AFileName: string);
+procedure TDXModel.LoadFromFile(AFileName: string);
 var
   stream: TFilestream;
-  msask: TMsaSkeleton;
 begin
   stream := TFilestream.Create(AFilename, $0000);
   LoadFromStream(stream);
   stream.Free;
-
-  //also load skeleton if needed (this means that when loading from stream only
-  if floadskeleton then
-  begin
-    fnumskeletons:=fnumskeletons+1;
-    setlength(fskeleton, fnumskeletons);
-    fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
-    msask := TMsaSkeleton.Create(self);
-    msask.BoneClass := fskeleton[fnumskeletons-1].BoneClass;
-    msask.LoadFromFile(AFileName);
-    fskeleton[fnumskeletons-1].Assign(msask);
-    msask.Free;
-  end;
 end;
 
-procedure TMsaModel.LoadFromStream(stream: Tstream);
+procedure TDXModel.LoadFromStream(stream: Tstream);
 var
   sl, tsl: TStringList;
   l: Integer;
   line: string;
   strtemp: string;
-  tcount: LongWord;
+//  tcount: LongWord;
   acount: LongWord;
   mcount: LongWord;
   bcount: LongWord;
@@ -87,260 +71,306 @@ var
   tempvertex: T3dPoint;
   tempmap: TMap;
 begin
+  mcount:=0;
+  acount:=0;
   floadskeleton:=false;
   sl := TStringList.Create;
   sl.LoadFromStream(stream);
-  l := 0;
-  while l < sl.Count - 1 do
+
+
+  //check if file realy is a DirectX model file.
+  if sl.Strings[0] = 'xof 0303txt 0032' then
   begin
-    line := sl.Strings[l];
 
-    //read in mesh data...
-    if (pos('Meshes: ', line) = 1) then
+    l := 0;
+    while l < sl.Count - 1 do
     begin
-      acount := StrToInt(StringReplace(Line, 'Meshes: ', '', [rfReplaceAll]));
+      line := sl.Strings[l];
 
-      FNumMeshes := acount;
-      SetLength(FMesh, acount);
-      SetLength(FRenderOrder, acount);
-      for tcount := 0 to acount - 1 do
+      //read in mesh data...
+      if (pos('Mesh ', line) = 1) then
       begin
-        FMesh[tcount] := FMeshClass.Create(self);
-        FMesh[tcount].Visible := True;
-        FRenderOrder[tcount] := tcount;
-          //read in mesh name and the id of the material for the mesh (only one material?)
+        acount := acount +1;
+
+        FNumMeshes := acount;
+        SetLength(FMesh, acount);
+        SetLength(FRenderOrder, acount);
+
+        FMesh[acount-1] := FMeshClass.Create(self);
+        FMesh[acount-1].Visible := True;
+        FRenderOrder[acount-1] := acount-1;
+
+        //read in mesh name and the id of the material for the mesh (only one material?)
+        strtemp := copy(line, 6, pos('{',line)-6);
+        Fmesh[acount-1].Name := strtemp;
+
+        //read in vertex data
         l := l + 1;
-        line := sl.Strings[l];
-        strtemp := copy(line, 0,pos(' ', line) - 1);
-        Fmesh[tcount].Name := StringReplace(strtemp, '"', '', [rfReplaceAll]);
-
-        strTemp := StringReplace(line, '"', '', [rfReplaceAll]);
-        strTemp := copy(strTemp, pos(' ', strTemp) + 1,length(strTemp));
-        matid := StrToInt(copy(strTemp, pos(' ', strTemp) + 1,length(strTemp)));
-
-        if matid = -1 then FMesh[tcount].MatName[0] := ''
-        else
-          FMesh[tcount].MatName[0] := IntToStr(matid);
-
-        //read in vertex data, texture u and v and the bone applied to the vertex
-        l := l + 1;
-        line := sl.Strings[l];
+        line := stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
         Count := StrToInt(line);
 
-        FMesh[tcount].NumVertex := Count;
-        FMesh[tcount].NumMappings := Count;
+        FMesh[acount-1].NumVertex := Count;
+        FMesh[acount-1].NumMappings := Count;
 
         if Count > 0 then
-          for loop := 0 to count-1 do
-          begin
-            l := l + 1;
-            line := sl.Strings[l];
-            tsl := TStringList.Create;
-            tsl.CommaText := line;
+        for loop := 0 to count-1 do
+        begin
+          l := l + 1;
+          line := sl.Strings[l];
+          tsl := TStringList.Create;
+          tsl.Delimiter :=';';
+          tsl.DelimitedText := line;
 
-            tempvertex := FMesh[tcount].Vertex[loop];
+          tempvertex := FMesh[acount-1].Vertex[loop];
 
-            tempvertex.x := strtofloat(tsl.Strings[1]);
-            tempvertex.y := strtofloat(tsl.Strings[2]);
-            tempvertex.z := strtofloat(tsl.Strings[3]);
+          tempvertex.x := strtofloat(tsl.Strings[0]);
+          tempvertex.y := strtofloat(tsl.Strings[1]);
+          tempvertex.z := strtofloat(tsl.Strings[2]);
 
-            FMesh[tcount].Vertex[loop] := tempvertex;
+          FMesh[acount-1].Vertex[loop] := tempvertex;
 
-            tempmap := FMesh[tcount].Mapping[loop];
-
-            tempmap.tu := strtofloat(tsl.Strings[4]);
-            tempmap.tv := strtofloat(tsl.Strings[5]);
-
-            //adjust texture coord v? when and when not?
-            tempmap.tv := 1.0 - tempmap.tv;
-
-            FMesh[tcount].Mapping[loop]:=tempmap;
-
-            FMesh[tcount].BoneId[loop] := StrToInt(tsl.Strings[6]);
-
-            tsl.Free;
-          end;
-
-        //read in the normals
-        l := l + 1;
-        line := sl.Strings[l];
-        Count := StrToInt(line);
-
-        FMesh[tcount].NumNormals := Count;
-
-        if Count > 0 then
-          for loop := 0 to count-1 do
-          begin
-            l := l + 1;
-            line := sl.Strings[l];
-            tsl := TStringList.Create;
-            tsl.CommaText := line;
-
-            tempvertex := FMesh[tcount].Normals[loop];
-
-            tempvertex.x := strtofloat(tsl.Strings[0]);
-            tempvertex.y := strtofloat(tsl.Strings[1]);
-            tempvertex.z := strtofloat(tsl.Strings[2]);
-
-            FMesh[tcount].Normals[loop] := tempvertex;
-
-            tsl.Free;
-          end;
+          tsl.Free;
+        end;
 
         //read in the indices (faces)
         l := l + 1;
-        line := sl.Strings[l];
+        line := stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
         Count := StrToInt(line);
 
-        FMesh[tcount].NumNormals := count * 3;
-        FMesh[tcount].NumVertexIndices := count * 3;
-
-        FMesh[tcount].NumVertexIndices := Count * 3;
-        FMesh[tcount].NumMappingIndices := Count * 3;
+        FMesh[acount-1].NumVertexIndices := count * 3;
 
         if Count > 0 then
-          for loop := 0 to Count - 1 do
-          begin
-            l := l + 1;
-            line := sl.Strings[l];
-            tsl := TStringList.Create;
-            tsl.CommaText := line;
-
-            for floop := 1 to 3 do
-            begin
-              FMesh[tcount].Face[loop * 3 + floop - 1] := StrToInt(tsl.Strings[floop]);
-              FMesh[tcount].Normal[loop * 3 + floop - 1] := StrToInt(tsl.Strings[floop + 3]);
-              FMesh[tcount].Map[loop * 3 + floop - 1] := StrToInt(tsl.Strings[floop]); //texturemapping as vertexindice
-            end;
-            tsl.Free;
-          end;
-
-        //set matid for every vertex (make compatible with 3ds render)
-        if Count > 0 then
+        for loop := 0 to Count - 1 do
         begin
-          for loop := 0 to (FMesh[tcount].NumVertexIndices div 3) - 1 do
-          begin
-            if matid = -1 then matid := 0;
-            FMesh[tcount].MatId[loop] := matid{+ 1};
-          end;
+          l := l + 1;
+          line := sl.Strings[l];
+          tsl := TStringList.Create;
+          tsl.Delimiter :=';';
+          tsl.DelimitedText := line;
+
+          strtemp :=tsl[1];
+          tsl.Free;
+
+          tsl := TStringList.Create;
+          tsl.Delimiter :=',';
+          tsl.DelimitedText := strtemp;
+
+          //for floop := 1 to 3 do
+          //begin
+            FMesh[acount-1].Face[loop * 3 + 1-1] := StrToInt(tsl.Strings[1-1]);
+            FMesh[acount-1].Face[loop * 3 + 2-1] := StrToInt(tsl.Strings[2-1]);
+            FMesh[acount-1].Face[loop * 3 + 3-1] := StrToInt(tsl.Strings[3-1]);
+          //end;
+          tsl.Free;
         end;
       end;
-    end;
 
-    //read in material data...
-    if (pos('Materials: ', line) = 1) then
-    begin
-      setlength(FMaterial, 1);
-      FMaterial[0] := FMaterialClass.Create(self);
-
-      mcount := StrToInt(StringReplace(Line, 'Materials: ', '', [rfReplaceAll]));
-      setlength(FMaterial, mcount + 1);
-
-      FNumMaterials := mcount;
-
-      if FNumMaterials > 0 then
+      //read in normals
+      if (pos('MeshNormals', line) = 3) then
       begin
-      for tcount := 0 to mcount - 1 do
+        //read in normal data
+        l := l + 1;
+        line := stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
+        Count := StrToInt(line);
+
+        FMesh[acount-1].NumNormals := Count;
+
+        if Count > 0 then
+        for loop := 0 to count-1 do
+        begin
+          l := l + 1;
+          line := sl.Strings[l];
+          tsl := TStringList.Create;
+          tsl.Delimiter :=';';
+          tsl.DelimitedText := line;
+
+          tempvertex := FMesh[acount-1].Normals[loop];
+
+          tempvertex.x := strtofloat(tsl.Strings[0]);
+          tempvertex.y := strtofloat(tsl.Strings[1]);
+          tempvertex.z := strtofloat(tsl.Strings[2]);
+
+          FMesh[acount-1].Normals[loop] := tempvertex;
+
+          tsl.Free;
+        end;
+
+        //read in the normal indices
+        l := l + 1;
+        line := stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
+        Count := StrToInt(line);
+
+        FMesh[acount-1].NumNormalIndices := count * 3;
+
+        if Count > 0 then
+        for loop := 0 to Count - 1 do
+        begin
+          l := l + 1;
+          line := sl.Strings[l];
+          tsl := TStringList.Create;
+          tsl.Delimiter :=';';
+          tsl.DelimitedText := line;
+
+          strtemp :=tsl[1];
+          tsl.Free;
+
+          tsl := TStringList.Create;
+          tsl.Delimiter :=',';
+          tsl.DelimitedText := strtemp;
+
+          //for floop := 1 to 3 do
+          //begin
+            FMesh[acount-1].Normal[loop * 3 + 1-1] := StrToInt(tsl.Strings[1-1]);
+            FMesh[acount-1].Normal[loop * 3 + 2-1] := StrToInt(tsl.Strings[2-1]);
+            FMesh[acount-1].Normal[loop * 3 + 3-1] := StrToInt(tsl.Strings[3-1]);
+          //end;
+          tsl.Free;
+        end;
+      end;
+
+      //read in texture coords data...
+      if (pos('MeshTextureCoords', line) = 3) then
       begin
-        FMaterial[tcount] := FMaterialClass.Create(self);
+        l := l + 1;
+        line := stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
+        Count := StrToInt(line);
+
+        FMesh[acount-1].NumMappings := Count;
+
+        if Count > 0 then
+        for loop := 0 to count-1 do
+        begin
+          l := l + 1;
+          line :=stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
+          tsl := TStringList.Create;
+          tsl.Delimiter :=',';
+          tsl.DelimitedText := line;
+
+          tempmap := FMesh[acount-1].Mapping[0];
+
+          tempmap.tu := strtofloat(tsl.Strings[0]);
+          tempmap.tv := strtofloat(tsl.Strings[1]);
+
+          FMesh[acount-1].Mapping[0] := tempmap;
+        end;
+
+        //texture coords per vertex so set indeces accordingly
+        FMesh[acount-1].NumMappingIndices := FMesh[acount-1].NumVertexIndices;
+        for loop:=0 to (FMesh[acount-1].NumMappingIndices div 3)-1 do
+        begin
+          for floop := 1 to 3 do
+          begin
+            FMesh[acount-1].Map[loop*3+floop-1]:=floop-1;
+          end;
+        end;
+
+      end;
+
+      //read in texture coords data...
+      if (pos('MeshMaterialList', line) = 3) then
+      begin
+        //number of materials
+        l := l + 1;
+        line := stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
+        Count := StrToInt(line);
+
+        //number of indices
+        l := l + 1;
+        line := stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
+        Count := StrToInt(line);
+
+        if Count> 0 then
+        for loop:=0 to count-1 do
+        begin
+          l:=l+1;
+          line := stringreplace(sl.Strings[l],',','',[rfReplaceAll]);
+          line := stringreplace(line,';','',[rfReplaceAll]);
+          matid := StrToInt(line);
+          FMesh[acount-1].MatId[loop] := matid{+ 1};
+
+          if loop = 0 then
+          begin
+            FMesh[acount-1].MatName[0]:=self.GetMaterial(matid).Name;
+            FMesh[acount-1].MatID[0]:=matid;
+          end;
+        end;
+
+      end;
+
+      //read in material data...
+      if (pos('Material ', line) = 1) then
+      begin
+        mcount:=mcount+1;
+        setlength(FMaterial, mcount);
+
+        FNumMaterials := mcount;
+
+        FMaterial[mcount-1] := FMaterialClass.Create(self);
 
         //read material name
-        l := l + 1;
-        line := sl.Strings[l];
-        strtemp := line;
-        FMaterial[tcount].Name := StringReplace(strtemp, '"', '', [rfReplaceAll]);
+        strtemp :='';
+        strtemp := copy(line, 10, pos(' {',line)-10);
+        FMaterial[mcount-1].Name := strtemp;
 
         //read ambient color data
         l := l + 1;
         line := sl.Strings[l];
         tsl := TStringList.Create;
-        tsl.CommaText := line;
-        FMaterial[tcount].IsAmbient := False;
-        FMaterial[tcount].AmbientRed := StrToFloat(tsl.strings[0]);
-        FMaterial[tcount].AmbientGreen := StrToFloat(tsl.strings[1]);
-        FMaterial[tcount].AmbientBlue := StrToFloat(tsl.strings[2]);
-        if (FMaterial[tcount].AmbientRed<>0) or (FMaterial[tcount].AmbientGreen<>0) or (FMaterial[tcount].AmbientBlue<>0) then FMaterial[tcount].IsAmbient := True;
+        tsl.Delimiter :=';';
+        tsl.DelimitedText := line;
+        FMaterial[mcount-1].IsAmbient := False;
+        FMaterial[mcount-1].AmbientRed := StrToFloat(tsl.strings[0]);
+        FMaterial[mcount-1].AmbientGreen := StrToFloat(tsl.strings[1]);
+        FMaterial[mcount-1].AmbientBlue := StrToFloat(tsl.strings[2]);
+        FMaterial[mcount-1].Transparency := StrToFloat(tsl.strings[3]);
+        if (FMaterial[mcount-1].AmbientRed<>0) or (FMaterial[mcount-1].AmbientGreen<>0) or (FMaterial[mcount-1].AmbientBlue<>0) then FMaterial[mcount-1].IsAmbient := True;
         tsl.Free;
 
-        //read diffuse color data
+        //read specular strength ...
         l := l + 1;
         line := sl.Strings[l];
         tsl := TStringList.Create;
-        tsl.CommaText := line;
-        FMaterial[tcount].IsDiffuse := False;
-        FMaterial[tcount].DiffuseRed := StrToFloat(tsl.strings[0]);
-        FMaterial[tcount].DiffuseGreen := StrToFloat(tsl.strings[1]);
-        FMaterial[tcount].DiffuseBlue := StrToFloat(tsl.strings[2]);
-        FMaterial[tcount].Transparency := StrToFloat(tsl.strings[3]);
-        if (FMaterial[tcount].DiffuseRed<>0) or (FMaterial[tcount].DiffuseGreen<>0) or (FMaterial[tcount].DiffuseBlue<>0) then FMaterial[tcount].IsDiffuse := True;
+        tsl.Delimiter :=';';
+        tsl.DelimitedText := line;
+        FMaterial[mcount-1].Shininess := StrToFloat(tsl.strings[0]);
         tsl.Free;
 
         //read specular color data
         l := l + 1;
         line := sl.Strings[l];
         tsl := TStringList.Create;
-        tsl.CommaText := line;
-        FMaterial[tcount].IsSpecular := False;
-        FMaterial[tcount].SpecularRed := StrToFloat(tsl.strings[0]);
-        FMaterial[tcount].SpecularGreen := StrToFloat(tsl.strings[1]);
-        FMaterial[tcount].SpecularBlue := StrToFloat(tsl.strings[2]);
-        if (FMaterial[tcount].SpecularRed<>0) or (FMaterial[tcount].SpecularGreen<>0) or (FMaterial[tcount].SpecularBlue<>0) then FMaterial[tcount].IsSpecular := True;
+        tsl.Delimiter :=';';
+        tsl.DelimitedText := line;
+        FMaterial[mcount-1].IsSpecular := False;
+        FMaterial[mcount-1].SpecularRed := StrToFloat(tsl.strings[0]);
+        FMaterial[mcount-1].SpecularGreen := StrToFloat(tsl.strings[1]);
+        FMaterial[mcount-1].SpecularBlue := StrToFloat(tsl.strings[2]);
+        if (FMaterial[mcount-1].SpecularRed<>0) or (FMaterial[mcount-1].SpecularGreen<>0) or (FMaterial[mcount-1].SpecularBlue<>0) then FMaterial[mcount-1].IsSpecular := True;
         tsl.Free;
 
-        l := l + 3; //skip emissive, shininess, transperancy (implement later)
-
-        line:=sl.Strings[l];
-        FMaterial[tcount].BumpMapStrength := StrToFloat(line);
-
-        l:=l+1;
-
-        //read texture filename
-        line := sl.Strings[l];
-        strtemp := line;
-        FMaterial[tcount].FileName := '';
-        FMaterial[tcount].FileName := StringReplace(strtemp, '"', '', [rfReplaceAll]);
-        FMaterial[tcount].FileName := StringReplace(Fmaterial[tcount].FileName, '.\', '', [rfReplaceAll]); //fix for wrong texture filenames
-
-        if FMaterial[tcount].Filename <> '' then
-          FMaterial[tcount].Hastexturemap := True;
-        //skip second texture filename? alpha?
+        //read diffuse color data
         l := l + 1;
-        //read bumpmap filename
         line := sl.Strings[l];
-        strtemp := line;
-        FMaterial[tcount].BumpMapFileName := '';
-        FMaterial[tcount].BumpMapFileName := StringReplace(strtemp, '"', '', [rfReplaceAll]);
-        if FMaterial[tcount].BumpMapFileName <> '' then
-          FMaterial[tcount].Hasbumpmap := True;
+        tsl := TStringList.Create;
+        tsl.Delimiter :=';';
+        tsl.DelimitedText := line;
+        FMaterial[mcount-1].IsDiffuse := False;
+        FMaterial[mcount-1].DiffuseRed := StrToFloat(tsl.strings[0]);
+        FMaterial[mcount-1].DiffuseGreen := StrToFloat(tsl.strings[1]);
+        FMaterial[mcount-1].DiffuseBlue := StrToFloat(tsl.strings[2]);
+        if (FMaterial[mcount-1].DiffuseRed<>0) or (FMaterial[mcount-1].DiffuseGreen<>0) or (FMaterial[mcount-1].DiffuseBlue<>0) then FMaterial[mcount-1].IsDiffuse := True;
+        tsl.Free;
+
+        //TODO: check if there are textures specified for material
       end;
-    end;
-    end;
 
-    //read in bone data...
-    if (pos('Bones: ', line) = 1) then
-    begin
-      bcount := StrToInt(StringReplace(Line, 'Bones: ', '', [rfReplaceAll]));
-      //if there are bones
-      if bcount >= 1 then floadskeleton:=true;
+      l := l + 1;
     end;
-
-    l := l + 1;
   end;
   sl.Free;
-
-  //fill matnames into meshes
-  If FnumMeshes > 0 then
-  for m:= 0 to FNumMeshes -1 do
-  begin
-    if (FMesh[m].MatName[0] <> '0') AND (FMesh[m].MatName[0] <> '')  then
-    begin
-      FMesh[m].MatID[0] := StrToInt(FMesh[m].MatName[0]);
-      FMesh[m].MatName[0] := FMaterial[StrToInt(FMesh[m].MatName[0])].Name;
-    end;
-  end;
 end;
 
-procedure TMsaModel.SaveToFile(AFileName: string);
+procedure TDXModel.SaveToFile(AFileName: string);
 var
   stream: TFilestream;
 begin
@@ -349,109 +379,14 @@ begin
   stream.Free;
 end;
 
-procedure TMsaModel.SaveToStream(stream: Tstream);
-var
-  ms: TStringList;
-  saveloop: Integer;
-  subsaveloop: Integer;
-  tempstring: string;
+procedure TDXModel.SaveToStream(stream: Tstream);
 begin
-  //this saves meshes and materials to a milkshape ascii file
-  ms:=TStringList.Create;
-
-  ms.Add('// MilkShape 3D ASCII');
-  ms.Add('');
-  ms.Add('Frames: 0');
-  ms.Add('Frame: 0');
-  ms.Add('');
-
-  //save mesh data
-  ms.Add('Meshes: '+IntToStr(FNumMeshes));
-
-  for saveloop:=0 to FNumMeshes-1 do
-  begin
-    tempstring:=StringReplace(fmesh[saveloop].name, ' ', '_', [rfReplaceAll]);
-
-    if fmesh[saveloop].NumMaterials > 0 then
-       ms.Add('"'+tempstring+'"'+' 0'+' '+inttostr(fmesh[saveloop].matid[0]))
-    else
-       ms.Add('"'+tempstring+'"'+' 0'+' 0');
-
-    //save vertexes
-    ms.Add(inttostr(fmesh[saveloop].numvertex));
-
-    for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
-    begin
-      if fmesh[saveloop].NumBones > 0 then
-      ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' '+inttostr(fmesh[saveloop].boneid[subsaveloop]))
-      else
-      ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
-    end;
-    //save normals
-    ms.Add(inttostr(fmesh[saveloop].NumNormals));
-    if fmesh[saveloop].NumNormals > 0 then
-    begin
-      for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do //should i use seperate Fnumnormals??
-      begin
-
-        ms.Add(floattostr( fmesh[saveloop].Normals[subsaveloop].x )+' '+floattostr(fmesh[saveloop].Normals[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Normals[subsaveloop].z));
-
-      end;
-    end;
-
-    //save faces (indices)
-    ms.Add(inttostr(fmesh[saveloop].numvertexindices div 3));
-    for subsaveloop:=0 to (fmesh[saveloop].numvertexindices div 3) -1 do
-    begin
-      if fmesh[saveloop].NumNormals > 0 then
-      begin
-      ms.Add('0 '
-        +IntToStr(fmesh[saveloop].Face[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+2])+' '
-         +IntToStr(fmesh[saveloop].normal[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].normal[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].normal[subsaveloop*3+2])
-        +' 1');
-      end
-      else
-      begin
-        ms.Add('0 '
-        +IntToStr(fmesh[saveloop].Face[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+2])+' '
-         +'0 0 0'
-        +' 1');
-      end;
-
-
-    end;
-  end;
-
-  ms.Add('');
-  //save material data
-  ms.Add('Materials: '+IntToStr(FNumMaterials));
-  for saveloop:=0 to FNumMaterials-1 do
-  begin
-    ms.Add('"'+FMaterial[saveloop].name+'"');
-    ms.Add(FloatToStr(FMaterial[saveloop].AmbientRed)+' '+FloatToStr(FMaterial[saveloop].AmbientGreen)+' '+FloatToStr(FMaterial[saveloop].AmbientBlue)+' 1.0');
-    ms.Add(FloatToStr(FMaterial[saveloop].DiffuseRed)+' '+FloatToStr(FMaterial[saveloop].DiffuseGreen)+' '+FloatToStr(FMaterial[saveloop].DiffuseBlue)+' '+FloatToStr(FMaterial[saveloop].Transparency));
-    ms.Add(FloatToStr(FMaterial[saveloop].SpecularRed)+' '+FloatToStr(FMaterial[saveloop].SpecularGreen)+' '+FloatToStr(FMaterial[saveloop].SpecularBlue)+' 1.0');
-    ms.Add('0.0 0.0 0.0 1.0');
-    ms.Add('0.0');
-    ms.Add(FloatToStr(FMaterial[saveloop].bumpmapstrength));
-    ms.Add('"'+FMaterial[saveloop].filename+'"');
-    ms.Add('"'+FMaterial[saveloop].bumpmapfilename+'"');
-  end;
-
-  //fake save bones
-  ms.Add('');
-  ms.Add('Bones: 0');
-  ms.Add('');
-  ms.Add('');
-
-  ms.SaveToStream(stream);
-  ms.Free;
 end;
 
 initialization
-RegisterModelFormat('txt', 'Milkshape 3D ascii model', TMsaModel);
+RegisterModelFormat('x', 'DirectX model', TDXModel);
 
 finalization
-UnRegisterModelClass(TMsaModel);
+UnRegisterModelClass(TDXModel);
 
 end.

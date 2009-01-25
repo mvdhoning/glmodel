@@ -31,6 +31,7 @@ uses
   Model,
   Model3ds,
   ModelObj,
+  ModelX,
   ModelMsa;
  // Material,
  // glMaterial,
@@ -238,7 +239,8 @@ scene1.AddModel();
 //scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
-scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
+//scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
+scene1.Models[0].LoadFromFile('models\houseobj.x');
 
 //scene1.AddModel; //this gives error on calculation normals after loading soccerball.obj
 //scene1.Models[1].LoadFromFile('models\tulip.3ds'); //was tulip.3ds
