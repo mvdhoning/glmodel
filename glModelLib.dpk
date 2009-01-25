@@ -1,4 +1,4 @@
-package glModel;
+package glModelLib;
 
 {$R *.res}
 {$ALIGN 8}
