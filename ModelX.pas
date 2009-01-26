@@ -61,7 +61,6 @@ var
   l: Integer;
   line: string;
   strtemp: string;
-//  tcount: LongWord;
   acount: LongWord;
   mcount: LongWord;
   bcount: LongWord;
@@ -78,7 +77,7 @@ begin
   sl.LoadFromStream(stream);
 
 
-  //check if file realy is a DirectX model file.
+  //check if file realy is a DirectX txt model file.
   if sl.Strings[0] = 'xof 0303txt 0032' then
   begin
 
@@ -159,9 +158,6 @@ begin
           begin
             FMesh[acount-1].Face[(loop*3) + floop] := StrToInt(tsl.Strings[floop]);
           end;
-            //FMesh[acount-1].Face[loop * 3 + (2-1)] := StrToInt(tsl.Strings[2-1]);
-            //FMesh[acount-1].Face[loop * 3 + (3-1)] := StrToInt(tsl.Strings[3-1]);
-          //end;
           tsl.Free;
         end;
       end;
@@ -223,9 +219,6 @@ begin
           begin
             FMesh[acount-1].Normal[(loop*3) + floop] := StrToInt(tsl.Strings[floop]);
           end;
-            //FMesh[acount-1].Normal[loop * 3 + (2-1)] := StrToInt(tsl.Strings[2-1]);
-            //FMesh[acount-1].Normal[loop * 3 + (3-1)] := StrToInt(tsl.Strings[3-1]);
-          //end;
           tsl.Free;
         end;
       end;
@@ -248,22 +241,18 @@ begin
           tsl.Delimiter :=',';
           tsl.DelimitedText := line;
 
-          tempmap := FMesh[acount-1].Mapping[0];
+          tempmap := FMesh[acount-1].Mapping[loop];
 
           tempmap.tu := strtofloat(tsl.Strings[0]);
           tempmap.tv := strtofloat(tsl.Strings[1]);
 
-          FMesh[acount-1].Mapping[0] := tempmap;
+          FMesh[acount-1].Mapping[loop] := tempmap;
         end;
 
         //texture coords per vertex so set indeces accordingly
         FMesh[acount-1].NumMappingIndices := FMesh[acount-1].NumVertexIndices;
         for loop:=0 to FMesh[acount-1].NumMappingIndices-1 do
         begin
-          //for floop := 1 to 3 do
-          //begin
-          //  FMesh[acount-1].Map[loop*3+floop-1]:=floop-1;
-          //end;
           FMesh[acount-1].Map[loop] := FMesh[acount-1].Face[loop];
         end;
 
@@ -366,6 +355,20 @@ begin
         tsl.Free;
 
         //TODO: check if there are textures specified for material
+      end;
+
+      //read in texture coords data...
+      if (pos('TextureFilename', line) = 4) then
+      begin
+         //l := l + 1;
+         line := stringreplace(sl.Strings[l],'TextureFilename','',[rfReplaceAll]);
+         line := stringreplace(line,';','',[rfReplaceAll]);
+         line := stringreplace(line,'{','',[rfReplaceAll]);
+         line := stringreplace(line,'}','',[rfReplaceAll]);
+         line := trim(line);
+         line := stringreplace(line,'"','',[rfReplaceAll]);
+         FMaterial[mcount-1].FileName := line;
+         FMaterial[mcount-1].HasTexturemap := true;
       end;
 
       l := l + 1;
