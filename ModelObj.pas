@@ -496,27 +496,9 @@ self.Material[0].IsDiffuse:=true;
                   ReadMaterialData(matcount-1,line);
                 end;
           'G' : begin
-
-                  //no this is not correct ...
-                  //G does set name but is not reponsible for
-                  //creating a new sub-mesh...
-                  //any other command after F should create a new sub-mesh
-                  //so we need to keep track of last command ...
-
-                  //also as a worst case scenario sub-meshes may share vertexes
-
-                  //Inc(fnummeshes);
-                  //SetLength(fmesh, fnummeshes+1);
-                  //setlength(FRenderOrder, fnummeshes+1);
-                  //FRenderOrder[fnummeshes - 1] := fnummeshes - 1;
                   line2 :=Trim(Copy(line, 2, length(line)));
-                  //FMesh[fnummeshes-1] := FMeshClass.Create(self);
                   fmesh[fnummeshes-1].Name :=line2;
-                  //fmesh[fnummeshes-1].Visible := true;
-
-                  //c:=0;
                   FLastCommand:='G';
-
                 end;
           'V' : begin
                   if FLastCommand = 'F' then
@@ -542,8 +524,7 @@ self.Material[0].IsDiffuse:=true;
 
   sl.Free;
 
-  //calcvnormals; //TODO: called automaticaly? Should not be called if not needed
-  //CalculateSize;
+  CalculateSize;
 
 end;
 
@@ -573,9 +554,11 @@ begin
   for saveloop:=0 to FNumMaterials-1 do
   begin
     mas.Add('newmtl '+FMaterial[saveloop].name);
-    mas.Add('Ka'+FloatToStr(FMaterial[saveloop].AmbientRed)+' '+FloatToStr(FMaterial[saveloop].AmbientGreen)+' '+FloatToStr(FMaterial[saveloop].AmbientBlue)+' 1.0');
-    mas.Add('Kd'+FloatToStr(FMaterial[saveloop].DiffuseRed)+' '+FloatToStr(FMaterial[saveloop].DiffuseGreen)+' '+FloatToStr(FMaterial[saveloop].DiffuseBlue)+' '+FloatToStr(FMaterial[saveloop].Transparency));
-    mas.Add('Ks'+FloatToStr(FMaterial[saveloop].SpecularRed)+' '+FloatToStr(FMaterial[saveloop].SpecularGreen)+' '+FloatToStr(FMaterial[saveloop].SpecularBlue)+' 1.0');
+    mas.Add('Ka '+FloatToStr(FMaterial[saveloop].AmbientRed)+' '+FloatToStr(FMaterial[saveloop].AmbientGreen)+' '+FloatToStr(FMaterial[saveloop].AmbientBlue)+' 1.0');
+    mas.Add('Kd '+FloatToStr(FMaterial[saveloop].DiffuseRed)+' '+FloatToStr(FMaterial[saveloop].DiffuseGreen)+' '+FloatToStr(FMaterial[saveloop].DiffuseBlue)+' '+FloatToStr(FMaterial[saveloop].Transparency));
+    mas.Add('Tr '+FLoatToStr(FMaterial[saveloop].Transparency ) );
+    mas.Add('Ks '+FloatToStr(FMaterial[saveloop].SpecularRed)+' '+FloatToStr(FMaterial[saveloop].SpecularGreen)+' '+FloatToStr(FMaterial[saveloop].SpecularBlue)+' 1.0');
+    mas.Add('Ns '+FLoatToStr(FMaterial[saveloop].Shininess ) );
     if FMaterial[saveloop].FileName <> '' then
       mas.Add('mapKd '+FMaterial[saveloop].filename);
   end;
