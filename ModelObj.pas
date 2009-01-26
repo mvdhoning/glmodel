@@ -576,7 +576,8 @@ begin
     mas.Add('Ka'+FloatToStr(FMaterial[saveloop].AmbientRed)+' '+FloatToStr(FMaterial[saveloop].AmbientGreen)+' '+FloatToStr(FMaterial[saveloop].AmbientBlue)+' 1.0');
     mas.Add('Kd'+FloatToStr(FMaterial[saveloop].DiffuseRed)+' '+FloatToStr(FMaterial[saveloop].DiffuseGreen)+' '+FloatToStr(FMaterial[saveloop].DiffuseBlue)+' '+FloatToStr(FMaterial[saveloop].Transparency));
     mas.Add('Ks'+FloatToStr(FMaterial[saveloop].SpecularRed)+' '+FloatToStr(FMaterial[saveloop].SpecularGreen)+' '+FloatToStr(FMaterial[saveloop].SpecularBlue)+' 1.0');
-    mas.Add('mapKd '+FMaterial[saveloop].filename);
+    if FMaterial[saveloop].FileName <> '' then
+      mas.Add('mapKd '+FMaterial[saveloop].filename);
   end;
   mas.Add('');
 
@@ -611,11 +612,11 @@ begin
     ms.Add('#NumUV: '+inttostr(fmesh[saveloop].NumMappings));
     for subsaveloop:=0 to fmesh[saveloop].NumMappings -1 do
     begin
-      ms.Add('vt'+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tv));
+      ms.Add('vt'+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tv)+' 0');
     end;
 
     //save normals
-    ms.Add(inttostr(fmesh[saveloop].NumNormals));
+    ms.Add('#NumNormals: '+inttostr(fmesh[saveloop].NumNormals));
     if fmesh[saveloop].NumNormals > 0 then
     begin
       for subsaveloop:=0 to fmesh[saveloop].NumNormals -1 do
@@ -629,7 +630,7 @@ begin
        ms.Add('usemtl '+fmesh[saveloop].MatName[0] );
 
     //save faces (indices)
-    ms.Add(inttostr(fmesh[saveloop].numvertexindices div 3));
+    ms.Add('#NumFaces: '+inttostr(fmesh[saveloop].numvertexindices div 3));
     for subsaveloop:=0 to (fmesh[saveloop].numvertexindices div 3) -1 do
     begin
       begin
