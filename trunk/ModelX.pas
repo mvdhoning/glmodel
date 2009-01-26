@@ -155,11 +155,12 @@ begin
           tsl.Delimiter :=',';
           tsl.DelimitedText := strtemp;
 
-          //for floop := 1 to 3 do
-          //begin
-            FMesh[acount-1].Face[loop * 3 + 1-1] := StrToInt(tsl.Strings[1-1]);
-            FMesh[acount-1].Face[loop * 3 + 2-1] := StrToInt(tsl.Strings[2-1]);
-            FMesh[acount-1].Face[loop * 3 + 3-1] := StrToInt(tsl.Strings[3-1]);
+          for floop := 0 to 2 do
+          begin
+            FMesh[acount-1].Face[(loop*3) + floop] := StrToInt(tsl.Strings[floop]);
+          end;
+            //FMesh[acount-1].Face[loop * 3 + (2-1)] := StrToInt(tsl.Strings[2-1]);
+            //FMesh[acount-1].Face[loop * 3 + (3-1)] := StrToInt(tsl.Strings[3-1]);
           //end;
           tsl.Free;
         end;
@@ -203,7 +204,7 @@ begin
         FMesh[acount-1].NumNormalIndices := count * 3;
 
         if Count > 0 then
-        for loop := 0 to Count - 1 do
+        for loop := 0 to count - 1 do
         begin
           l := l + 1;
           line := sl.Strings[l];
@@ -218,11 +219,12 @@ begin
           tsl.Delimiter :=',';
           tsl.DelimitedText := strtemp;
 
-          //for floop := 1 to 3 do
-          //begin
-            FMesh[acount-1].Normal[loop * 3 + 1-1] := StrToInt(tsl.Strings[1-1]);
-            FMesh[acount-1].Normal[loop * 3 + 2-1] := StrToInt(tsl.Strings[2-1]);
-            FMesh[acount-1].Normal[loop * 3 + 3-1] := StrToInt(tsl.Strings[3-1]);
+          for floop := 0 to 2 do
+          begin
+            FMesh[acount-1].Normal[(loop*3) + floop] := StrToInt(tsl.Strings[floop]);
+          end;
+            //FMesh[acount-1].Normal[loop * 3 + (2-1)] := StrToInt(tsl.Strings[2-1]);
+            //FMesh[acount-1].Normal[loop * 3 + (3-1)] := StrToInt(tsl.Strings[3-1]);
           //end;
           tsl.Free;
         end;
@@ -256,12 +258,13 @@ begin
 
         //texture coords per vertex so set indeces accordingly
         FMesh[acount-1].NumMappingIndices := FMesh[acount-1].NumVertexIndices;
-        for loop:=0 to (FMesh[acount-1].NumMappingIndices div 3)-1 do
+        for loop:=0 to FMesh[acount-1].NumMappingIndices-1 do
         begin
-          for floop := 1 to 3 do
-          begin
-            FMesh[acount-1].Map[loop*3+floop-1]:=floop-1;
-          end;
+          //for floop := 1 to 3 do
+          //begin
+          //  FMesh[acount-1].Map[loop*3+floop-1]:=floop-1;
+          //end;
+          FMesh[acount-1].Map[loop] := FMesh[acount-1].Face[loop];
         end;
 
       end;
@@ -318,12 +321,13 @@ begin
         tsl := TStringList.Create;
         tsl.Delimiter :=';';
         tsl.DelimitedText := line;
-        FMaterial[mcount-1].IsAmbient := False;
-        FMaterial[mcount-1].AmbientRed := StrToFloat(tsl.strings[0]);
-        FMaterial[mcount-1].AmbientGreen := StrToFloat(tsl.strings[1]);
-        FMaterial[mcount-1].AmbientBlue := StrToFloat(tsl.strings[2]);
+        FMaterial[mcount-1].IsDiffuse := False;
+        FMaterial[mcount-1].DiffuseRed := StrToFloat(tsl.strings[0]);
+        FMaterial[mcount-1].DiffuseGreen := StrToFloat(tsl.strings[1]);
+        FMaterial[mcount-1].DiffuseBlue := StrToFloat(tsl.strings[2]);
+
         FMaterial[mcount-1].Transparency := StrToFloat(tsl.strings[3]);
-        if (FMaterial[mcount-1].AmbientRed<>0) or (FMaterial[mcount-1].AmbientGreen<>0) or (FMaterial[mcount-1].AmbientBlue<>0) then FMaterial[mcount-1].IsAmbient := True;
+        if (FMaterial[mcount-1].DiffuseRed<>0) or (FMaterial[mcount-1].DiffuseGreen<>0) or (FMaterial[mcount-1].DiffuseBlue<>0) then FMaterial[mcount-1].IsDiffuse := True;
         tsl.Free;
 
         //read specular strength ...
@@ -348,17 +352,17 @@ begin
         if (FMaterial[mcount-1].SpecularRed<>0) or (FMaterial[mcount-1].SpecularGreen<>0) or (FMaterial[mcount-1].SpecularBlue<>0) then FMaterial[mcount-1].IsSpecular := True;
         tsl.Free;
 
-        //read diffuse color data
+        //read ambient color data
         l := l + 1;
         line := sl.Strings[l];
         tsl := TStringList.Create;
         tsl.Delimiter :=';';
         tsl.DelimitedText := line;
-        FMaterial[mcount-1].IsDiffuse := False;
-        FMaterial[mcount-1].DiffuseRed := StrToFloat(tsl.strings[0]);
-        FMaterial[mcount-1].DiffuseGreen := StrToFloat(tsl.strings[1]);
-        FMaterial[mcount-1].DiffuseBlue := StrToFloat(tsl.strings[2]);
-        if (FMaterial[mcount-1].DiffuseRed<>0) or (FMaterial[mcount-1].DiffuseGreen<>0) or (FMaterial[mcount-1].DiffuseBlue<>0) then FMaterial[mcount-1].IsDiffuse := True;
+        FMaterial[mcount-1].IsAmbient := False;
+        FMaterial[mcount-1].AmbientRed := StrToFloat(tsl.strings[0]);
+        FMaterial[mcount-1].AmbientGreen := StrToFloat(tsl.strings[1]);
+        FMaterial[mcount-1].AmbientBlue := StrToFloat(tsl.strings[2]);
+        if (FMaterial[mcount-1].AmbientRed<>0) or (FMaterial[mcount-1].AmbientGreen<>0) or (FMaterial[mcount-1].AmbientBlue<>0) then FMaterial[mcount-1].IsAmbient := True;
         tsl.Free;
 
         //TODO: check if there are textures specified for material
