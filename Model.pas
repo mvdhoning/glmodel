@@ -495,6 +495,10 @@ var
   f, m: Integer;
   vertexn: t3dpoint;
   tempvertexn : T3dpoint;
+  tvtx: array[0..2] of T3Dpoint;
+  n1: t3dPoint;
+  n2: t3dPoint;
+  normal: t3dPoint;
 begin
   //get basic normals
   for m := 0 to FNumMeshes - 1 do
@@ -502,21 +506,23 @@ begin
     if FMesh[m].NumVertexIndices > 0 then
     begin
       f := 0;
-      while f < FMesh[m].NumVertexIndices - 3 do // go through all vertexes and
+      while f <= FMesh[m].NumVertexIndices -3 do // go through all vertexes and
       begin
+
         vertexn := CalcNormalVector(FMesh[m].Vertex[FMesh[m].Face[f]],
           FMesh[m].Vertex[FMesh[m].Face[f + 1]], FMesh[m].Vertex[FMesh[m].Face[f + 2]]);
 
-        FMesh[m].Normal[f] := FMesh[m].Face[f];
-        FMesh[m].Normal[f + 1] := FMesh[m].Face[f + 1];
-        FMesh[m].Normal[f + 2] := FMesh[m].Face[f + 2];
-
         //add all normals and normalize
-        tempvertexn := Normalize(VectorAdd(VectorAdd(vertexn, vertexn), vertexn));
+        //tempvertexn := Normalize(VectorAdd(VectorAdd(vertexn, vertexn), vertexn));
+        tempvertexn:=Normalize(vertexn);
 
         FMesh[m].Normals[FMesh[m].Face[f]] := tempvertexn;
         FMesh[m].Normals[FMesh[m].Face[f + 1]] := tempvertexn;
         FMesh[m].Normals[FMesh[m].Face[f + 2]] := tempvertexn;
+
+        FMesh[m].Normal[f] := FMesh[m].Face[f];
+        FMesh[m].Normal[f + 1] := FMesh[m].Face[f + 1];
+        FMesh[m].Normal[f + 2] := FMesh[m].Face[f + 2];
 
         f := f + 3;
       end;
