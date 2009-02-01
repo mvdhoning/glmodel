@@ -55,7 +55,7 @@ type
   end;
 
 var
-   hastexture: TGLint;
+   hastexture: TGLuint;
 
 function Normalize(v: T3dPoint): T3dPoint;
 function CrossProduct(V1, V2: T3dPoint): T3dPoint;
