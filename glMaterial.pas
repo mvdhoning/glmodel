@@ -113,7 +113,7 @@ begin
   begin
     glActiveTexture(GL_TEXTURE0); //MVDH 2005 march
     //glenable(GL_TEXTURE_2D);
-    //if ftexture <> nil then
+    if ftexture <> nil then
       ftexture.Bind;
 
       //the following it not efficient... (maybe i should have a var containing the states)
