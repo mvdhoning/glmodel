@@ -85,7 +85,8 @@ type
     function GetMeshByName(s: string): TBaseMesh;
     procedure InitSkin;
     procedure LoadFromFile(AFilename: string); overload; virtual;
-    procedure LoadFromStream(Stream: TStream); virtual;
+    procedure LoadFromStream(Stream: TStream); overload; virtual;
+    procedure LoadFromStream(AType: TBaseModelClass; Stream: TStream); overload;
     procedure LoadFromFile(AType: TBaseModelClass; AFileName: string); overload;
     procedure SaveToFile(AType: TBaseModelClass; AFileName: string); overload;
     procedure SaveToFile(AFilename: string); overload; virtual;
@@ -431,7 +432,20 @@ end;
 
 procedure TBaseModel.LoadFromStream(Stream: TStream);
 begin
-  raise Exception.Create('TModel.LoadFromStream is not implemented')
+  Raise Exception.Create('TModel.LoadFromStream not implemented');
+end;
+
+procedure TBaseModel.LoadFromStream(AType: TBaseModelClass; Stream: TStream);
+var
+  LoadModel: TBaseModel;
+begin
+  LoadModel:= AType.Create(nil);
+  LoadModel.MeshClass := self.FMeshClass;
+  LoadModel.MaterialClass := self.FMaterialClass;
+  LoadModel.SkeletonClass := self.FSkeletonClass;
+  LoadModel.LoadFromStream(Stream);
+  self.Assign(LoadModel);
+  LoadModel.Free;
 end;
 
 procedure TBaseModel.SaveToFile(AType: TBaseModelClass; AFileName: string);
