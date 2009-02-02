@@ -51,7 +51,8 @@ package glModelLib;
 requires
   rtl,
   vcl,
-  vcljpg;
+  vcljpg,
+  oglpan;
 
 contains
   SkeletonMsa in 'SkeletonMsa.pas',
