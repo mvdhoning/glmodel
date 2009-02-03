@@ -132,6 +132,7 @@ type
     procedure RenderBoundBox; virtual; abstract;
     procedure Assign(Source: TPersistent); override;
     procedure CalculateSize;
+    procedure CalculateNormals;
     procedure AddFace(v1, v2, v3: T3DPoint; fmaterial: TBaseMaterial);
     property Visible: boolean read FVisible write FVisible;
     property Face[Index: integer]: Word read GetFace write SetFace;
@@ -270,6 +271,71 @@ begin
       if x > FMaximum.x then FMaximum.x := x;
       if y > FMaximum.y then FMaximum.y := y;
       if z > FMaximum.z then FMaximum.z := z;
+    end;
+end;
+
+procedure TBaseMesh.CalculateNormals;
+var
+  v, f: integer;
+  vertexn: t3dpoint;
+  summedvertexn: t3dpoint;
+  tempvertexn : T3dpoint;
+  tempnormals : array of T3dPoint;
+  shared: integer;
+begin
+if self.NumVertexIndices > 0 then
+    begin
+      SetLength(tempnormals, self.NumVertex); //init tempnormals
+      f := 0;
+      while f <= self.NumVertexIndices -3 do // go through all vertexes and
+      begin
+
+        vertexn := CalcNormalVector(self.Vertex[self.Face[f]],
+          self.Vertex[self.Face[f + 1]], self.Vertex[self.Face[f + 2]]);
+
+        //add all normals and normalize
+        tempvertexn:=vertexn;//Normalize(vertexn);
+
+
+        tempnormals[f div 3] := tempvertexn;
+        //self.Normals[self.Face[f div 3]] := tempvertexn;
+
+
+        //TODO: should be in seperate pass
+        self.Normal[f] := self.Face[f];
+        self.Normal[f + 1] := self.Face[f+1];
+        self.Normal[f + 2] := self.Face[f+2];
+
+        f := f + 3;
+      end;
+
+      summedvertexn.x:=0.0;
+      summedvertexn.y:=0.0;
+      summedvertexn.z:=0.0;
+      shared:=0;
+      for v:=0 to self.NumVertex-1 do
+      begin
+        f:=0;
+        while f <= self.NumVertexIndices -3  do
+        begin
+          if (self.Face[f]=v) or (self.Face[f+1]=v) or (self.Face[f+2]=v) then
+          begin
+            summedvertexn:=VectorAdd(summedvertexn, tempnormals[v]);
+            shared:=shared+1;
+            //self.Normal[f] := v;
+            //self.Normal[f+1] := v;
+            //self.Normal[f+2] := v;
+          end;
+          f:=f+3;
+        end;
+        self.Normals[v]:=Normalize(VectorDiv(summedvertexn, -shared));
+
+        summedvertexn.x:=0.0;
+        summedvertexn.y:=0.0;
+        summedvertexn.z:=0.0;
+        shared:=0;
+      end;
+      SetLength(tempnormals,0);
     end;
 end;
 

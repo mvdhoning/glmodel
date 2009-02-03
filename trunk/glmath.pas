@@ -163,8 +163,8 @@ var
   temppoint1, temppoint2: t3dpoint;
   temp: t3dpoint;
 begin
-temppoint1:=vectorsubtract(point1,point3);
-temppoint2:=vectorsubtract(point3,point2);
+temppoint1:=vectorsubtract(point2,point1);
+temppoint2:=vectorsubtract(point3,point1);
 temp:=crossproduct(temppoint1,temppoint2);
 result:=normalize(temp);
 end;
