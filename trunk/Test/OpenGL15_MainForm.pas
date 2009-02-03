@@ -32,7 +32,10 @@ uses
   Model3ds,
   ModelObj,
   ModelX,
-  ModelMsa;
+  ModelMsa,
+  Mesh,
+  Material,
+  glMath;
  // Material,
  // glMaterial,
  // glModel;
@@ -182,6 +185,10 @@ var
   xangle: single;
   yangle: single;
 
+  v1: T3dPoint;
+  map: TMap;
+  tel: integer;
+
 // =============================================================================
 //  TForm1.FormCreate
 // =============================================================================
@@ -261,9 +268,133 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
 
   scene1.UpdateTextures; //If this is forgotten disaster happens... FIX ASAP
 
-  //save test
-  scene1.Models[0].SaveToFile('test.obj');
+  //dynamic mesh creation example ...
+  scene1.AddModel; //new model
+  scene1.Models[1].AddMesh; //new mesh
+  scene1.Models[1].AddMaterial;  //new material
+  scene1.Models[1].Material[0].DiffuseRed:= 1.0; //make it red
+  scene1.Models[1].Material[0].DiffuseBlue:= 0.0;
+  scene1.Models[1].Material[0].DiffuseGreen:= 0.0;
+  scene1.Models[1].Material[0].AmbientRed:= 0.5; //make it red
+  scene1.Models[1].Material[0].IsAmbient:=true;
+  scene1.Models[1].Material[0].Name:='RedMat';
 
+  scene1.Models[1].Mesh[0].NumVertex := 8; //number of vertexes
+  v1.x := -1.0;
+  v1.y := -1.0;
+  v1.z := -1.0;
+  scene1.Models[1].Mesh[0].Vertex[0]:=v1;
+  v1.x := -1.0;
+  v1.y := -1.0;
+  v1.z := 1.0;
+  scene1.Models[1].Mesh[0].Vertex[1]:=v1;
+  v1.x := -1.0;
+  v1.y := 1.0;
+  v1.z := -1.0;
+  scene1.Models[1].Mesh[0].Vertex[2]:=v1;
+  v1.x := -1.0;
+  v1.y := 1.0;
+  v1.z := 1.0;
+  scene1.Models[1].Mesh[0].Vertex[3]:=v1;
+  v1.x := 1.0;
+  v1.y := -1.0;
+  v1.z := -1.0;
+  scene1.Models[1].Mesh[0].Vertex[4]:=v1;
+  v1.x := 1.0;
+  v1.y := -1.0;
+  v1.z := 1.0;
+  scene1.Models[1].Mesh[0].Vertex[5]:=v1;
+  v1.x := 1.0;
+  v1.y := 1.0;
+  v1.z := -1.0;
+  scene1.Models[1].Mesh[0].Vertex[6]:=v1;
+  v1.x := 1.0;
+  v1.y := 1.0;
+  v1.z := 1.0;
+  scene1.Models[1].Mesh[0].Vertex[7]:=v1;
+
+  scene1.Models[1].Mesh[0].NumVertexIndices := 36; //number of vertex indices
+  scene1.Models[1].Mesh[0].Face[0]:=0;
+  scene1.Models[1].Mesh[0].Face[1]:=2;
+  scene1.Models[1].Mesh[0].Face[2]:=4;
+
+  scene1.Models[1].Mesh[0].Face[3]:=4;
+  scene1.Models[1].Mesh[0].Face[4]:=2;
+  scene1.Models[1].Mesh[0].Face[5]:=6;
+
+  scene1.Models[1].Mesh[0].Face[6]:=0;
+  scene1.Models[1].Mesh[0].Face[7]:=4;
+  scene1.Models[1].Mesh[0].Face[8]:=1;
+
+  scene1.Models[1].Mesh[0].Face[9]:=1;
+  scene1.Models[1].Mesh[0].Face[10]:=4;
+  scene1.Models[1].Mesh[0].Face[11]:=5;
+
+  scene1.Models[1].Mesh[0].Face[12]:=0;
+  scene1.Models[1].Mesh[0].Face[13]:=1;
+  scene1.Models[1].Mesh[0].Face[14]:=2;
+
+  scene1.Models[1].Mesh[0].Face[15]:=2;
+  scene1.Models[1].Mesh[0].Face[16]:=1;
+  scene1.Models[1].Mesh[0].Face[17]:=3;
+
+  scene1.Models[1].Mesh[0].Face[18]:=4;
+  scene1.Models[1].Mesh[0].Face[19]:=6;
+  scene1.Models[1].Mesh[0].Face[20]:=5;
+
+  scene1.Models[1].Mesh[0].Face[21]:=5;
+  scene1.Models[1].Mesh[0].Face[22]:=6;
+  scene1.Models[1].Mesh[0].Face[23]:=7;
+
+  scene1.Models[1].Mesh[0].Face[24]:=2;
+  scene1.Models[1].Mesh[0].Face[25]:=3;
+  scene1.Models[1].Mesh[0].Face[26]:=6;
+
+  scene1.Models[1].Mesh[0].Face[27]:=6;
+  scene1.Models[1].Mesh[0].Face[28]:=3;
+  scene1.Models[1].Mesh[0].Face[29]:=7;
+
+  scene1.Models[1].Mesh[0].Face[30]:=1;
+  scene1.Models[1].Mesh[0].Face[31]:=5;
+  scene1.Models[1].Mesh[0].Face[32]:=3;
+
+  scene1.Models[1].Mesh[0].Face[33]:=3;
+  scene1.Models[1].Mesh[0].Face[34]:=5;
+  scene1.Models[1].Mesh[0].Face[35]:=7;
+
+  //apply material
+  scene1.Models[1].Mesh[0].MatName[0]:=scene1.Models[1].Material[0].Name;
+  scene1.Models[1].Mesh[0].MatID[0]:=0;
+
+  //add calculated normals ...
+  scene1.Models[1].Mesh[0].NumNormals:=8;
+  scene1.Models[1].Mesh[0].NumNormalIndices:=36;
+  scene1.Models[1].CalcVnormals;
+
+  //add fake texture coords
+  scene1.Models[1].Mesh[0].NumMappings:=1;
+  scene1.Models[1].Mesh[0].NumMappingIndices:=36;
+  map.tu:=0;
+  map.tv:=0;
+  scene1.Models[1].Mesh[0].Mapping[0]:=map;
+  for tel:=0 to 35 do
+  begin
+    scene1.Models[1].Mesh[0].Map[tel]:=0;
+  end;
+
+  //make mesh visible
+  scene1.Models[1].Mesh[0].Visible:=true;
+
+  //calculate size for bounding box
+  scene1.Models[1].CalculateSize;
+
+  //determine render order even with one mesh
+  scene1.Models[1].CalculateRenderOrder;
+
+  //save test
+  scene1.Models[1].SaveToFile('test.obj');
+
+  //end dynamic mesh creation example ...
 
   //glinit;
     glClearColor(0.0, 0.0, 0.0, 0.0); 	   // Black Background
@@ -391,6 +522,7 @@ glLoadIdentity();
  glRotatef(yangle,0.0,1.0,0.0);
 
  Scene1.Models[0].Render;
+ Scene1.Models[1].Render;
 
  //TglModel(mesh1).Render; //uggly?
 
