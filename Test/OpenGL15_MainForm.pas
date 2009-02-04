@@ -367,7 +367,7 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   scene1.Models[1].Mesh[0].MatID[0]:=0;
 
   //add calculated normals ...
-  scene1.Models[1].Mesh[0].NumNormals:=8;
+  scene1.Models[1].Mesh[0].NumNormals:=12; //for each face indices div 3
   scene1.Models[1].Mesh[0].NumNormalIndices:=36;
   scene1.Models[1].CalcVnormals;
 
