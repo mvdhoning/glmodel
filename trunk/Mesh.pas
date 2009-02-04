@@ -280,12 +280,12 @@ var
   vertexn: t3dpoint;
   summedvertexn: t3dpoint;
   tempvertexn : T3dpoint;
-  tempnormals : array of T3dPoint;
+  //tempnormals : array of T3dPoint;
   shared: integer;
 begin
 if self.NumVertexIndices > 0 then
     begin
-      SetLength(tempnormals, self.NumVertex); //init tempnormals
+      //SetLength(tempnormals, self.NumVertex); //init tempnormals
       f := 0;
       while f <= self.NumVertexIndices -3 do // go through all vertexes and
       begin
@@ -297,18 +297,22 @@ if self.NumVertexIndices > 0 then
         tempvertexn:=vertexn;//Normalize(vertexn);
 
 
-        tempnormals[f div 3] := tempvertexn;
+        //tempnormals[f div 3] := tempvertexn;
         //self.Normals[self.Face[f div 3]] := tempvertexn;
+        self.Normals[f div 3] := tempvertexn;
 
 
         //TODO: should be in seperate pass
-        self.Normal[f] := self.Face[f];
-        self.Normal[f + 1] := self.Face[f+1];
-        self.Normal[f + 2] := self.Face[f+2];
+//        self.Normal[f] := self.Face[f];
+//        self.Normal[f + 1] := self.Face[f+1];
+//        self.Normal[f + 2] := self.Face[f+2];
+        self.Normal[f] := f div 3;
+        self.Normal[f+1] := f div 3;
+        self.Normal[f+2] := f div 3;
 
         f := f + 3;
       end;
-
+        (*
       summedvertexn.x:=0.0;
       summedvertexn.y:=0.0;
       summedvertexn.z:=0.0;
@@ -322,9 +326,9 @@ if self.NumVertexIndices > 0 then
           begin
             summedvertexn:=VectorAdd(summedvertexn, tempnormals[v]);
             shared:=shared+1;
-            //self.Normal[f] := v;
-            //self.Normal[f+1] := v;
-            //self.Normal[f+2] := v;
+            self.Normal[f] := f div 3;
+            self.Normal[f+1] := f div 3;
+            self.Normal[f+2] := f div 3;
           end;
           f:=f+3;
         end;
@@ -335,7 +339,8 @@ if self.NumVertexIndices > 0 then
         summedvertexn.z:=0.0;
         shared:=0;
       end;
-      SetLength(tempnormals,0);
+      *)
+      //SetLength(tempnormals,0);
     end;
 end;
 
