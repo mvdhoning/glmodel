@@ -1,0 +1,82 @@
+package glModelLib;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD OFF}
+{%File 'ModelSupport\glBone\glBone.txvpck'}
+{%File 'ModelSupport\glMaterial\glMaterial.txvpck'}
+{%File 'ModelSupport\FileFormats3d\FileFormats3d.txvpck'}
+{%File 'ModelSupport\glvpRender\glvpRender.txvpck'}
+{%File 'ModelSupport\SkeletonMsa\SkeletonMsa.txvpck'}
+{%File 'ModelSupport\glRender\glRender.txvpck'}
+{%File 'ModelSupport\Mesh\Mesh.txvpck'}
+{%File 'ModelSupport\Bone\Bone.txvpck'}
+{%File 'ModelSupport\glMesh\glMesh.txvpck'}
+{%File 'ModelSupport\KeyFrame\KeyFrame.txvpck'}
+{%File 'ModelSupport\Skeleton\Skeleton.txvpck'}
+{%File 'ModelSupport\glmath\glmath.txvpck'}
+{%File 'ModelSupport\Material\Material.txvpck'}
+{%File 'ModelSupport\glQuaternions\glQuaternions.txvpck'}
+{%File 'ModelSupport\Model\Model.txvpck'}
+{%File 'ModelSupport\glModel\glModel.txvpck'}
+{%File 'ModelSupport\Model3ds\Model3ds.txvpck'}
+{%File 'ModelSupport\glMatrix\glMatrix.txvpck'}
+{%File 'ModelSupport\ModelX\ModelX.txvpck'}
+{%File 'ModelSupport\ModelMsa\ModelMsa.txvpck'}
+{%File 'ModelSupport\Render\Render.txvpck'}
+{%File 'ModelSupport\ModelObj\ModelObj.txvpck'}
+{%File 'ModelSupport\glskeleton\glskeleton.txvpck'}
+{%File 'ModelSupport\default.txvpck'}
+
+requires
+  rtl,
+  vcl,
+  vcljpg,
+  oglpan;
+
+contains
+  SkeletonMsa in 'SkeletonMsa.pas',
+  Bone in 'Bone.pas',
+  FileFormats3d in 'FileFormats3d.pas',
+  glBone in 'glBone.pas',
+  glMaterial in 'glMaterial.pas',
+  glmath in 'glmath.pas',
+  glMatrix in 'glMatrix.pas',
+  glMesh in 'glMesh.pas',
+  glmodel in 'glmodel.pas',
+  glQuaternions in 'glQuaternions.pas',
+  glRender in 'glRender.pas',
+  glSkeleton in 'glSkeleton.pas',
+  glvpRender in 'glvpRender.pas',
+  KeyFrame in 'KeyFrame.pas',
+  Material in 'Material.pas',
+  Mesh in 'Mesh.pas',
+  Model3ds in 'Model3ds.pas',
+  Model in 'Model.pas',
+  ModelMsa in 'ModelMsa.pas',
+  ModelObj in 'ModelObj.pas',
+  ModelX in 'ModelX.pas',
+  Render in 'Render.pas',
+  Skeleton in 'Skeleton.pas';
+
+end.
