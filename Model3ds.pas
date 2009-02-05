@@ -576,7 +576,7 @@ begin
       begin
         stream.Read(Count, 2);
         FMesh[acount - 1].NumVertexIndices := Count * 3;
-        FMesh[acount - 1].NumNormals := Count * 3;
+        FMesh[acount - 1].NumNormals := Count;// * 3;
         FMesh[acount - 1].NumNormalIndices := Count * 3;
         FMesh[acount - 1].NumMappingIndices := Count * 3;
         //FMesh[acount - 1].NumFaceRecords := Count;
@@ -607,9 +607,9 @@ begin
           //Alleen TFace overhouden!!!
 
           //copy vertex to normal data
-          FMesh[acount - 1].Normal[i * 3] := FMesh[acount - 1].Face[i * 3];
-          FMesh[acount - 1].Normal[i * 3 + 1] := FMesh[acount - 1].Face[i * 3 + 1];
-          FMesh[acount - 1].Normal[i * 3 + 2] := FMesh[acount - 1].Face[i * 3 + 2];
+//          FMesh[acount - 1].Normal[i * 3] := FMesh[acount - 1].Face[i * 3];
+//          FMesh[acount - 1].Normal[i * 3 + 1] := FMesh[acount - 1].Face[i * 3 + 1];
+//          FMesh[acount - 1].Normal[i * 3 + 2] := FMesh[acount - 1].Face[i * 3 + 2];
 
           FMesh[acount - 1].Map[i * 3] := FMesh[acount - 1].Face[i * 3];
           FMesh[acount - 1].Map[i * 3 + 1] := FMesh[acount - 1].Face[i * 3 + 1];
@@ -698,7 +698,7 @@ begin
 //  fmasterscale:=fmasterscale/100; //?? Am i allowed to do this?
 
   CalculateScale;                //calculate new vertexes with masterscale
-  calcvnormals;                  //calculate vertex normals for a smooth looking 3ds
+  CalculateNormals;                  //calculate vertex normals for a smooth looking 3ds
   CalculateSize;                 //calculate min and max size
   CalculateRenderOrder;          //transparent items should be rendered last
 

@@ -241,13 +241,13 @@ scene1.AddModel();
 
 //mesh1.TexturePath:='textures\';  // no use at this point...
 
-//scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
+scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
 //scene1.Models[0].LoadFromFile('models\hog2.txt');
 //scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
 //scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
-scene1.Models[0].LoadFromFile('models\houseobj.x');
+//scene1.Models[0].LoadFromFile('models\houseobj.x');
 
 //scene1.AddModel; //this gives error on calculation normals after loading soccerball.obj
 //scene1.Models[1].LoadFromFile('models\tulip.3ds'); //was tulip.3ds
@@ -369,7 +369,7 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   //add calculated normals ...
   scene1.Models[1].Mesh[0].NumNormals:=12; //for each face indices div 3
   scene1.Models[1].Mesh[0].NumNormalIndices:=36;
-  scene1.Models[1].CalcVnormals;
+  scene1.Models[1].CalculateNormals;
 
   //add fake texture coords
   scene1.Models[1].Mesh[0].NumMappings:=1;
@@ -512,7 +512,7 @@ glLoadIdentity();
 
 
 
- glTranslatef(0.0,0.0, -10.0);
+ glTranslatef(0.0,0.0, -150.0);
  //glscalef(0.25,0.25,0.25);
 
 
