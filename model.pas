@@ -80,7 +80,7 @@ type
     procedure AddSkeleton;
     procedure CalculateRenderOrder;
     procedure CalculateSize;
-    procedure CalcVnormals;
+    procedure CalculateNormals;
     function GetMaterialByName(s: string): TBaseMaterial;
     function GetMeshByName(s: string): TBaseMesh;
     procedure InitSkin;
@@ -506,7 +506,7 @@ begin
   end;
 end;
 
-procedure TBaseModel.CalcVnormals;
+procedure TBaseModel.CalculateNormals;
 var
   m: Integer;
 begin
