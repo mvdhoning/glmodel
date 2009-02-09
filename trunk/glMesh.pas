@@ -33,7 +33,10 @@ uses classes, Mesh;
 
 type
     TglMesh = class(TBaseMesh)
+    protected
+      FDisplaylist: Integer;
     public
+      procedure BuildDisplayList;
       procedure Render; override;
       procedure RenderBoundBox; override;
     end;
@@ -44,6 +47,17 @@ type
 implementation
 
 uses dglOpenGl, Material, glMath, glMatrix, glMaterial, glModel, model;
+
+procedure TglMesh.BuildDisplayList;
+begin
+  // create one display list
+  fdisplaylist := glGenLists(1);
+
+  // compile the display list, store the mesh in it
+  glNewList(fdisplaylist, GL_COMPILE);
+    self.Render;
+  glEndList;
+end;
 
 procedure TglMesh.Render;
 var
