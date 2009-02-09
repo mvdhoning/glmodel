@@ -64,7 +64,7 @@ type
     FVisible: boolean;
 
     Fboneid: array of integer;
-    FDisplaylist: Integer;
+//    FDisplaylist: Integer;
 
     FId: Integer;
 
@@ -222,7 +222,7 @@ begin
       self.FMatrix:=FMatrix;
       self.FVisible:=FVisible;
       self.Fboneid:= Fboneid;
-      self.FDisplaylist:= FDisplaylist;
+      //self.FDisplaylist:= FDisplaylist;
       self.FId:= FId;
       self.FVertexIndices:= FVertexIndices;
       self.Fmapping:= Fmapping;
