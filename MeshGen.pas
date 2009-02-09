@@ -8,10 +8,138 @@ type
   TMeshGen = class(TBaseMesh)
   protected
   public
+    procedure GenerateDisc(radius: single);
+    procedure GeneratePlane(width: single; depth: single);
     procedure GenerateCube(width:single; height: single; depth: single);
   end;
 
 implementation
+
+procedure TMeshGen.GenerateDisc(radius: single);
+var
+  v1: T3dPoint;
+  map: TMap;
+  tel: integer;
+  
+  n: integer;
+  divider: integer;
+  alpha: double;
+  numberOfSeparators: integer;
+begin
+  n:=1; //number of segments;
+  numberOfSeparators := (4 * n) +4;
+
+  self.NumVertex := numberOfSeparators+1;
+  self.NumVertexIndices := (numberOfSeparators+1)*3;
+
+  v1.x:=0;
+  v1.y:=0;
+  v1.z:=0;
+
+  for divider := 0 to numberOfSeparators do
+  begin
+    alpha := PI / 2 / (n + 1) * divider;
+    v1.x:=radius*System.Cos(alpha);
+    v1.y:=0.0;
+    v1.z:=-1 * radius * System.Sin(alpha);
+    self.Vertex[divider]:=v1;
+
+    self.FVertexIndices[(divider*3)+0]:=0;
+    self.FVertexIndices[(divider*3)+1]:=divider+1;
+    if divider = numberofseparators-1 then
+      self.FVertexIndices[(divider*3)+2]:=1
+    else
+      self.FVertexIndices[(divider*3)+2]:=divider+2;
+  end;
+
+  //apply dummy material
+  self.MatName[0]:='';
+  self.MatID[0]:=0;
+
+  //add calculated normals ...
+  self.NumNormals:=numberOfSeparators+1; //for each face indices div 3
+  self.NumNormalIndices:=(numberOfSeparators+1)*3;
+  self.CalculateNormals;
+
+  //add fake texture coords
+  self.NumMappings:=1;
+  self.NumMappingIndices:=(numberOfSeparators+1)*3;
+  map.tu:=0;
+  map.tv:=0;
+  self.Mapping[0]:=map;
+  for tel:=0 to self.NumMappingIndices-1 do
+  begin
+    self.Map[tel]:=0;
+  end;
+
+  //make mesh visible
+  self.Visible:=true;
+
+end;
+
+procedure TMeshGen.GeneratePlane(width: single; depth: single);
+var
+  v1: T3dPoint;
+  map: TMap;
+  tel: integer;
+  cwidth: single;
+  cdepth: single;
+begin
+  cwidth:=width / 2;
+  cdepth:=depth / 2;
+
+  self.NumVertex := 4; //number of vertexes
+
+  v1.x := -1.0 * cwidth;
+  v1.y := 0.0;
+  v1.z := -1.0 * cdepth;
+  self.Vertex[0]:=v1;
+  v1.x := -1.0 * cwidth;
+  v1.y := 0.0;
+  v1.z := 1.0  * cdepth;
+  self.Vertex[1]:=v1;
+  v1.x := 1.0  * cwidth;
+  v1.y := 0.0;
+  v1.z := -1.0 * cdepth;
+  self.Vertex[2]:=v1;
+  v1.x := 1.0  * cwidth;
+  v1.y := 0.0;
+  v1.z := 1.0  * cdepth;
+  self.Vertex[3]:=v1;
+
+  self.NumVertexIndices := 6; //number of vertex indices
+
+  self.Face[0]:=0;
+  self.Face[1]:=1;
+  self.Face[2]:=2;
+
+  self.Face[3]:=2;
+  self.Face[4]:=1;
+  self.Face[5]:=3;
+
+  //apply dummy material
+  self.MatName[0]:='';
+  self.MatID[0]:=0;
+
+  //add calculated normals ...
+  self.NumNormals:=2; //for each face indices div 3
+  self.NumNormalIndices:=6;
+  self.CalculateNormals;
+
+  //add fake texture coords
+  self.NumMappings:=1;
+  self.NumMappingIndices:=6;
+  map.tu:=0;
+  map.tv:=0;
+  self.Mapping[0]:=map;
+  for tel:=0 to self.NumMappingIndices-1 do
+  begin
+    self.Map[tel]:=0;
+  end;
+
+  //make mesh visible
+  self.Visible:=true;
+end;
 
 procedure TMeshGen.GenerateCube(width: single; height: single; depth: single);
 var
@@ -124,7 +252,7 @@ begin
   map.tu:=0;
   map.tv:=0;
   self.Mapping[0]:=map;
-  for tel:=0 to 35 do
+  for tel:=0 to self.NumMappingIndices-1 do
   begin
     self.Map[tel]:=0;
   end;
