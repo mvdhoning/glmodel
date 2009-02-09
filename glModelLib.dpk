@@ -77,6 +77,7 @@ contains
   ModelObj in 'ModelObj.pas',
   ModelX in 'ModelX.pas',
   Render in 'Render.pas',
-  Skeleton in 'Skeleton.pas';
+  Skeleton in 'Skeleton.pas',
+  MeshGen in 'MeshGen.pas';
 
 end.
