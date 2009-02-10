@@ -281,7 +281,10 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   scene1.Models[1].Material[0].Name:='RedMat';
 
   //generate cube
-  TMeshGen(scene1.Models[1].Mesh[0]).GenerateCube(1,1,1);
+  //TMeshGen(scene1.Models[1].Mesh[0]).GenerateCube(2,2,2);
+  //TMeshGen(scene1.Models[1].Mesh[0]).GeneratePlane(2,2);
+  //TMeshGen(scene1.Models[1].Mesh[0]).GenerateDisc(2);
+  TMeshGen(scene1.Models[1].Mesh[0]).GenerateCylinder(2,2);
 
   //apply material (optional?)
   scene1.Models[1].Mesh[0].MatName[0]:=scene1.Models[1].Material[0].Name;
