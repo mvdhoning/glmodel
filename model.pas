@@ -69,6 +69,7 @@ type
     function GetSkeleton(Index: integer): TBaseSkeleton;
     procedure CalculateScale;
   public
+    constructor Create(AOwner: TComponent);
     destructor Destroy; override;
     procedure Render; virtual; abstract;
     procedure RenderBoundBox; virtual; abstract;
@@ -133,6 +134,14 @@ function GetFileFormats: TModelFormatList;
 begin
   if FileFormats = nil then FileFormats := TModelFormatList.Create;
   Result := FileFormats;
+end;
+
+constructor TBaseModel.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FMeshClass := TBaseMesh;
+  FMaterialClass := TBaseMaterial;
+  FSkeletonClass := TBaseSkeleton;
 end;
 
 destructor TBaseModel.Destroy;

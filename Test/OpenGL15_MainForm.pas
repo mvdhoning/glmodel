@@ -69,7 +69,8 @@ var
 
 
   scene1: TglRender;
- // mesh1: TBaseModel;
+  model1: TBaseModel;
+  
  // mesh2: TglModel;
 
 //  mesh1: TAll3dsMesh;
@@ -223,6 +224,12 @@ BuildFont('MS Sans Serif');
 
 
 
+Model1 := TBaseModel.Create(nil);
+Model1.LoadFromFile('models\tulip.3ds');
+Model1.SaveToFile('tulip.txt');
+Model1.Free;
+
+
 // Load 3ds meshes
 
 //mesh1 := TAll3dsMesh.Create(nil);
@@ -320,7 +327,7 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   glenable(GL_LIGHT0);
   glLightfv( GL_LIGHT0, GL_POSITION, @g_LightPosition );
 
-  glEnable (GL_BLEND); glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+  glEnable (GL_BLEND); glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
 // Idleevent für Rendervorgang zuweisen
@@ -426,8 +433,8 @@ glLoadIdentity();
  glRotatef(xangle,1.0,0.0,0.0);
  glRotatef(yangle,0.0,1.0,0.0);
 
- Scene1.Models[0].Render;
- Scene1.Models[1].Render;
+  Scene1.Models[0].Render;
+  Scene1.Models[1].Render;
 
  //TglModel(mesh1).Render; //uggly?
 
