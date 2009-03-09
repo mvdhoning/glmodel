@@ -26,6 +26,9 @@ end;
 
 implementation
 
+uses
+  SysUtils;
+
 { TModelFormatList }
 
 procedure TModelFormatList.Add(const Ext, Desc: string;
@@ -33,7 +36,7 @@ procedure TModelFormatList.Add(const Ext, Desc: string;
 begin
   FNumModelFormats := FNumModelFormats+1;
   SetLength(FModelFormats, FNumModelFormats);
-  FModelFormats[FNumModelFormats-1].Extension := Ext;
+  FModelFormats[FNumModelFormats-1].Extension := LowerCase(Ext);
   FModelFormats[FNumModelFormats-1].Description := Desc;
   FModelFormats[FNumModelFormats-1].ModelClass := AClass;
 end;
@@ -57,7 +60,7 @@ begin
   result := nil;
   for i := 0 to FNumModelFormats - 1 do
   begin
-    if FModelFormats[i].Extension = Ext then
+    if FModelFormats[i].Extension = LowerCase(Ext) then
     begin
       result := FModelFormats[i].ModelClass;
       exit;
