@@ -71,7 +71,10 @@ var
   offset: Single;
 begin
   if fdisplaylist<>0
-  then glcalllist(fdisplaylist)
+  then
+  begin
+    glcalllist(fdisplaylist);
+  end
   else
   begin
     matid := -1; //hmm since material now starts with 0 this has to be higher...

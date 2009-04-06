@@ -11,7 +11,7 @@ type
     procedure GenerateDisc(radius: single);
     procedure GenerateCylinder(radius: single; height: single);
     procedure GeneratePlane(width: single; depth: single);
-    procedure GenerateCube(width:single; height: single; depth: single);
+    procedure GenerateCube(width:single; height: single; depth: single; scaletu: single; scaletv: single);
   end;
 
 implementation
@@ -337,7 +337,7 @@ begin
   self.Visible:=true;
 end;
 
-procedure TMeshGen.GenerateCube(width: single; height: single; depth: single);
+procedure TMeshGen.GenerateCube(width: single; height: single; depth: single; scaletu: single; scaletv: single);
 var
   v1: T3dPoint;
   map: TMap;
@@ -443,14 +443,18 @@ begin
   self.CalculateNormals;
 
   //add fake texture coords
-  self.NumMappings:=1;
+  self.NumMappings:=8;
   self.NumMappingIndices:=36;
-  map.tu:=0;
-  map.tv:=0;
-  self.Mapping[0]:=map;
+  for tel:=0 to self.NumMappings-1 do
+  begin
+  map.tu:=self.Vertex[tel].x*scaletu;
+  map.tv:=self.Vertex[tel].y*scaletv;
+  self.Mapping[tel]:=map;
+  end;
+
   for tel:=0 to self.NumMappingIndices-1 do
   begin
-    self.Map[tel]:=0;
+    self.Map[tel]:=self.Face[tel];
   end;
 
   //make mesh visible
