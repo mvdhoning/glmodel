@@ -87,7 +87,7 @@ begin
       line := sl.Strings[l];
 
       //read in mesh data...
-      if (pos('Mesh ', line) = 1) then
+      if (pos('Mesh ', line) = 2) then
       begin
         acount := acount +1;
 
@@ -236,9 +236,10 @@ begin
         for loop := 0 to count-1 do
         begin
           l := l + 1;
-          line :=stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
+          //line :=stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
+          line := sl.Strings[l];
           tsl := TStringList.Create;
-          tsl.Delimiter :=',';
+          tsl.Delimiter :=';';
           tsl.DelimitedText := line;
 
           tempmap := FMesh[acount-1].Mapping[loop];
@@ -290,7 +291,7 @@ begin
       end;
 
       //read in material data...
-      if (pos('Material ', line) = 1) then
+      if (pos('Material ', line) = 2) then
       begin
         mcount:=mcount+1;
         setlength(FMaterial, mcount);

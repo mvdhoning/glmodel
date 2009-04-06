@@ -255,7 +255,8 @@ scene1.AddModel();
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
 //scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
-scene1.Models[0].LoadFromFile('models\houseobj.x');
+//scene1.Models[0].LoadFromFile('models\houseobj.x');
+scene1.Models[0].LoadFromFile('c:\test\accel\cell.x');
 
 //scene1.AddModel; //this gives error on calculation normals after loading soccerball.obj
 //scene1.Models[1].LoadFromFile('models\tulip.3ds'); //was tulip.3ds
@@ -267,7 +268,7 @@ scene1.Models[0].LoadFromFile('models\houseobj.x');
 //mesh1.LoadFromFile('models\character2.txt'); //Load the mesh...
 //mesh1.LoadFromFile('models\bend.txt');
 
-scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is lost...
+//scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is lost...
 //scene1.Models[1].TexturePath:='models\';
 
 //TMsaModel(mesh1).SaveToFile('tulip.txt');

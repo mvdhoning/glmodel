@@ -112,9 +112,15 @@ begin
   if FHastexturemap = True then
   begin
     glActiveTexture(GL_TEXTURE0); //MVDH 2005 march
-    //glenable(GL_TEXTURE_2D);
+    glenable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, self.FTexId);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT);
+
     if ftexture <> nil then
+    begin
       ftexture.Bind;
+    end;
 
       //the following it not efficient... (maybe i should have a var containing the states)
     glDisable(GL_ALPHA_TEST);
@@ -149,6 +155,7 @@ begin
       glTexEnvf(GL_TEXTURE_ENV,GL_OPERAND0_ALPHA,GL_SRC_ALPHA);
 
     end;
+
   end;
 
 
@@ -178,7 +185,6 @@ begin
     glDisable(GL_CULL_FACE)
   else
     glEnable(GL_CULL_FACE);
-
 
 end;
 
