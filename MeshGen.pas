@@ -8,9 +8,9 @@ type
   TMeshGen = class(TBaseMesh)
   protected
   public
-    procedure GenerateDisc(radius: single);
-    procedure GenerateCylinder(radius: single; height: single);
-    procedure GeneratePlane(width: single; depth: single);
+    procedure GenerateDisc(radius: single; scaletu: single; scaletv: single);
+    procedure GenerateCylinder(radius: single; height: single; scaletu: single; scaletv: single);
+    procedure GeneratePlane(width: single; depth: single; scaletu: single; scaletv: single);
     procedure GenerateCube(width:single; height: single; depth: single; scaletu: single; scaletv: single);
   end;
 
@@ -100,101 +100,101 @@ namespace Sphere3D
 *)
 
 
-procedure TMeshGen.GenerateCylinder(radius: single; height: single);
+procedure TMeshGen.GenerateCylinder(radius: single; height: single; scaletu: single; scaletv: single);
 var
   v1: T3dPoint;
   map: TMap;
   tel: integer;
 
-  n: integer;
+  n,i : integer;
   r: single;
   h: single;
   divider: integer;
   alpha: double;
-  numberOfSeparators: integer;
+  slices: integer;
   fc: integer;
 begin
 
   h:=height/2;
   r:=radius/2;
-  n:=1; //number of segments;
-  numberOfSeparators := (4 * n) +4;
+//n:=1; //number of segments;
+//slices := (4 * n) +4;
 
-  self.NumVertex := (numberOfSeparators*2)+2;
-  self.NumVertexIndices := ((numberOfSeparators*2)+2)*3;
+slices:=35; //was 8
+
+  self.NumVertex := (slices*2)+2;
+  self.NumVertexIndices := self.NumVertex*3;
+
+  self.NumVertexIndices := self.NumVertexIndices + ((slices*2) * 3);
+
 
   v1.x:=0;
   v1.y:=0;
   v1.z:=0;
 
+//  first points is center
+
   //bottom
-  for divider := 0 to numberOfSeparators do
+  //vertexes
+  for i := 0 to slices-1 do
   begin
-    alpha := PI / 2 / (n + 1) * divider;
-    v1.x:=1.0 * r *System.Cos(alpha);
-    v1.y:=-1.0*h;
-    v1.z:=-1 * r * System.Sin(alpha);
-    self.Vertex[divider]:=v1;
+   v1.x := r * System.Sin(2 * i * PI / slices);
+   v1.y := r * System.Cos(2 * i * PI / slices);
+   v1.z := -1.0 * h;
+    self.Vertex[(i*2)]:=v1;
 
-    self.FVertexIndices[(divider*3)+2]:=0;
-    self.FVertexIndices[(divider*3)+1]:=divider+1;
-    if divider = numberofseparators-1 then
-      self.FVertexIndices[(divider*3)+0]:=1
-    else
-      self.FVertexIndices[(divider*3)+0]:=divider+2;
+   v1.x := r * System.Sin(2 * i * PI / slices);
+   v1.y := r * System.Cos(2 * i * PI / slices);
+   v1.z := 1.0 * h;
+    self.Vertex[(i*2)+1]:=v1;
+
   end;
 
-  //top
-  for divider := 0 to numberOfSeparators do
+  v1.x := 0;
+  v1.y := 0;
+  v1.z := -1.0 * h;
+  self.Vertex[slices*2]:=v1;
+
+    v1.x := 0;
+  v1.y := 0;
+  v1.z := 1.0 * h;
+  self.Vertex[(slices*2)+1]:=v1;
+
+  //indices
+  for i := 0 to slices-1 do
   begin
-    alpha := PI / 2 / (n + 1) * divider;
-    v1.x:=1.0 * r *System.Cos(alpha);
-    v1.y:=1.0*h;
-    v1.z:=-1 * r * System.Sin(alpha);
-    self.Vertex[divider+numberofseparators+1]:=v1;
 
-    self.FVertexIndices[((divider+numberofseparators)*3)+0]:=numberofseparators+1;
-    self.FVertexIndices[((divider+numberofseparators)*3)+1]:=numberofseparators+divider+1+1;
-    if divider = (numberofseparators+numberofseparators)-1 then
-      self.FVertexIndices[((divider+numberofseparators)*3)+2]:=numberofseparators+1+1
-    else
-      self.FVertexIndices[((divider+numberofseparators)*3)+2]:=NumberOfSeparators+divider+2+1;
+  // Triangles along length of cylinder
+   self.FVertexIndices[(i*12)+0]:= 2 * i + 0;
+   self.FVertexIndices[(i*12)+1]:=2 * i + 1;
+   self.FVertexIndices[(i*12)+2]:=(2 * i + 2) mod (2 * Slices);
+
+   self.FVertexIndices[(i*12)+3]:=(2 * i + 2) mod (2 * Slices);
+   self.FVertexIndices[(i*12)+4]:=2 * i + 1;
+   self.FVertexIndices[(i*12)+5]:=(2 * i + 3) mod (2 * Slices);
+
+   self.FVertexIndices[(i*12)+6]:=2 * slices;
+   self.FVertexIndices[(i*12)+7]:=2 * i + 0;
+   self.FVertexIndices[(i*12)+8]:=(2 * i + 2) mod (2 * slices);
+
+   self.FVertexIndices[(i*12)+9]:=2 * Slices + 1;
+   self.FVertexIndices[(i*12)+10]:=(2 * i + 3) mod (2 * Slices);
+   self.FVertexIndices[(i*12)+11]:=2 * i + 1;
+
   end;
-
-  //body (connect bottom with top)
-  self.NumVertexIndices := self.NumVertexIndices + ((numberofseparators*2) * 3);
-
-  fc:=0;
-  tel:=((numberofseparators*2)+2)*3;
-  while  tel < {12+((numberofseparators*2)+2)*3} self.NumVertexIndices-1 do
-  begin
-    self.FVertexIndices[tel+2]:=fc+1;
-    self.FVertexIndices[tel+1]:=numberofseparators+fc+1+1;
-    self.FVertexIndices[tel+0]:=numberofseparators+fc+2+1;
-
-    tel:=tel+3;
-    //fc:=fc+1;
-
-    self.FVertexIndices[tel+0]:=fc+1;
-    self.FVertexIndices[tel+1]:=fc+2;
-    self.FVertexIndices[tel+2]:=numberofseparators+fc+2+1;
-
-    tel:=tel+3;
-    fc:=fc+1;
-  end;
-
+  
   //apply dummy material
   self.MatName[0]:='';
   self.MatID[0]:=0;
 
   //add calculated normals ...
-  self.NumNormals:=((numberOfSeparators*2)+2)+(numberofseparators*2); //for each face indices div 3
-  self.NumNormalIndices:=(((numberOfSeparators*2)+2)*3)+((numberofseparators*2) *3);
+  self.NumNormals:=((slices*2)+2)+(slices*2); //for each face indices div 3
+  self.NumNormalIndices:=(((slices*2)+2)*3)+((slices*2) *3);
   self.CalculateNormals;
 
   //add fake texture coords
   self.NumMappings:=1;
-  self.NumMappingIndices:=(((numberOfSeparators*2)+2)*3)+((numberofseparators*2) *3);
+  self.NumMappingIndices:=(((slices*2)+2)*3)+((slices*2) *3);
   map.tu:=0;
   map.tv:=0;
   self.Mapping[0]:=map;
@@ -208,7 +208,7 @@ begin
 
 end;
 
-procedure TMeshGen.GenerateDisc(radius: single);
+procedure TMeshGen.GenerateDisc(radius: single; scaletu: single; scaletv: single);
 var
   v1: T3dPoint;
   map: TMap;
@@ -273,7 +273,7 @@ begin
 
 end;
 
-procedure TMeshGen.GeneratePlane(width: single; depth: single);
+procedure TMeshGen.GeneratePlane(width: single; depth: single; scaletu: single; scaletv: single);
 var
   v1: T3dPoint;
   map: TMap;

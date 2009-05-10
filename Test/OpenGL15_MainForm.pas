@@ -292,7 +292,7 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   //TMeshGen(scene1.Models[1].Mesh[0]).GenerateCube(2,2,2);
   //TMeshGen(scene1.Models[1].Mesh[0]).GeneratePlane(2,2);
   //TMeshGen(scene1.Models[1].Mesh[0]).GenerateDisc(2);
-  TMeshGen(scene1.Models[1].Mesh[0]).GenerateCylinder(2,2);
+  TMeshGen(scene1.Models[1].Mesh[0]).GenerateCylinder(4,2,1,1);
 
   //apply material (optional?)
   scene1.Models[1].Mesh[0].MatName[0]:=scene1.Models[1].Material[0].Name;
