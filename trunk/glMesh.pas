@@ -78,7 +78,6 @@ begin
   else
   begin
     matid := -1; //hmm since material now starts with 0 this has to be higher...
-    glpushmatrix();
     glbegin(GL_TRIANGLES);
     if NumVertexIndices > 0 then
     begin
@@ -191,8 +190,6 @@ begin
           end;
 
         //render the face
-//        glbegin(GL_TRIANGLES);
-
           if FNumNormals >=1 then
             glNormal3fv(@FVnormal[FNormalIndices[f]]);
           glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f]].tu, FMapping[FMappingIndices[f]].tv);
@@ -210,13 +207,10 @@ begin
           glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f + 2]].tu, FMapping[FMappingIndices[f + 2]].tv);
           glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f + 2]].tu + (lightv3.x*offset), FMapping[FMappingIndices[f + 2]].tv + (lightv3.y*offset));
           glVertex3fv(@v3);
-
-//        glend;
         f := f + 3;
       end;
     end;
     glend;
-    glpopmatrix();
   end;
 end;
 
