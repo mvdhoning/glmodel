@@ -1,9 +1,9 @@
 object GLForm: TGLForm
   Left = 196
   Top = 108
-  Width = 648
-  Height = 514
   Caption = 'GL3DS Example - www.delphigl.com'
+  ClientHeight = 487
+  ClientWidth = 640
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

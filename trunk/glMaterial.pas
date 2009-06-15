@@ -31,7 +31,7 @@ interface
 
 {$define NO_NATIVE_GL} //Tell glbitmap that is should use dlgopengl
 
-uses classes, material, dglopengl, glmath, glbitmap;
+uses classes, material, dglopengl, glmath, glBitmap;
 
 type
   TglMaterial= class(TBaseMaterial)
