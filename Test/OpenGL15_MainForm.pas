@@ -250,7 +250,8 @@ scene1.AddModel();
 //mesh1.TexturePath:='textures\';  // no use at this point...
 
 //scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
-scene1.Models[0].LoadFromFile('models\hog2.txt');
+scene1.Models[0].LoadFromFile('models\acube.3ds');
+//scene1.Models[0].LoadFromFile('models\hog2.txt');
 //scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
@@ -275,11 +276,34 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
 //scene1.Models[0].SaveToFile('hog.txt');
 //TBaseModelFactory.SaveModel(TMsaModel, 'new.txt', mesh1);
 
-  scene1.UpdateTextures; //If this is forgotten disaster happens... FIX ASAP
+  //scene1.UpdateTextures; //If this is forgotten disaster happens... FIX ASAP
+
+
+  scene1.Models[0].Mesh[0].Visible := true;
+
+  //add material
+  //scene1.Models[0].AddMaterial;  //new material
+  scene1.Models[0].Material[0].DiffuseRed:= 0.0; //make it red
+  scene1.Models[0].Material[0].DiffuseBlue:= 1.0;
+  scene1.Models[0].Material[0].DiffuseGreen:= 0.0;
+  scene1.Models[0].Material[0].AmbientRed:= 0.5; //make it red
+  scene1.Models[0].Material[0].IsAmbient:=true;
+  scene1.Models[0].Material[0].Name:='RedMat';
+  scene1.Models[0].Mesh[0].MatName[0]:=scene1.Models[0].Material[0].Name;
+  scene1.Models[0].Mesh[0].MatID[0]:=0; //first material in model
+
 
   //dynamic mesh creation example ...
   scene1.AddModel; //new model
   scene1.Models[1].AddMesh; //new mesh
+
+  //generate cube
+  //TMeshGen(scene1.Models[1].Mesh[0]).GenerateCube(2,2,2);
+  //TMeshGen(scene1.Models[1].Mesh[0]).GeneratePlane(2,2);
+  //TMeshGen(scene1.Models[1].Mesh[0]).GenerateDisc(2);
+  TMeshGen(scene1.Models[1].Mesh[0]).GenerateCylinder(4,2,1,1);
+
+
   scene1.Models[1].AddMaterial;  //new material
   scene1.Models[1].Material[0].DiffuseRed:= 1.0; //make it red
   scene1.Models[1].Material[0].DiffuseBlue:= 0.0;
@@ -288,15 +312,12 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   scene1.Models[1].Material[0].IsAmbient:=true;
   scene1.Models[1].Material[0].Name:='RedMat';
 
-  //generate cube
-  //TMeshGen(scene1.Models[1].Mesh[0]).GenerateCube(2,2,2);
-  //TMeshGen(scene1.Models[1].Mesh[0]).GeneratePlane(2,2);
-  //TMeshGen(scene1.Models[1].Mesh[0]).GenerateDisc(2);
-  TMeshGen(scene1.Models[1].Mesh[0]).GenerateCylinder(4,2,1,1);
+
 
   //apply material (optional?)
   scene1.Models[1].Mesh[0].MatName[0]:=scene1.Models[1].Material[0].Name;
   scene1.Models[1].Mesh[0].MatID[0]:=0; //first material in model
+
 
   //calculate size for bounding box
   scene1.Models[1].CalculateSize;
@@ -305,7 +326,7 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   scene1.Models[1].CalculateRenderOrder;
 
   //save test
-  scene1.Models[1].SaveToFile('test.obj');
+  //scene1.Models[0].SaveToFile('test.obj');
 
   //end dynamic mesh creation example ...
 
@@ -435,7 +456,7 @@ glLoadIdentity();
  glRotatef(yangle,0.0,1.0,0.0);
 
   Scene1.Models[0].Render;
-  Scene1.Models[1].Render;
+  //Scene1.Models[1].Render;
 
  //TglModel(mesh1).Render; //uggly?
 

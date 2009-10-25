@@ -28,7 +28,8 @@ requires
   rtl,
   vcl,
   vclimg,
-  oglpan;
+  oglpan,
+  glvglib;
 
 contains
   SkeletonMsa in 'SkeletonMsa.pas',

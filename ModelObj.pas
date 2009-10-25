@@ -497,11 +497,12 @@ self.Material[0].IsDiffuse:=true;
                 end;
           'G' : begin
                   line2 :=Trim(Copy(line, 2, length(line)));
-                  fmesh[fnummeshes-1].Name :=line2;
+                  if fnummeshes>0 then //TODO: sometimes the G elemen apears before the V element?
+                    fmesh[fnummeshes-1].Name :=line2;
                   FLastCommand:='G';
                 end;
           'V' : begin
-                  if FLastCommand = 'F' then
+                  if (FLastCommand = 'F') or (FLastCommand = 'G') then
                   begin
                     self.CreateMesh();
                     c:=0;
