@@ -627,27 +627,24 @@ begin
           //copy vertex and normal indexes to face structure
           //TODO FIX ASAP no faces are storedd.....
 
-          (*
-          tempface:= FMesh[acount -1].Faces[i];
-          tempface.vertex[0]:=FMesh[acount - 1].Face[i * 3];
-          tempface.vertex[1]:=FMesh[acount - 1].Face[i * 3 + 1];
-          tempface.vertex[2]:=FMesh[acount - 1].Face[i * 3 + 2];
+
+          //tempface:= FMesh[acount -1].Faces[i];
+          //tempface.vertex[0]:=FMesh[acount - 1].Face[i * 3];
+          //tempface.vertex[1]:=FMesh[acount - 1].Face[i * 3 + 1];
+          //tempface.vertex[2]:=FMesh[acount - 1].Face[i * 3 + 2];
 
           //tempface.vertex[3]:=FMesh[acount - 1].Face[i * 3 + 3];
           //tempface.vertex[4]:=FMesh[acount - 1].Face[i * 3 + 4];
           //tempface.vertex[5]:=FMesh[acount - 1].Face[i * 3 + 5];
 
-          tempface.normal[0]:=FMesh[acount - 1].Normal[i * 3];
-          tempface.normal[1]:=FMesh[acount - 1].Normal[i * 3 + 1];
-          tempface.normal[2]:=FMesh[acount - 1].Normal[i * 3 + 2];
+          //tempface.normal[0]:=FMesh[acount - 1].Normal[i * 3];
+          //tempface.normal[1]:=FMesh[acount - 1].Normal[i * 3 + 1];
+          //tempface.normal[2]:=FMesh[acount - 1].Normal[i * 3 + 2];
 
           //tempface.normal[3]:=FMesh[acount - 1].Normal[i * 3 + 3];
           //tempface.normal[4]:=FMesh[acount - 1].Normal[i * 3 + 4];
           //tempface.normal[5]:=FMesh[acount - 1].Normal[i * 3 + 5];
 
-          FMesh[acount -1].Faces[i]:=tempface;
-          *)
-          
         end;
       end;
 
