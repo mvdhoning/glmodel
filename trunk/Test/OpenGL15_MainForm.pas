@@ -245,8 +245,8 @@ scene1.AddModel();
 
 //scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
 //scene1.Models[0].LoadFromFile('models\acube.3ds');
-//scene1.Models[0].LoadFromFile('models\hog2.txt');
-scene1.Models[0].LoadFromFile('models\soccerball.obj');
+scene1.Models[0].LoadFromFile('models\hog2.txt');
+//scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
 //scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
@@ -270,11 +270,10 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
 //scene1.Models[0].SaveToFile('hog.txt');
 //TBaseModelFactory.SaveModel(TMsaModel, 'new.txt', mesh1);
 
-  //scene1.UpdateTextures; //If this is forgotten disaster happens... FIX ASAP
-
+  scene1.UpdateTextures; //TODO: auto load textures if needed
 
   scene1.Models[0].Mesh[0].Visible := true;
-
+(*
   //add material
   //scene1.Models[0].AddMaterial;  //new material
   scene1.Models[0].Material[0].DiffuseRed:= 0.0; //make it red
@@ -285,7 +284,7 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   scene1.Models[0].Material[0].Name:='RedMat';
   scene1.Models[0].Mesh[0].MatName[0]:=scene1.Models[0].Material[0].Name;
   scene1.Models[0].Mesh[0].MatID[0]:=0; //first material in model
-
+*)
 
   //dynamic mesh creation example ...
   scene1.AddModel; //new model
@@ -306,8 +305,6 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   scene1.Models[1].Material[0].IsAmbient:=true;
   scene1.Models[1].Material[0].Name:='RedMat';
 
-
-
   //apply material (optional?)
   scene1.Models[1].Mesh[0].MatName[0]:=scene1.Models[1].Material[0].Name;
   scene1.Models[1].Mesh[0].MatID[0]:=0; //first material in model
@@ -326,16 +323,13 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
 
   //end dynamic mesh creation example ...
 
-  //glinit;
-    glClearColor(0.0, 0.0, 0.0, 0.0); 	   // Black Background
+  glClearColor(0.0, 0.0, 0.0, 0.0); 	   // Black Background
   glShadeModel(GL_SMOOTH);                 // Enables Smooth Color Shading
   glClearDepth(1.0);                       // Depth Buffer Setup
   glEnable(GL_DEPTH_TEST);                 // Enable Depth Buffer
   glDepthFunc(GL_LESS);		           // The Type Of Depth Test To Do
 
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
-
-
 
   glenable(GL_LIGHTING);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, @specular);		// Input our specular to OpenGL
@@ -348,15 +342,15 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   glEnable (GL_BLEND); glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-// Idleevent für Rendervorgang zuweisen
-Application.OnIdle := ApplicationEventsIdle;
-// Zeitpunkt des Programmstarts für FPS-Messung speichern
-StartTick := GetTickCount;
+  // Idleevent für Rendervorgang zuweisen
+  Application.OnIdle := ApplicationEventsIdle;
+  // Zeitpunkt des Programmstarts für FPS-Messung speichern
+  StartTick := GetTickCount;
 
-//glEnable(GL_NORMALIZE);
+  //glEnable(GL_NORMALIZE);
   s := gluErrorString(glGetError);
 
-    xSpeed :=0.4;   // start with some movement
+  xSpeed :=0.4;   // start with some movement
   ySpeed :=0.4;
 
 end;
@@ -392,111 +386,81 @@ end;
 //  Hier wird gerendert. Der Idle-Event wird bei Done=False permanent aufgerufen
 // =============================================================================
 procedure TGLForm.ApplicationEventsIdle(Sender: TObject; var Done: Boolean);
-
 begin
 
   s := gluErrorString(glGetError);
 
-glenable(GL_LIGHTING);
+  glenable(GL_LIGHTING);
 
-// In die Projektionsmatrix wechseln
-glMatrixMode(GL_PROJECTION);
-// Identitätsmatrix laden
-glLoadIdentity;
-// Viewport an Clientareal des Fensters anpassen
-glViewPort(0, 0, ClientWidth, ClientHeight);
-// Perspective, FOV und Tiefenreichweite setzen
-gluPerspective(60, ClientWidth/ClientHeight, 1, 128);
+  // In die Projektionsmatrix wechseln
+  glMatrixMode(GL_PROJECTION);
+  // Identitätsmatrix laden
+  glLoadIdentity;
+  // Viewport an Clientareal des Fensters anpassen
+  glViewPort(0, 0, ClientWidth, ClientHeight);
+  // Perspective, FOV und Tiefenreichweite setzen
+  gluPerspective(60, ClientWidth/ClientHeight, 1, 128);
 
-// In die Modelansichtsmatrix wechseln
-glMatrixMode(GL_MODELVIEW);
-// Identitätsmatrix laden
-glLoadIdentity;
-// Farb- und Tiefenpuffer löschen
-glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+  // In die Modelansichtsmatrix wechseln
+  glMatrixMode(GL_MODELVIEW);
+  // Identitätsmatrix laden
+  glLoadIdentity;
+  // Farb- und Tiefenpuffer löschen
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 
-Scene1.AdvanceAnimation;
-//advance animation
-//if mesh1.NumSkeletons >= 1 then
-//begin
-//  mesh1.Skeleton[0].AdvanceAnimation();
-//  mesh1.calculatesize; //TODO: does not help as mesh is altered during rendering...
-//end;
+  //advance animation
+  if Scene1.Models[0].NumSkeletons >= 1 then
+  begin
+    Scene1.Models[0].Skeleton[0].AdvanceAnimation();
+    Scene1.Models[0].Init();
+    Scene1.Models[0].calculatesize; //TODO: does not help as mesh is altered during rendering...
+  end;
 
-//glLightfv( GL_LIGHT0, GL_POSITION, @g_LightPosition );
-glLoadIdentity();
+  //glLightfv( GL_LIGHT0, GL_POSITION, @g_LightPosition );
+  glLoadIdentity();
+  glTranslatef(0.0,0.0, -100.0);
+  //glRotatef(-90.0,0.0,0.0,1.0);
+  glRotatef(xangle,1.0,0.0,0.0);
+  glRotatef(yangle,0.0,1.0,0.0);
+  glscalef(0.25,0.25,0.25);
 
+  //Scene1.Render;
+  Scene1.Models[0].Render;
+  Scene1.Models[1].Render;
 
-// Render the mesh
-//glpushmatrix();
+  //Optionaly Render BoundingBoxes and show skeleton system
+  glClear(GL_DEPTH_BUFFER_BIT); //clear the depth buffers before drawing boundbox and bones
+  gldisable(GL_LIGHTING);       //also turn of lighting
 
- //gltranslatef(0.0,-15.0,-100.0);
+  //Scene1.Models[0].RenderBoundBox;
 
+  if Scene1.Models[0].NumSkeletons >= 1 then
+    Scene1.Models[0].RenderSkeleton;
 
+  // Show fps
+  ShowText;
 
- //Scene1.Render;
+  // Hinteren Puffer nach vorne bringen
+  SwapBuffers(DC);
 
-// glPushMatrix();
+  // Windows denken lassen, das wir noch nicht fertig wären
+  Done := False;
 
-//  glrotatef(180,1.0,1.0,1.0);
-
-
-
- glTranslatef(0.0,0.0, -10.0);
- //glscalef(0.25,0.25,0.25);
-
-
-
- //glRotatef(-90.0,0.0,0.0,1.0);
- glRotatef(xangle,1.0,0.0,0.0);
- glRotatef(yangle,0.0,1.0,0.0);
-
- Scene1.Render;
-  //Scene1.Models[0].Render;
-  //Scene1.Models[1].Render;
-
- //TglModel(mesh1).Render; //uggly?
-
-glClear(GL_DEPTH_BUFFER_BIT); //clear the depth buffers before drawing boundbox and bones
-
-gldisable(GL_LIGHTING);
-
-//mat.Apply;
-
-//Scene1.Models[0].RenderBoundBox;
-//TglModel(mesh1).RenderBoundBox;
-
-//if Scene1.Models[0].NumSkeletons >= 1 then
-//  Scene1.Models[0].RenderSkeleton;
-
-//glpopmatrix();
-
-
-
-// Show fps
-ShowText;
-
-// Hinteren Puffer nach vorne bringen
-SwapBuffers(DC);
-
-// Windows denken lassen, das wir noch nicht fertig wären
-Done := False;
-
-// Nummer des gezeichneten Frames erhöhen
-inc(Frames);
-// FPS aktualisieren
-if GetTickCount - StartTick >= 500 then
- begin
- FPS       := Frames/(GetTickCount-StartTick)*1000;
- Frames    := 0;
- StartTick := GetTickCount
- end;
+  // Nummer des gezeichneten Frames erhöhen
+  inc(Frames);
+  // FPS aktualisieren
+  if GetTickCount - StartTick >= 500 then
+  begin
+    FPS       := Frames/(GetTickCount-StartTick)*1000;
+    Frames    := 0;
+    StartTick := GetTickCount
+  end;
 
   xAngle :=xAngle + xSpeed;
   yAngle :=yAngle + ySpeed;
 
-//  if s <> 'no error' then
-//    Showmessage('OpenGL meldet: "' + s + '"');
+  //  if s <> 'no error' then
+  //    Showmessage('OpenGL meldet: "' + s + '"');
 end;
 
 // =============================================================================

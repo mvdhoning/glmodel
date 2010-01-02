@@ -375,8 +375,6 @@ end;
 
 procedure TBaseMesh.SetMatID(Index: Integer; Value: Word);
 begin
-  //TODO: Rewrite do not have setlength here!!!
-  SetLength(FMatId, FNumVertexIndices);
   FMatId[Index]:=Value;
 end;
 
@@ -488,6 +486,7 @@ procedure TBaseMesh.SetNumberOfIndices(Value: Integer);
 begin
   FNumVertexIndices := Value;
   SetLength(FVertexIndices, Value);
+  SetLength(FMatId, Value);
 end;
 
 procedure TBaseMesh.SetNumberOfMappings(Value: Integer);

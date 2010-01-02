@@ -84,16 +84,39 @@ begin
   for i := 0 to (FNumVertex )-1 do
   begin
 
-    FVBOPointer^.U := FMapping[FMappingIndices[i]].tu;
-    FVBOPointer^.V := FMapping[FMappingIndices[i]].tu;
+    FVBOPointer^.U := FMapping[i].tu;
+    FVBOPointer^.V := FMapping[i].tv;
 
     FVBOPointer^.NX := FvNormal[i].x;
     FVBOPointer^.NY := FvNormal[i].y;
     FVBOPointer^.NZ := FvNormal[i].z;
 
-    FVBOPointer^.X := FVertex[i].x;
-    FVBOPointer^.Y := FVertex[i].y;
-    FVBOPointer^.Z := FVertex[i].z;
+    //read vertex data for the face
+    v1[0] := FVertex[i].x;
+    v1[1] := FVertex[i].y;
+    v1[2] := FVertex[i].z;
+
+    //if a skeleton is available then ...
+    if TBaseModel(owner).NumSkeletons >= 1 then
+    begin
+      //if there is a bone then apply bone translate etc...
+      if TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].NumBones>0 then
+        if FBoneId <> nil then
+          begin
+            id1 := FBoneId[i];
+            if id1 <> -1 then
+            begin
+              matrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id1].Matrix;
+              matrix.rotateVect(v1);
+              matrix.translateVect(v1);
+            end;
+          end;
+    end;
+
+
+    FVBOPointer^.X := v1[0];
+    FVBOPointer^.Y := v1[1];
+    FVBOPointer^.Z := v1[2];
 
     if i < (FNumVertexIndices)-1 then
       inc(Cardinal(FVBOPointer), SizeOf(TVertex));

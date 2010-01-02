@@ -207,8 +207,7 @@ begin
         FMesh[tcount].NumNormals := count * 3;
         FMesh[tcount].NumNormalIndices := count * 3; //TODO: support less indices then normals
         FMesh[tcount].NumVertexIndices := count * 3;
-
-        FMesh[tcount].NumVertexIndices := Count * 3;
+        //FMesh[tcount].NumVertexIndices := Count * 3;
         FMesh[tcount].NumMappingIndices := Count * 3;
 
         if Count > 0 then
