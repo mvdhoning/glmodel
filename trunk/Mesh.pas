@@ -128,6 +128,7 @@ type
     function GetNumBones: integer;
   public
     destructor Destroy; override;
+    procedure Init; virtual; abstract;
     procedure Render; virtual; abstract;
     procedure RenderBoundBox; virtual; abstract;
     procedure Assign(Source: TPersistent); override;

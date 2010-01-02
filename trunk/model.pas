@@ -71,6 +71,7 @@ type
   public
     constructor Create(AOwner: TComponent);
     destructor Destroy; override;
+    procedure Init; virtual; abstract;
     procedure Render; virtual; abstract;
     procedure RenderBoundBox; virtual; abstract;
     procedure RenderSkeleton; virtual; abstract;

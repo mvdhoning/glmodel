@@ -34,6 +34,7 @@ uses classes, Model;
 type
   TglModel = class(TBaseModel)
     public
+      procedure Init; override;
       procedure Render; override;
       procedure RenderBoundBox; override;
       procedure RenderSkeleton; override;
@@ -43,6 +44,16 @@ type
 implementation
 
 uses dglOpenGl, glMesh, glBone, glMaterial;
+
+procedure TglModel.Init;
+var
+  m: Integer;
+begin
+    for m := 0 to FNumMeshes - 1 do
+    begin
+      FMesh[FRenderOrder[m]].Init;
+    end;
+end;
 
 procedure TglModel.Render;
 var

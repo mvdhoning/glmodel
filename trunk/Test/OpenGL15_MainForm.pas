@@ -24,10 +24,7 @@ uses
   Forms,
   Dialogs,
   dglOpenGL,
-//  gl3ds;
-
-  //Render,
-  glRender,
+  glvboRender,
   Model,
   Model3ds,
   ModelObj,
@@ -37,9 +34,6 @@ uses
   MeshGen,
   Material,
   glMath;
- // Material,
- // glMaterial,
- // glModel;
 
 
 type
@@ -68,7 +62,7 @@ var
   GLForm: TGLForm;
 
 
-  scene1: TglRender;
+  scene1: TglvboRender;
   model1: TBaseModel;
   
  // mesh2: TglModel;
@@ -236,7 +230,7 @@ Model1.Free;
 //mesh1.TexturePath :='textures\';
 //mesh1.LoadFromFile('models\character2.txt');
 
-scene1 := TglRender.Create(nil);
+scene1 := TglvboRender.Create(nil);
 
 
 //mat := TGLMaterial.Create(nil);
@@ -250,9 +244,9 @@ scene1.AddModel();
 //mesh1.TexturePath:='textures\';  // no use at this point...
 
 //scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
-scene1.Models[0].LoadFromFile('models\acube.3ds');
+//scene1.Models[0].LoadFromFile('models\acube.3ds');
 //scene1.Models[0].LoadFromFile('models\hog2.txt');
-//scene1.Models[0].LoadFromFile('models\soccerball.obj');
+scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
 //scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
@@ -324,6 +318,8 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
 
   //determine render order even with one mesh
   scene1.Models[1].CalculateRenderOrder;
+
+  scene1.Init; //pff ok dont forget this with vbo's
 
   //save test
   //scene1.Models[0].SaveToFile('test.obj');
@@ -455,7 +451,8 @@ glLoadIdentity();
  glRotatef(xangle,1.0,0.0,0.0);
  glRotatef(yangle,0.0,1.0,0.0);
 
-  Scene1.Models[0].Render;
+ Scene1.Render;
+  //Scene1.Models[0].Render;
   //Scene1.Models[1].Render;
 
  //TglModel(mesh1).Render; //uggly?
