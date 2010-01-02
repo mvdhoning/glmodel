@@ -44,7 +44,6 @@ contains
   glQuaternions in 'glQuaternions.pas',
   glRender in 'glRender.pas',
   glSkeleton in 'glSkeleton.pas',
-  glvpRender in 'glvpRender.pas',
   KeyFrame in 'KeyFrame.pas',
   Material in 'Material.pas',
   Mesh in 'Mesh.pas',
@@ -55,6 +54,8 @@ contains
   ModelX in 'ModelX.pas',
   Render in 'Render.pas',
   Skeleton in 'Skeleton.pas',
-  MeshGen in 'MeshGen.pas';
+  MeshGen in 'MeshGen.pas',
+  glvboMesh in 'glvboMesh.pas',
+  glvboRender in 'glvboRender.pas';
 
 end.
