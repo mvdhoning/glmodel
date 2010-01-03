@@ -243,13 +243,13 @@ scene1.AddModel();
 
 //mesh1.TexturePath:='textures\';  // no use at this point...
 
-//scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
+scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
 //scene1.Models[0].LoadFromFile('models\acube.3ds');
 //scene1.Models[0].LoadFromFile('models\hog2.txt');
 //scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
-scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
+//scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
 //scene1.Models[0].LoadFromFile('models\houseobj.x');
 //scene1.Models[0].LoadFromFile('c:\test\accel\cell.x');
 
@@ -296,7 +296,7 @@ scene1.Models[0].TexturePath:='textures\'; //set texturepath again since it is l
   //TMeshGen(scene1.Models[1].Mesh[0]).GeneratePlane(2,2);
   //TMeshGen(scene1.Models[1].Mesh[0]).GenerateDisc(2);
   TMeshGen(scene1.Models[1].Mesh[0]).GenerateCylinder(4,2,1,1);
-
+  scene1.Models[1].Mesh[0].Name := 'RedCylinder';
 
   scene1.Models[1].AddMaterial;  //new material
   scene1.Models[1].Material[0].DiffuseRed:= 1.0; //make it red
@@ -412,18 +412,18 @@ begin
   //advance animation
   if Scene1.Models[0].NumSkeletons >= 1 then
   begin
-    Scene1.Models[0].Skeleton[0].AdvanceAnimation();
-    Scene1.Models[0].Init();
-    Scene1.Models[0].calculatesize; //TODO: does not help as mesh is altered during rendering...
+    //Scene1.Models[0].Skeleton[0].AdvanceAnimation();
+    //Scene1.Models[0].Init();
+    //Scene1.Models[0].calculatesize; //TODO: does not help as mesh is altered during rendering...
   end;
 
   //glLightfv( GL_LIGHT0, GL_POSITION, @g_LightPosition );
   glLoadIdentity();
-  glTranslatef(0.0,0.0, -10.0);
+  glTranslatef(0.0,0.0, -100.0);
   //glRotatef(-90.0,0.0,0.0,1.0);
   glRotatef(xangle,1.0,0.0,0.0);
   glRotatef(yangle,0.0,1.0,0.0);
-  //glscalef(0.25,0.25,0.25);
+  glscalef(0.25,0.25,0.25);
 
   //Scene1.Render;
   Scene1.Models[0].Render;
