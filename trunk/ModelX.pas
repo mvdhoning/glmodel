@@ -63,10 +63,10 @@ var
   strtemp: string;
   acount: LongWord;
   mcount: LongWord;
-  bcount: LongWord;
+//  bcount: LongWord;
   Count, loop, floop: LongWord;
   matid: Integer;
-  m: LongWord;
+//  m: LongWord;
   tempvertex: T3dPoint;
   tempmap: TMap;
 begin
@@ -265,7 +265,7 @@ begin
         //number of materials
         l := l + 1;
         line := stringreplace(sl.Strings[l],';','',[rfReplaceAll]);
-        Count := StrToInt(line);
+        //Count := StrToInt(line); //warning due to count not used :-)
 
         //number of indices
         l := l + 1;

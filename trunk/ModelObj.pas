@@ -248,6 +248,19 @@ var
   cur_tn: integer;
 
 begin
+
+  //init
+  cur_t  := -2; //-1 does not do the trick ...
+  cur_tt := -2;
+  cur_tn := -2;
+  first_t := cur_t;
+  first_tt := cur_tt;
+  first_tn := cur_tn;
+  prev_t := cur_t;
+  prev_tt := cur_tt;
+  prev_tn := cur_tn;
+
+  //start loading
   P :=Pos(' ', ValueS);
 
   tsl := TStringList.Create;
@@ -380,10 +393,8 @@ var
   c: integer;
   matcount: integer;
   MatStream: TFileStream;
-
   loopcount: integer;
   loopadd: integer;
-  uc: char;
 
 begin
 
