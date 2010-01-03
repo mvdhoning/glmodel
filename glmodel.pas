@@ -119,7 +119,7 @@ var
 begin
   for m := 0 to FNumMaterials - 1 do
   begin
-    fmaterial[m].UpdateTexture; //Can this also work without overloading?
+    fmaterial[m].UpdateTexture;
   end;
 end;
 
