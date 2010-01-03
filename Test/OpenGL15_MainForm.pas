@@ -245,10 +245,10 @@ scene1.AddModel();
 
 //scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
 //scene1.Models[0].LoadFromFile('models\acube.3ds');
-scene1.Models[0].LoadFromFile('models\hog2.txt');
+//scene1.Models[0].LoadFromFile('models\hog2.txt');
 //scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
-//scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
+scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
 //scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
 //scene1.Models[0].LoadFromFile('models\houseobj.x');
 //scene1.Models[0].LoadFromFile('c:\test\accel\cell.x');
@@ -419,11 +419,11 @@ begin
 
   //glLightfv( GL_LIGHT0, GL_POSITION, @g_LightPosition );
   glLoadIdentity();
-  glTranslatef(0.0,0.0, -100.0);
+  glTranslatef(0.0,0.0, -10.0);
   //glRotatef(-90.0,0.0,0.0,1.0);
   glRotatef(xangle,1.0,0.0,0.0);
   glRotatef(yangle,0.0,1.0,0.0);
-  glscalef(0.25,0.25,0.25);
+  //glscalef(0.25,0.25,0.25);
 
   //Scene1.Render;
   Scene1.Models[0].Render;

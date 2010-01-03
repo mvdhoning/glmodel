@@ -25,19 +25,18 @@ unit glvboMesh;
  *
  *)
 
- //TODO: render once to new datastructure and use that to fill buffer
- //and indices ... also do sort the new datastructure on vertexindex?
+//TODO: implement support for bumpmapping
 
 interface
 
-uses classes, dglOpenGl, Mesh, logger, sysutils;
+uses classes, dglOpenGl, Mesh;
 
 type
   PVertex = ^TVertex;
   TVertex = record
     U,V,
     NX,NY,NZ,
-    X,Y,Z : GLFloat; //TODO: extend with u,v,nx,ny,nz
+    X,Y,Z : GLFloat;
   end;
 
   TglvboMesh = class(TBaseMesh)
@@ -48,7 +47,7 @@ type
     FIVBOMatIdCount: array of integer;
     FVBOPointer: PVertex;
     FIVBOPointer: array of PGluShort;
-    CountMatUsed: integer;
+    FCountMatUsed: integer;
     CMatId: array of word;
   public
     destructor Destroy; override;
@@ -64,88 +63,54 @@ uses Material, glMath, glMatrix, glMaterial, glModel, model;
 destructor TglvboMesh.Destroy;
 begin
   glDeleteBuffersARB(1, @FVBO); //remove the buffer (from video/main memory)
+  glDeleteBuffersARB(FCountMatUsed, @FIVBO);
   inherited;
 end;
 
 procedure TglvboMesh.Init;
 var
-  i,m,mcount: Integer;
+  i,m: Integer;
   matid: Integer;
-  id1, id2, id3: Integer;
-  v1, v2, v3: array [0..2] of single;
-  calcv1, calcv2, calcv3: T3dPoint;
-  lightv1, lightv2, lightv3: t3dpoint;
+  id1: Integer;
+  v1: array [0..2] of single;
   matrix: clsMatrix;
-  offset: Single;
-
   f: integer;
-  counter, min, temp, look: integer;
-
-  teller: integer;
   found:boolean;
 begin
 
-  log.Writeln('Begin of mesh: ' + fname);
-
-//  SetLength(CMatId, NumMaterials);
-//  for counter := 0 to NumMaterials do
-//  begin
-//    CMatId[counter]:=FMatId[counter];
-//  end;
-(*
-  //Sort CMatId
-  for counter:=0 to NumMaterials do
-  begin
-    min:=counter;
-    for look:=counter+1 to NumMaterials do
-      if CMatID[look]<CMatID[min] then
-        min:=look;
-      temp:=CMatID[min]; CMatID[min]:=CMatID[counter];
-      CMatID[counter]:=temp;
-  end;
-*)
+  //find and count materials used in mesh
   matid:=-1;
-  countmatused:=0;
+  FCountMatUsed:=0;
   f:=0;
-  //for f:=0 to FNumVertexIndices-1 do
   while f <= FNumVertexIndices do
   begin
-    //if matid <> FMatId[f div 3] then
-    //begin
-      if FMatId<>nil then
-        matid := FMatId[f div 3];
-      //have we found this one before?
-      found:=false;
-      for i := 0 to CountMatUsed - 1 do
-      begin
-        if FIVBOMatId[i]=matid then
-        begin
-          FIVBOMatIdCount[i]:=FIVBOMatIdCount[i]+3;
-          found:=true;
-          break; //and exit as we found it...
-        end;
-      end;
+    if FMatId<>nil then
+      matid := FMatId[f div 3];
 
-      if not found then
+    //have we found this one before?
+    found:=false;
+    for i := 0 to FCountMatUsed - 1 do
+    begin
+      if FIVBOMatId[i]=matid then
       begin
-        //new material
-        CountMatUsed:=CountMatUsed+1;
-        setLength(FIVBOMatId,CountMatUsed);
-        setLength(FIVBOMatIdCount,CountMatUsed);
-        FIVBOMatId[CountMatUsed-1]:=matid;
-        FIVBOMatIdCount[CountMatUsed-1]:=3;
+        FIVBOMatIdCount[i]:=FIVBOMatIdCount[i]+3;
+        found:=true;
+        break; //and exit as we found it...
       end;
+    end;
 
-    //end;
+    if not found then
+    begin
+      //new material
+      FCountMatUsed:=FCountMatUsed+1;
+      setLength(FIVBOMatId,FCountMatUsed);
+      setLength(FIVBOMatIdCount,FCountMatUsed);
+      FIVBOMatId[FCountMatUsed-1]:=matid;
+      FIVBOMatIdCount[FCountMatUsed-1]:=3;
+    end;
+
     f:=f+3;
   end;
-
-  for i := 0 to CountMatUsed - 1 do
-    begin
-        log.Writeln('matid['+IntToStr(i)+']: '+IntToStr(FIVBOMatId[i]));
-        log.Writeln('matidcount['+IntToStr(i)+']: '+IntToStr(FIVBOMatIdCount[i]));
-    end;
- log.Writeln('step2');
 
   glGenBuffersARB(1, @FVBO); //create a vertex buffer
   glBindBufferARB(GL_ARRAY_BUFFER_ARB, FVBO); //bind the buffer
@@ -199,26 +164,19 @@ begin
   end;
   glUnMapBufferARB(GL_ARRAY_BUFFER_ARB); //after filling unmap the filled buffer
 
-  //now create indices buffer one for each material
-  setLength(FIVBO,CountMatUsed);
-  setLength(FIVBOPointer,CountMatUsed);
+  //now create indices buffer once for each material
+  setLength(FIVBO,FCountMatUsed);
+  setLength(FIVBOPointer,FCountMatUsed);
 
-  glGenBuffersARB(CountMatUsed, @FIVBO[0]);//verwijzen naar eerste element
+  glGenBuffersARB(FCountMatUsed, @FIVBO[0]);//verwijzen naar eerste element
 
-  for m := 0 to CountMatUsed - 1 do
+  for m := 0 to FCountMatUsed - 1 do
   begin
 	  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, FIVBO[m] );
 	  glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, (FIVBOMatIdCount[m])*sizeof(GLushort), nil, GL_STREAM_DRAW_ARB); //allocate memory on board
-
-    log.Writeln('matid['+IntToStr(m)+']: '+IntToStr(FIVBOMatId[m]));
-    log.Writeln('matidcount['+IntToStr(m)+']: '+IntToStr(FIVBOMatIdCount[m]));
-
-    //TODO: multiple indices buffer e.g. per material
     FIVBOPointer[m] := glMapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB); //get pointer to memory on board
     f:=0;
-    teller:=0;
     while f <= FNumVertexIndices do
-    //for f:=0 to FNumVertexIndices-1 do
     begin
     if FMatId<>nil then
       if FIVBOMatId[m]=FMatId[f div 3] then
@@ -229,11 +187,9 @@ begin
         inc(Cardinal(FIVBOPointer[m]), SizeOf(TGluShort));
         FIVBOPointer[m]^ := f+2;//upload indices
         inc(Cardinal(FIVBOPointer[m]), SizeOf(TGluShort));
-        teller:=teller+3;
       end;
       f:=f+3;
     end;
-    log.Writeln('written elements: '+inttostr(teller));
 	  glUnmapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB);
   end;
 
@@ -248,15 +204,15 @@ end;
 
 procedure TglvboMesh.Render;
 var
-  matid: integer;
   m: integer;
 begin
-  for m := 0 to CountMatUsed - 1 do
+  for m := 0 to FCountMatUsed - 1 do
   begin
     //apply material...
     if FIVBOMatId[m]<>-1 then
       TBaseModel(owner).material[FIVBOMatId[m]].apply;
 
+    //render mesh...
     glEnableClientState( GL_TEXTURE_COORD_ARRAY );
     glEnableClientState( GL_NORMAL_ARRAY );
     glEnableClientState( GL_VERTEX_ARRAY );
@@ -271,7 +227,7 @@ begin
     glNormalPointer( GL_FLOAT, sizeof(TVertex), ptr(2*sizeof(GLFLOAT)+0) );
     glVertexPointer( 3, GL_FLOAT, sizeof(TVertex), ptr((5*sizeof(GLFLOAT))+0) );
 
-    glDrawElements(GL_TRIANGLES, FIVBOMatIdCount[m], GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, FIVBOMatIdCount[m], GL_UNSIGNED_SHORT, nil);
 
     glDisableClientState( GL_VERTEX_ARRAY );
     glDisableClientState( GL_NORMAL_ARRAY );

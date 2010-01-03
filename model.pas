@@ -69,7 +69,7 @@ type
     function GetSkeleton(Index: integer): TBaseSkeleton;
     procedure CalculateScale;
   public
-    constructor Create(AOwner: TComponent);
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Init; virtual; abstract;
     procedure Render; virtual; abstract;
