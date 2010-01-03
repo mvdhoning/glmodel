@@ -246,10 +246,10 @@ scene1.AddModel();
 //scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
 //scene1.Models[0].LoadFromFile('models\acube.3ds');
 //scene1.Models[0].LoadFromFile('models\hog2.txt');
-scene1.Models[0].LoadFromFile('models\soccerball.obj');
+//scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
-//scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
+scene1.Models[0].LoadFromFile('models\housewiththickwalls.obj');
 //scene1.Models[0].LoadFromFile('models\houseobj.x');
 //scene1.Models[0].LoadFromFile('c:\test\accel\cell.x');
 

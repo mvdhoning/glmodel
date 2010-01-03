@@ -82,8 +82,9 @@ var
   counter, min, temp, look: integer;
 
   teller: integer;
+  found:boolean;
 begin
-  SetLength(CMatId, NumMaterials+1);
+  SetLength(CMatId, NumMaterials);
   for counter := 0 to NumMaterials do
   begin
     CMatId[counter]:=FMatId[counter];
@@ -101,22 +102,46 @@ begin
   end;
 
   matid:=-1;
-  for counter:=0 to NumMaterials do
+  countmatused:=0;
+  f:=0;
+  //for f:=0 to FNumVertexIndices-1 do
+  while f < FNumVertexIndices do
   begin
-    if matid <> CMatId[counter] then
-    begin
-      matid := CMatId[counter];
-      CountMatUsed:=CountMatUsed+1;
-      setLength(FIVBOMatId,CountMatUsed);
-      setLength(FIVBOMatIdCount,CountMatUsed);
-      FIVBOMatId[CountMatUsed-1]:=matid;
-      FIVBOMatIdCount[CountMatUsed-1]:=1;
-    end else
-    begin
-      FIVBOMatIdCount[CountMatUsed-1]:=FIVBOMatIdCount[CountMatUsed-1]+1;
-    end;
+    //if matid <> FMatId[f div 3] then
+    //begin
+      matid := FMatId[f div 3];
+      //have we found this one before?
+      found:=false;
+      for i := 0 to CountMatUsed - 1 do
+      begin
+        if FIVBOMatId[i]=matid then
+        begin
+          FIVBOMatIdCount[i]:=FIVBOMatIdCount[i]+3;
+          found:=true;
+          break; //and exit as we found it...
+        end;
+      end;
+
+      if not found then
+      begin
+        //new material
+        CountMatUsed:=CountMatUsed+1;
+        setLength(FIVBOMatId,CountMatUsed);
+        setLength(FIVBOMatIdCount,CountMatUsed);
+        FIVBOMatId[CountMatUsed-1]:=matid;
+        FIVBOMatIdCount[CountMatUsed-1]:=3;
+      end;
+
+    //end;
+    f:=f+3;
   end;
 
+  for i := 0 to CountMatUsed - 1 do
+    begin
+        log.Writeln('matid['+IntToStr(i)+']: '+IntToStr(FIVBOMatId[i]));
+        log.Writeln('matidcount['+IntToStr(i)+']: '+IntToStr(FIVBOMatIdCount[i]));
+    end;
+ log.Writeln('step2');
 
   glGenBuffersARB(1, @FVBO); //create a vertex buffer
   glBindBufferARB(GL_ARRAY_BUFFER_ARB, FVBO); //bind the buffer
@@ -176,7 +201,6 @@ begin
 
   glGenBuffersARB(CountMatUsed, @FIVBO[0]);//verwijzen naar eerste element
 
-  //if countmatused >=2 then
   for m := 0 to CountMatUsed - 1 do
   begin
 	  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, FIVBO[m] );
@@ -189,15 +213,16 @@ begin
     FIVBOPointer[m] := glMapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB); //get pointer to memory on board
     f:=0;
     teller:=0;
-    while f < FNumVertexIndices do
+    //while f < FNumVertexIndices -1 do
+    for f:=0 to FNumVertexIndices-1 do
     begin
-      if FIVBOMatId[m]=FMatId[f] then
+      if FIVBOMatId[m]=FMatId[f div 3] then
       begin
         FIVBOPointer[m]^ := f;//upload indices
         inc(Cardinal(FIVBOPointer[m]), SizeOf(TGluShort));
         teller:=teller+1;
       end;
-      f:=f+1;
+      //f:=f+1;
     end;
     log.Writeln('written elements: '+inttostr(teller));
 	  glUnmapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB);
