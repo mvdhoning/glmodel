@@ -39,6 +39,7 @@ type
       procedure BuildDisplayList;
       procedure Render; override;
       procedure RenderBoundBox; override;
+      procedure Init; override;
     end;
 
     //TODO: fix texturing
@@ -47,6 +48,11 @@ type
 implementation
 
 uses dglOpenGl, Material, glMath, glMatrix, glMaterial, glModel, model;
+
+procedure TglMesh.Init;
+begin
+  //Nothing to do here ...
+end;
 
 procedure TglMesh.BuildDisplayList;
 begin
@@ -86,8 +92,7 @@ begin
       begin
         //begin setting material
         //only set material if different from previous
-
-        if FMatId<>nil then
+         if FMatId<>nil then
           if FMatId[f div 3] <> matid then
           begin
             glend;

@@ -84,12 +84,15 @@ var
   teller: integer;
   found:boolean;
 begin
-  SetLength(CMatId, NumMaterials);
-  for counter := 0 to NumMaterials do
-  begin
-    CMatId[counter]:=FMatId[counter];
-  end;
 
+  log.Writeln('Begin of mesh: ' + fname);
+
+//  SetLength(CMatId, NumMaterials);
+//  for counter := 0 to NumMaterials do
+//  begin
+//    CMatId[counter]:=FMatId[counter];
+//  end;
+(*
   //Sort CMatId
   for counter:=0 to NumMaterials do
   begin
@@ -100,16 +103,17 @@ begin
       temp:=CMatID[min]; CMatID[min]:=CMatID[counter];
       CMatID[counter]:=temp;
   end;
-
+*)
   matid:=-1;
   countmatused:=0;
   f:=0;
   //for f:=0 to FNumVertexIndices-1 do
-  while f < FNumVertexIndices do
+  while f <= FNumVertexIndices do
   begin
     //if matid <> FMatId[f div 3] then
     //begin
-      matid := FMatId[f div 3];
+      if FMatId<>nil then
+        matid := FMatId[f div 3];
       //have we found this one before?
       found:=false;
       for i := 0 to CountMatUsed - 1 do
@@ -167,7 +171,7 @@ begin
     v1[0] := FVertex[FVertexIndices[i]].x;
     v1[1] := FVertex[FVertexIndices[i]].y;
     v1[2] := FVertex[FVertexIndices[i]].z;
-
+    (*
     //if a skeleton is available then ...
     if TBaseModel(owner).NumSkeletons >= 1 then
     begin
@@ -184,7 +188,7 @@ begin
             end;
           end;
     end;
-
+    *)
     FVBOPointer^.X := v1[0];
     FVBOPointer^.Y := v1[1];
     FVBOPointer^.Z := v1[2];
@@ -213,16 +217,21 @@ begin
     FIVBOPointer[m] := glMapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB); //get pointer to memory on board
     f:=0;
     teller:=0;
-    //while f < FNumVertexIndices -1 do
-    for f:=0 to FNumVertexIndices-1 do
+    while f <= FNumVertexIndices do
+    //for f:=0 to FNumVertexIndices-1 do
     begin
+    if FMatId<>nil then
       if FIVBOMatId[m]=FMatId[f div 3] then
       begin
         FIVBOPointer[m]^ := f;//upload indices
         inc(Cardinal(FIVBOPointer[m]), SizeOf(TGluShort));
-        teller:=teller+1;
+        FIVBOPointer[m]^ := f+1;//upload indices
+        inc(Cardinal(FIVBOPointer[m]), SizeOf(TGluShort));
+        FIVBOPointer[m]^ := f+2;//upload indices
+        inc(Cardinal(FIVBOPointer[m]), SizeOf(TGluShort));
+        teller:=teller+3;
       end;
-      //f:=f+1;
+      f:=f+3;
     end;
     log.Writeln('written elements: '+inttostr(teller));
 	  glUnmapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB);
@@ -245,7 +254,7 @@ begin
   for m := 0 to CountMatUsed - 1 do
   begin
     //apply material...
-    TBaseModel(owner).material[m].apply;
+    TBaseModel(owner).material[FIVBOMatId[m]].apply;
 
     glEnableClientState( GL_TEXTURE_COORD_ARRAY );
     glEnableClientState( GL_NORMAL_ARRAY );
