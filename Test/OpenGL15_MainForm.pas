@@ -243,9 +243,9 @@ scene1.AddModel();
 
 //mesh1.TexturePath:='textures\';  // no use at this point...
 
-scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
+//scene1.Models[0].LoadFromFile('models\tulip.3ds');  //Yeah it works again!!!...
 //scene1.Models[0].LoadFromFile('models\acube.3ds');
-//scene1.Models[0].LoadFromFile('models\hog2.txt');
+scene1.Models[0].LoadFromFile('models\hog2.txt');
 //scene1.Models[0].LoadFromFile('models\soccerball.obj');
 //scene1.Models[0].LoadFromFile('models\trashbin.obj');
 //scene1.Models[0].LoadFromFile('models\houseobjtexwin.obj');
@@ -412,8 +412,8 @@ begin
   //advance animation
   if Scene1.Models[0].NumSkeletons >= 1 then
   begin
-    //Scene1.Models[0].Skeleton[0].AdvanceAnimation();
-    //Scene1.Models[0].Init();
+    Scene1.Models[0].Skeleton[0].AdvanceAnimation();
+    Scene1.Models[0].Init();
     //Scene1.Models[0].calculatesize; //TODO: does not help as mesh is altered during rendering...
   end;
 

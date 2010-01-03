@@ -44,8 +44,8 @@ type
   protected
     FVBO: TGluInt;
     FIVBO: array of TGLuInt;
-    FIVBOMatId: array of word;
-    FIVBOMatIdCount: array of word;
+    FIVBOMatId: array of integer;
+    FIVBOMatIdCount: array of integer;
     FVBOPointer: PVertex;
     FIVBOPointer: array of PGluShort;
     CountMatUsed: integer;
@@ -171,7 +171,7 @@ begin
     v1[0] := FVertex[FVertexIndices[i]].x;
     v1[1] := FVertex[FVertexIndices[i]].y;
     v1[2] := FVertex[FVertexIndices[i]].z;
-    (*
+
     //if a skeleton is available then ...
     if TBaseModel(owner).NumSkeletons >= 1 then
     begin
@@ -179,7 +179,7 @@ begin
       if TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].NumBones>0 then
         if FBoneId <> nil then
           begin
-            id1 := FBoneId[i];
+            id1 := FBoneId[FVertexIndices[i]];
             if id1 <> -1 then
             begin
               matrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id1].Matrix;
@@ -188,7 +188,7 @@ begin
             end;
           end;
     end;
-    *)
+
     FVBOPointer^.X := v1[0];
     FVBOPointer^.Y := v1[1];
     FVBOPointer^.Z := v1[2];
@@ -254,7 +254,8 @@ begin
   for m := 0 to CountMatUsed - 1 do
   begin
     //apply material...
-    TBaseModel(owner).material[FIVBOMatId[m]].apply;
+    if FIVBOMatId[m]<>-1 then
+      TBaseModel(owner).material[FIVBOMatId[m]].apply;
 
     glEnableClientState( GL_TEXTURE_COORD_ARRAY );
     glEnableClientState( GL_NORMAL_ARRAY );
