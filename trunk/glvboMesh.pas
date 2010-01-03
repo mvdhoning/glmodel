@@ -25,9 +25,12 @@ unit glvboMesh;
  *
  *)
 
+ //TODO: render once to new datastructure and use that to fill buffer
+ //and indices ... also do sort the new datastructure on vertexindex?
+
 interface
 
-uses classes, dglOpenGl, Mesh;
+uses classes, dglOpenGl, Mesh, logger, sysutils;
 
 type
   PVertex = ^TVertex;
@@ -40,9 +43,13 @@ type
   TglvboMesh = class(TBaseMesh)
   protected
     FVBO: TGluInt;
-    FIVBO: TGLuInt;
+    FIVBO: array of TGLuInt;
+    FIVBOMatId: array of word;
+    FIVBOMatIdCount: array of word;
     FVBOPointer: PVertex;
-    FIVBOPointer: PGluShort;
+    FIVBOPointer: array of PGluShort;
+    CountMatUsed: integer;
+    CMatId: array of word;
   public
     destructor Destroy; override;
     procedure Init; override;
@@ -62,7 +69,7 @@ end;
 
 procedure TglvboMesh.Init;
 var
-  i: Integer;
+  i,m,mcount: Integer;
   matid: Integer;
   id1, id2, id3: Integer;
   v1, v2, v3: array [0..2] of single;
@@ -70,31 +77,71 @@ var
   lightv1, lightv2, lightv3: t3dpoint;
   matrix: clsMatrix;
   offset: Single;
+
+  f: integer;
+  counter, min, temp, look: integer;
+
+  teller: integer;
 begin
+  SetLength(CMatId, NumMaterials+1);
+  for counter := 0 to NumMaterials do
+  begin
+    CMatId[counter]:=FMatId[counter];
+  end;
+
+  //Sort CMatId
+  for counter:=0 to NumMaterials do
+  begin
+    min:=counter;
+    for look:=counter+1 to NumMaterials do
+      if CMatID[look]<CMatID[min] then
+        min:=look;
+      temp:=CMatID[min]; CMatID[min]:=CMatID[counter];
+      CMatID[counter]:=temp;
+  end;
+
+  matid:=-1;
+  for counter:=0 to NumMaterials do
+  begin
+    if matid <> CMatId[counter] then
+    begin
+      matid := CMatId[counter];
+      CountMatUsed:=CountMatUsed+1;
+      setLength(FIVBOMatId,CountMatUsed);
+      setLength(FIVBOMatIdCount,CountMatUsed);
+      FIVBOMatId[CountMatUsed-1]:=matid;
+      FIVBOMatIdCount[CountMatUsed-1]:=1;
+    end else
+    begin
+      FIVBOMatIdCount[CountMatUsed-1]:=FIVBOMatIdCount[CountMatUsed-1]+1;
+    end;
+  end;
+
+
   glGenBuffersARB(1, @FVBO); //create a vertex buffer
   glBindBufferARB(GL_ARRAY_BUFFER_ARB, FVBO); //bind the buffer
-  glBufferDataARB(GL_ARRAY_BUFFER_ARB, (FNumVertex)*SizeOf(TVertex), nil, GL_STATIC_DRAW_ARB); //reserve memory
+  glBufferDataARB(GL_ARRAY_BUFFER_ARB, (FNumVertexIndices)*SizeOf(TVertex), nil, GL_STATIC_DRAW_ARB); //reserve memory
 
   glEnableClientState( GL_TEXTURE_COORD_ARRAY );
   glEnableClientState( GL_NORMAL_ARRAY );
   glEnableClientState( GL_VERTEX_ARRAY );
 
   FVBOPointer := glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB); //get a pointer to the vbo
+
   //copy the vertex data into the vbo buffer
-  for i := 0 to (FNumVertex )-1 do
+  for i := 0 to (FNumVertexIndices )-1 do
   begin
+    FVBOPointer^.U := FMapping[FMappingIndices[i]].tu; //TODO: need to be looked up via indices
+    FVBOPointer^.V := FMapping[FMappingIndices[i]].tv;
 
-    FVBOPointer^.U := FMapping[i].tu;
-    FVBOPointer^.V := FMapping[i].tv;
-
-    FVBOPointer^.NX := FvNormal[i].x;
-    FVBOPointer^.NY := FvNormal[i].y;
-    FVBOPointer^.NZ := FvNormal[i].z;
+    FVBOPointer^.NX := FvNormal[FNormalIndices[i]].x; //TODO: need to be looked up via indices
+    FVBOPointer^.NY := FvNormal[FNormalIndices[i]].y;
+    FVBOPointer^.NZ := FvNormal[FNormalIndices[i]].z;
 
     //read vertex data for the face
-    v1[0] := FVertex[i].x;
-    v1[1] := FVertex[i].y;
-    v1[2] := FVertex[i].z;
+    v1[0] := FVertex[FVertexIndices[i]].x;
+    v1[1] := FVertex[FVertexIndices[i]].y;
+    v1[2] := FVertex[FVertexIndices[i]].z;
 
     //if a skeleton is available then ...
     if TBaseModel(owner).NumSkeletons >= 1 then
@@ -113,7 +160,6 @@ begin
           end;
     end;
 
-
     FVBOPointer^.X := v1[0];
     FVBOPointer^.Y := v1[1];
     FVBOPointer^.Z := v1[2];
@@ -124,18 +170,38 @@ begin
   end;
   glUnMapBufferARB(GL_ARRAY_BUFFER_ARB); //after filling unmap the filled buffer
 
-  //now create indices buffer
-  glGenBuffersARB(1, @FIVBO);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, FIVBO);
-	glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, (FNumVertexIndices)*sizeof(GLushort), nil, GL_STREAM_DRAW_ARB); //allocate memory on board
+  //now create indices buffer one for each material
+  setLength(FIVBO,CountMatUsed);
+  setLength(FIVBOPointer,CountMatUsed);
 
-	FIVBOPointer := glMapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB); //get pointer to memory on board
-	for i:= 0 to (FNumVertexIndices)-1 do
+  glGenBuffersARB(CountMatUsed, @FIVBO[0]);//verwijzen naar eerste element
+
+  //if countmatused >=2 then
+  for m := 0 to CountMatUsed - 1 do
   begin
-    FIVBOPointer^ := FVertexIndices[i]; //upload indices
-    inc(Cardinal(FIVBOPointer), SizeOf(TGluShort));
+	  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, FIVBO[m] );
+	  glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, (FIVBOMatIdCount[m])*sizeof(GLushort), nil, GL_STREAM_DRAW_ARB); //allocate memory on board
+
+    log.Writeln('matid['+IntToStr(m)+']: '+IntToStr(FIVBOMatId[m]));
+    log.Writeln('matidcount['+IntToStr(m)+']: '+IntToStr(FIVBOMatIdCount[m]));
+
+    //TODO: multiple indices buffer e.g. per material
+    FIVBOPointer[m] := glMapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB); //get pointer to memory on board
+    f:=0;
+    teller:=0;
+    while f < FNumVertexIndices do
+    begin
+      if FIVBOMatId[m]=FMatId[f] then
+      begin
+        FIVBOPointer[m]^ := f;//upload indices
+        inc(Cardinal(FIVBOPointer[m]), SizeOf(TGluShort));
+        teller:=teller+1;
+      end;
+      f:=f+1;
+    end;
+    log.Writeln('written elements: '+inttostr(teller));
+	  glUnmapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB);
   end;
-	glUnmapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB);
 
   glDisableClientState( GL_VERTEX_ARRAY );
   glDisableClientState( GL_NORMAL_ARRAY );
@@ -144,182 +210,42 @@ begin
   // bind with 0, so, switch back to normal pointer operation
   glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
   glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-
-
-    (*
-    matid := -1; //hmm since material now starts with 0 this has to be higher...
-    glbegin(GL_TRIANGLES);
-    if NumVertexIndices > 0 then
-    begin
-      f := 0;
-      while f < NumVertexIndices - 1 do
-      begin
-        //begin setting material
-        //only set material if different from previous
-
-        if FMatId<>nil then
-          if FMatId[f div 3] <> matid then
-          begin
-            glend;
-
-            matid := FMatId[f div 3];
-            if (TBaseModel(owner).material[matid] is TBaseMaterial) then
-              TBaseModel(owner).material[matid].apply;
-
-            glbegin(GL_TRIANGLES);
-          end;
-        //end setting material
-
-        //read vertex data for the face
-        v1[0] := FVertex[FVertexIndices[f]].x;
-        v1[1] := FVertex[FVertexIndices[f]].y;
-        v1[2] := FVertex[FVertexIndices[f]].z;
-
-        v2[0] := FVertex[FVertexIndices[f+1]].x;
-        v2[1] := FVertex[FVertexIndices[f+1]].y;
-        v2[2] := FVertex[FVertexIndices[f+1]].z;
-
-        v3[0] := FVertex[FVertexIndices[f+2]].x;
-        v3[1] := FVertex[FVertexIndices[f+2]].y;
-        v3[2] := FVertex[FVertexIndices[f+2]].z;
-
-        //if a skeleton is available then ...
-
-        //TODO: move this to base mesh?
-        if TBaseModel(owner).NumSkeletons >= 1 then
-        begin
-          //if there is a bone then apply bone translate etc...
-          if TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].NumBones>0 then
-            if FBoneId <> nil then
-            begin
-              id1 := FBoneId[FVertexIndices[f]] ;
-              id2 := FBoneId[FVertexIndices[f + 1]] ;
-              id3 := FBoneId[FVertexIndices[f + 2]] ;
-
-              if id1 <> -1 then
-              begin
-                matrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id1].Matrix;
-                matrix.rotateVect(v1);
-                matrix.translateVect(v1);
-              end;
-
-              if id2 <> -1 then
-              begin
-                matrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id2].Matrix;
-                matrix.rotateVect(v2);
-                matrix.translateVect(v2);
-              end;
-
-              if id3 <> -1 then
-              begin
-                matrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id3].Matrix;
-                matrix.rotateVect(v3);
-                matrix.translateVect(v3);
-              end;
-            end;
-        end;
-
-        offset:=0;
-        if FMatId<>nil then
-          if TBaseModel(owner).material[matid].Hasbumpmap then
-          begin
-            //calculate bumpmapping
-            Calcv1.x := V1[0];
-            Calcv1.y := V1[1];
-            Calcv1.z := V1[2];
-            Calcv2.x := V2[0];
-            Calcv2.y := V2[1];
-            Calcv2.z := V2[2];
-            Calcv3.x := V3[0];
-            Calcv3.y := V3[1];
-            Calcv3.z := V3[2];
-
-            //TODO: think about calculating this only once...
-            //LightV1 := VectorSubtract(ObjLightPos,CalcV1);
-            //LightV1 := Normalize(LightV1);
-            //LightV2 := VectorSubtract(ObjLightPos,CalcV2);
-            //LightV2 := Normalize(LightV2);
-            //LightV3 := VectorSubtract(ObjLightPos,CalcV3);
-            //LightV3 := Normalize(LightV3);
-
-            offset:=TBaseModel(owner).Material[matid].BumpmapStrength;
-          end
-          else
-          begin
-            //no bumpmapping
-            LightV1.x:=0;
-            LightV1.y:=0;
-            LightV1.z:=0;
-            LightV2.x:=0;
-            LightV2.y:=0;
-            LightV2.z:=0;
-            LightV3.x:=0;
-            LightV3.y:=0;
-            LightV3.z:=0;
-            offset:=0;
-          end;
-
-        //render the face
-          if FNumNormals >=1 then
-            glNormal3fv(@FVnormal[FNormalIndices[f]]);
-          glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f]].tu, FMapping[FMappingIndices[f]].tv);
-          glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f]].tu + (lightv1.x*offset), FMapping[FMappingIndices[f]].tv + (lightv1.y*offset));
-          glVertex3fv(@v1);
-
-          if FNumNormals >=1 then
-            glNormal3fv(@FVnormal[FNormalIndices[f + 1]]);
-          glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f + 1]].tu, FMapping[FMappingIndices[f + 1]].tv);
-          glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f + 1]].tu + (lightv2.x*offset), FMapping[FMappingIndices[f + 1]].tv + (lightv2.y*offset));
-          glVertex3fv(@v2);
-
-          if FNumNormals >=1 then
-            glNormal3fv(@FVnormal[FNormalIndices[f + 2]]);
-          glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f + 2]].tu, FMapping[FMappingIndices[f + 2]].tv);
-          glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f + 2]].tu + (lightv3.x*offset), FMapping[FMappingIndices[f + 2]].tv + (lightv3.y*offset));
-          glVertex3fv(@v3);
-        f := f + 3;
-      end;
-    end;
-    glend;
-    *)
 end;
 
 procedure TglvboMesh.Render;
 var
   matid: integer;
+  m: integer;
 begin
-  matid := -1;
-  //Set Material ...  (only first for now)
-  if FMatId<>nil then
-    if FMatId[0] <> matid then
-    begin
-      matid := FMatId[0];
-      if (TBaseModel(owner).material[matid] is TBaseMaterial) then
-        TBaseModel(owner).material[matid].apply;
-    end;
+  for m := 0 to CountMatUsed - 1 do
+  begin
+    //apply material...
+    TBaseModel(owner).material[m].apply;
 
-  // bind VBOs for vertex array and index array
-  glBindBufferARB(GL_ARRAY_BUFFER_ARB, FVBO);          // for vertex coordinates
-  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, FIVBO); // for indices
+    glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+    glEnableClientState( GL_NORMAL_ARRAY );
+    glEnableClientState( GL_VERTEX_ARRAY );
 
-  glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-  glEnableClientState( GL_NORMAL_ARRAY );
-  glEnableClientState( GL_VERTEX_ARRAY );
+    // bind VBOs for vertex array and index array
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, FVBO);          // for vertex coordinates
 
-  //Set Offset Pointer for texcoords, normals and vertices
-  glTexCoordPointer( 2, GL_FLOAT, sizeof(TVertex), ptr(0) );
-  glNormalPointer( GL_FLOAT, sizeof(TVertex), ptr(2*sizeof(GLFLOAT)+0) );
-  glVertexPointer( 3, GL_FLOAT, sizeof(TVertex), ptr((5*sizeof(GLFLOAT))+0) );
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, FIVBO[m]); // for indices
 
-  glDrawElements(GL_TRIANGLES, FNumVertexIndices, GL_UNSIGNED_SHORT, 0);
+    //Set Offset Pointer for texcoords, normals and vertices
+    glTexCoordPointer( 2, GL_FLOAT, sizeof(TVertex), ptr(0) );
+    glNormalPointer( GL_FLOAT, sizeof(TVertex), ptr(2*sizeof(GLFLOAT)+0) );
+    glVertexPointer( 3, GL_FLOAT, sizeof(TVertex), ptr((5*sizeof(GLFLOAT))+0) );
 
-  glDisableClientState( GL_VERTEX_ARRAY );
-  glDisableClientState( GL_NORMAL_ARRAY );
-  glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+    glDrawElements(GL_TRIANGLES, FIVBOMatIdCount[m], GL_UNSIGNED_SHORT, 0);
 
-  // bind with 0, so, switch back to normal pointer operation
-  glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    glDisableClientState( GL_VERTEX_ARRAY );
+    glDisableClientState( GL_NORMAL_ARRAY );
+    glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+    // bind with 0, so, switch back to normal pointer operation
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+  end;
 end;
 
 procedure TglvboMesh.RenderBoundBox;
