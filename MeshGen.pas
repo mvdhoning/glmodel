@@ -130,7 +130,7 @@ namespace Sphere3D
 procedure TMeshGen.GenerateCylinder(radius: single; height: single; scaletu: single; scaletv: single);
 var
   v1: T3dPoint;
-  map: TMap;
+  texmap: TMap;
   tel: integer;
   i : integer;
   r: single;
@@ -214,9 +214,9 @@ begin
   //add fake texture coords
   self.NumMappings:=1;
   self.NumMappingIndices:=(((slices*2)+2)*3)+((slices*2) *3);
-  map.tu:=0;
-  map.tv:=0;
-  self.Mapping[0]:=map;
+  texmap.tu:=0;
+  texmap.tv:=0;
+  self.Mapping[0]:=texmap;
   for tel:=0 to self.NumMappingIndices-1 do
   begin
     self.Map[tel]:=0;
@@ -230,7 +230,7 @@ end;
 procedure TMeshGen.GenerateDisc(radius: single; scaletu: single; scaletv: single);
 var
   v1: T3dPoint;
-  map: TMap;
+  texmap: TMap;
   tel: integer;
 
   n: integer;
@@ -279,9 +279,9 @@ begin
   //add fake texture coords
   self.NumMappings:=1;
   self.NumMappingIndices:=(numberOfSeparators+1)*3;
-  map.tu:=0;
-  map.tv:=0;
-  self.Mapping[0]:=map;
+  texmap.tu:=0;
+  texmap.tv:=0;
+  self.Mapping[0]:=texmap;
   for tel:=0 to self.NumMappingIndices-1 do
   begin
     self.Map[tel]:=0;
@@ -295,7 +295,7 @@ end;
 procedure TMeshGen.GeneratePlane(width: single; depth: single; scaletu: single; scaletv: single);
 var
   v1: T3dPoint;
-  map: TMap;
+  texmap: TMap;
   tel: integer;
   cwidth: single;
   cdepth: single;
@@ -344,9 +344,9 @@ begin
   //add fake texture coords
   self.NumMappings:=1;
   self.NumMappingIndices:=6;
-  map.tu:=0;
-  map.tv:=0;
-  self.Mapping[0]:=map;
+  texmap.tu:=0;
+  texmap.tv:=0;
+  self.Mapping[0]:=texmap;
   for tel:=0 to self.NumMappingIndices-1 do
   begin
     self.Map[tel]:=0;
@@ -359,7 +359,7 @@ end;
 procedure TMeshGen.GenerateCube(width: single; height: single; depth: single; scaletu: single; scaletv: single);
 var
   v1: T3dPoint;
-  map: TMap;
+  texmap: TMap;
   tel: integer;
   cwidth: single;
   cheight: single;
@@ -466,9 +466,9 @@ begin
   self.NumMappingIndices:=36;
   for tel:=0 to self.NumMappings-1 do
   begin
-  map.tu:=self.Vertex[tel].x*scaletu;
-  map.tv:=self.Vertex[tel].y*scaletv;
-  self.Mapping[tel]:=map;
+  texmap.tu:=self.Vertex[tel].x*scaletu;
+  texmap.tv:=self.Vertex[tel].y*scaletv;
+  self.Mapping[tel]:=texmap;
   end;
 
   for tel:=0 to self.NumMappingIndices-1 do

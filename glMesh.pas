@@ -68,12 +68,12 @@ end;
 procedure TglMesh.Render;
 var
   f: Integer;
-  matid: Integer;
+  imatid: Integer;
   id1, id2, id3: Integer;
   v1, v2, v3: array [0..2] of single;
   calcv1, calcv2, calcv3: T3dPoint;
   lightv1, lightv2, lightv3: t3dpoint;
-  matrix: clsMatrix;
+  mmatrix: clsMatrix;
   offset: Single;
 begin
   if fdisplaylist<>0
@@ -83,7 +83,7 @@ begin
   end
   else
   begin
-    matid := -1; //hmm since material now starts with 0 this has to be higher...
+    imatid := -1; //hmm since material now starts with 0 this has to be higher...
     glbegin(GL_TRIANGLES);
     if NumVertexIndices > 0 then
     begin
@@ -93,13 +93,13 @@ begin
         //begin setting material
         //only set material if different from previous
          if FMatId<>nil then
-          if FMatId[f div 3] <> matid then
+          if FMatId[f div 3] <> imatid then
           begin
             glend;
 
-            matid := FMatId[f div 3];
-            if (TBaseModel(owner).material[matid] is TBaseMaterial) then
-              TBaseModel(owner).material[matid].apply;
+            imatid := FMatId[f div 3];
+            if (TBaseModel(owner).material[imatid] is TBaseMaterial) then
+              TBaseModel(owner).material[imatid].apply;
 
             glbegin(GL_TRIANGLES);
           end;
@@ -133,30 +133,30 @@ begin
 
               if id1 <> -1 then
               begin
-                matrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id1].Matrix;
-                matrix.rotateVect(v1);
-                matrix.translateVect(v1);
+                mmatrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id1].Matrix;
+                mmatrix.rotateVect(v1);
+                mmatrix.translateVect(v1);
               end;
 
               if id2 <> -1 then
               begin
-                matrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id2].Matrix;
-                matrix.rotateVect(v2);
-                matrix.translateVect(v2);
+                mmatrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id2].Matrix;
+                mmatrix.rotateVect(v2);
+                mmatrix.translateVect(v2);
               end;
 
               if id3 <> -1 then
               begin
-                matrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id3].Matrix;
-                matrix.rotateVect(v3);
-                matrix.translateVect(v3);
+                mmatrix := TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[id3].Matrix;
+                mmatrix.rotateVect(v3);
+                mmatrix.translateVect(v3);
               end;
             end;
         end;
 
         offset:=0;
         if FMatId<>nil then
-          if TBaseModel(owner).material[matid].Hasbumpmap then
+          if TBaseModel(owner).material[imatid].Hasbumpmap then
           begin
             //calculate bumpmapping
             Calcv1.x := V1[0];
@@ -177,7 +177,7 @@ begin
             //LightV3 := VectorSubtract(ObjLightPos,CalcV3);
             //LightV3 := Normalize(LightV3);
 
-            offset:=TBaseModel(owner).Material[matid].BumpmapStrength;
+            offset:=TBaseModel(owner).Material[imatid].BumpmapStrength;
           end
           else
           begin

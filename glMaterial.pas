@@ -27,9 +27,13 @@ unit glMaterial;
  *
  *)
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
-uses classes, material, dglopengl, glmath, glBitmap, jpeg;
+uses classes, material, dglopengl, glmath, glBitmap;
 
 type
   TglMaterial= class(TBaseMaterial)
