@@ -540,4 +540,7 @@ begin
   GetFileFormats.Remove(ABaseModelClass);
 end;
 
+finalization
+  FreeAndNil(FileFormats);
+
 end.
