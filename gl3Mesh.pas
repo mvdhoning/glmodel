@@ -83,9 +83,9 @@ begin
   begin
     fVboBuffer[i].Position:=FVertex[FVertexIndices[i]];
     fVboBuffer[i].Normal:=FvNormal[FNormalIndices[i]];
-    fVboBuffer[i].Color.red:=TBaseModel(owner).material[fmatid[i]].DiffuseRed;
-    fVboBuffer[i].Color.green:=TBaseModel(owner).material[fmatid[i]].DiffuseGreen;
-    fVboBuffer[i].Color.blue:=TBaseModel(owner).material[fmatid[i]].DiffuseBlue;
+    fVboBuffer[i].Color.red:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseRed;
+    fVboBuffer[i].Color.green:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseGreen;
+    fVboBuffer[i].Color.blue:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseBlue;
     fVboBuffer[i].Color.alpha:=1.0;
   end;
   // make a new index buffer
@@ -98,12 +98,12 @@ begin
   glGenBuffers(1, @FVBO);
   glBindBuffer(GL_ARRAY_BUFFER, FVBO);
   glBufferData(GL_ARRAY_BUFFER, fNumVertexIndices*sizeof(TvboVertex), @FvboBuffer[0], GL_STATIC_DRAW);
-  writeln(glGetError());
+  //writeln(glGetError());
   //assign the index buffer to opengl
   glGenBuffers(1, @FIBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, FIBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, fNumVertexIndices*sizeof(word), @FVboIndices[0], GL_STATIC_DRAW);
-  writeln(glGetError());
+  //writeln(glGetError());
 
   (* //buffer draw
   glGenBuffers(1, @FVBO);
