@@ -148,7 +148,7 @@ begin
   glEnableClientState(GL_COLOR_ARRAY);
   glDrawElements(GL_TRIANGLES, fnumvertexindices, GL_UNSIGNED_SHORT, nil);
   glDisableClientState(GL_COLOR_ARRAY);
-  glDisableClientState( GL_NORMAL_ARRAY );
+  glDisableClientState(GL_NORMAL_ARRAY );
   glDisableClientState(GL_VERTEX_ARRAY);
 end;
 

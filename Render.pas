@@ -43,6 +43,7 @@ type TBaseRender = class(TComponent)
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property Models[Index: integer]: TBaseModel read GetModel write SetModel;
+    property NumModels: Integer read FNumModels;
     procedure AddModel(Value: TBaseModel); overload; virtual;
     procedure AddModel; overload; virtual; abstract;
     procedure UpdateTextures;
