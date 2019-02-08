@@ -45,6 +45,8 @@ type
     Position: T3dPoint;
     Normal: T3dPoint;
     Color: TGLColor;
+    BoneIndex: T4dPoint;
+    BoneWeight: T4dPoint;
   end;
 
   TVBOBuffer = array of TVBOVertex;

@@ -49,6 +49,7 @@ type
   public
     destructor Destroy; override;
     property BoneClass: TBaseBoneClass read FBoneClass write FBoneClass;
+    procedure AddBone;
     procedure Assign(Source: TPersistent); override;
     procedure InitBones;
     procedure AdvanceAnimation;
@@ -101,6 +102,13 @@ begin
   inherited Destroy; //this will automaticaly free the meshes, materials, bones...
   //however do free the dynamic arrays used
   SetLength(FBone, 0);
+end;
+
+procedure TBaseSkeleton.AddBone;
+begin
+  FNumBones := FNumBones + 1;
+  SetLength(FBone, FNumBones);
+  FBone[FNumBones - 1] := FBoneClass.Create(self);
 end;
 
 function TBaseSkeleton.GetBone(Index: integer): TBaseBone;

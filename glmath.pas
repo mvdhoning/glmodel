@@ -68,6 +68,7 @@ function VectorDiv(V: T3DPoint; S: single): T3dPoint; register;
 function VectorTransform3f(V: T3DPoint; M: TMatrix): T3dPoint;
 function VectorTransform4f(V: T4DPoint; M: TMatrix): T4dPoint;
 function CreateT3DPoint(x,y,z: Single): T3dPoint;
+function CreateT4DPoint(x,y,z,w: Single): T4dPoint;
 
 implementation
 
@@ -76,6 +77,14 @@ begin
   result.x:=x;
   result.y:=y;
   result.z:=z;
+end;
+
+function CreateT4DPoint(x,y,z,w: Single): T4dPoint;
+begin
+  result.x:=x;
+  result.y:=y;
+  result.z:=z;
+  result.w:=w;
 end;
 
 //Normalizes a vector
