@@ -37,7 +37,7 @@ unit gl3Render;
  
 interface
 
-uses classes, model, render, dglopengl, gl3mesh, glmodel, glmaterial{, glskeleton};
+uses classes, model, render, dglopengl, gl3mesh, glmodel, glmaterial, glskeleton;
 
 type Tgl3Render = class(TBaseRender)
   protected
@@ -56,7 +56,7 @@ begin
 
   Models[FNumModels-1].MeshClass := TGL3Mesh;
   Models[FNumModels-1].MaterialClass := TGLMaterial;
-  //Models[FNumModels-1].SkeletonClass := TGLSkeleton;
+  Models[FNumModels-1].SkeletonClass := TGLSkeleton;
 end;
 
 procedure Tgl3Render.AddModel;

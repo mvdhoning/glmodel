@@ -94,6 +94,8 @@ type
     Fvnormal: array of T3dPoint;
     Fmapping: array of TMap;
 
+    function GetVertexIndex(Index: integer): Word;
+    procedure SetVertexIndex(Index: integer; Value: Word);
     function GetMap(Index: integer): Word;
     procedure SetMap(Index: integer; Value: Word);
     function GetFace(Index: integer): Word;
@@ -164,6 +166,7 @@ type
 
     //    property NumFaceRecords: Integer read FNumFaces write SetNumberOfFaces;
     property Vertex[Index: integer]: T3dPoint read GetVertex write SetVertex;
+    property VertexIndices[Index: integer]: Word read GetVertexIndex write SetVertexIndex;
     property Pivot: T3dPoint read FPivot write FPivot; //TODO: move to 3ds only?
     property Matrix[Index: integer]: Single read GetValFromMatrix write SetValInMatrix; //TODO: move to 3ds only?
   end;
@@ -345,6 +348,11 @@ if self.NumVertexIndices > 0 then
     end;
 end;
 
+function TBaseMesh.GetVertexIndex(Index: integer): Word;
+begin
+  Result := FVertexIndices[index];
+end;
+
 function TBaseMesh.GetMap(Index: integer): Word;
 begin
   Result := FMappingIndices[index];
@@ -401,6 +409,11 @@ end;
 procedure TBaseMesh.SetVertex(Index: integer; Value: T3DPoint);
 begin
   FVertex[index]  :=Value;
+end;
+
+procedure TBaseMesh.SetVertexIndex(Index: integer; Value: word);
+begin
+  FVertexIndices[index]:=Value;
 end;
 
 procedure TBaseMesh.SetMap(Index: integer; Value: word);

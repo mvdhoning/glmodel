@@ -55,10 +55,12 @@ type
      FVBO: GLuint;
      FvboBuffer: TvboBuffer;
      FvboIndices: array of word;
+     fDrawStyle: GLenum;
   public
     destructor Destroy; override;
     procedure Init; override;
     procedure Render; override;
+    property DrawStyle: GLenum read fDrawStyle write fDrawStyle;
   end;
 
 implementation
@@ -77,6 +79,7 @@ procedure Tgl3Mesh.Init;
 var
   i: integer;
 begin
+  fDrawStyle:=GL_TRIANGLES;
   // fill the vbo buffer with vertices and colors and normals (and uv tex coords)
   setlength(FVBOBuffer, fNumVertexIndices);
   for i:=0 to fnumvertexindices-1 do
@@ -120,6 +123,7 @@ end;
 
 procedure Tgl3Mesh.Render;
 begin
+
   (* //static draw
   glEnableClientState(GL_VERTEX_ARRAY);
   glVertexPointer(3,GL_FLOAT,0,@FVertex[0]);
@@ -146,10 +150,11 @@ begin
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
   glEnableClientState(GL_COLOR_ARRAY);
-  glDrawElements(GL_TRIANGLES, fnumvertexindices, GL_UNSIGNED_SHORT, nil);
+  glDrawElements(fDrawStyle, fnumvertexindices, GL_UNSIGNED_SHORT, nil);
   glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY );
   glDisableClientState(GL_VERTEX_ARRAY);
+
 end;
 
 end.
