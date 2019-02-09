@@ -63,12 +63,25 @@ type
 		{	Rotate a vector by the inverse of the rotation part of this matrix. }
 		procedure inverseRotateVect( var pVect: array of single );
 
+                // Determinant of a 4x4 matrix
+                function determinant(matrix : array of single): Single;
+
+                procedure Adjoint(var matrix : array of single);
+
+                procedure Scale(var matrix : array of single; Factor: Single);
+
+                procedure Invert(var matrix : array of single);
+
+
+
 	private
 		//	Matrix data, stored in column-major order
 		m_matrix : array [0..15] of single;
+                function DetInternal(a1, a2, a3, b1, b2, b3, c1, c2, c3: Single): Single;
 
 end;
 
+   procedure MatrixMultiply(var aresult: array of single; const matrix0: array of single; const matrix1: array of single);
 
 implementation
 
@@ -80,6 +93,154 @@ implementation
 constructor clsMatrix.create;
 begin
   loadIdentity();
+end;
+
+{------------------------------------------------------------------}
+{  Multiply Matrices                                               }
+{------------------------------------------------------------------}
+procedure MatrixMultiply(var aresult: array of single; const matrix0: array of single; const matrix1: array of single);
+var
+  i, k: integer;
+  temp: array [0..15] of single;
+begin
+	for i := 0 to 15 do
+	begin
+		temp[i] := 0.0;
+
+		for k := 0 to 3 do
+		begin
+			//			  		row   column   		   row column
+			temp[i] := temp[i]+ matrix0[(i mod 4)+(k*4)] * matrix1[k+((i div 4)*4)];
+		end;
+	end;
+
+	for i := 0 to 15 do
+	begin
+		aresult[i] := temp[i];
+	end;
+end;
+
+function clsMatrix.DetInternal(a1, a2, a3, b1, b2, b3, c1, c2, c3: Single): Single;
+// internal version for the determinant of a 3x3 matrix
+begin
+  Result := a1 * (b2 * c3 - b3 * c2) -
+            b1 * (a2 * c3 - a3 * c2) +
+            c1 * (a2 * b3 - a3 * b2);
+end;
+
+function clsMatrix.Determinant(matrix : array of single): Single;
+
+// Determinant of a 4x4 matrix
+
+var a1, a2, a3, a4,
+    b1, b2, b3, b4,
+    c1, c2, c3, c4,
+    d1, d2, d3, d4  : Single;
+
+
+
+begin
+  a1 := matrix[0];  b1 := matrix[1];  c1 := matrix[2];  d1 := matrix[3];
+  a2 := matrix[4];  b2 := matrix[5];  c2 := matrix[6];  d2 := matrix[7];
+  a3 := matrix[8];  b3 := matrix[9];  c3 := matrix[10];  d3 := matrix[11];
+  a4 := matrix[12];  b4 := matrix[13];  c4 := matrix[14];  d4 := matrix[15];
+
+  Result := a1 * DetInternal(b2, b3, b4, c2, c3, c4, d2, d3, d4) -
+            b1 * DetInternal(a2, a3, a4, c2, c3, c4, d2, d3, d4) +
+            c1 * DetInternal(a2, a3, a4, b2, b3, b4, d2, d3, d4) -
+            d1 * DetInternal(a2, a3, a4, b2, b3, b4, c2, c3, c4);
+end;
+
+procedure clsMatrix.Adjoint(var matrix : array of single);
+
+// Adjoint of a 4x4 matrix - used in the computation of the inverse
+// of a 4x4 matrix
+
+var a1, a2, a3, a4,
+    b1, b2, b3, b4,
+    c1, c2, c3, c4,
+    d1, d2, d3, d4: Single;
+
+
+begin
+    a1 :=  matrix[0]; b1 :=  matrix[1];
+    c1 :=  matrix[2]; d1 :=  matrix[3];
+    a2 :=  matrix[4]; b2 :=  matrix[5];
+    c2 :=  matrix[6]; d2 :=  matrix[7];
+    a3 :=  matrix[8]; b3 :=  matrix[9];
+    c3 :=  matrix[10]; d3 :=  matrix[11];
+    a4 :=  matrix[12]; b4 :=  matrix[13];
+    c4 :=  matrix[14]; d4 :=  matrix[15];
+
+    // row column labeling reversed since we transpose rows & columns
+    matrix[0] :=  DetInternal(b2, b3, b4, c2, c3, c4, d2, d3, d4);
+    matrix[4] := -DetInternal(a2, a3, a4, c2, c3, c4, d2, d3, d4);
+    matrix[8] :=  DetInternal(a2, a3, a4, b2, b3, b4, d2, d3, d4);
+    matrix[12] := -DetInternal(a2, a3, a4, b2, b3, b4, c2, c3, c4);
+
+    matrix[1] := -DetInternal(b1, b3, b4, c1, c3, c4, d1, d3, d4);
+    matrix[5] :=  DetInternal(a1, a3, a4, c1, c3, c4, d1, d3, d4);
+    matrix[9] := -DetInternal(a1, a3, a4, b1, b3, b4, d1, d3, d4);
+    matrix[13] :=  DetInternal(a1, a3, a4, b1, b3, b4, c1, c3, c4);
+
+    matrix[2] :=  DetInternal(b1, b2, b4, c1, c2, c4, d1, d2, d4);
+    matrix[6] := -DetInternal(a1, a2, a4, c1, c2, c4, d1, d2, d4);
+    matrix[10] :=  DetInternal(a1, a2, a4, b1, b2, b4, d1, d2, d4);
+    matrix[14] := -DetInternal(a1, a2, a4, b1, b2, b4, c1, c2, c4);
+
+    matrix[3] := -DetInternal(b1, b2, b3, c1, c2, c3, d1, d2, d3);
+    matrix[7] :=  DetInternal(a1, a2, a3, c1, c2, c3, d1, d2, d3);
+    matrix[11] := -DetInternal(a1, a2, a3, b1, b2, b3, d1, d2, d3);
+    matrix[15] :=  DetInternal(a1, a2, a3, b1, b2, b3, c1, c2, c3);
+end;
+
+procedure clsMatrix.Scale(var matrix : array of single; Factor: Single);
+
+// multiplies all elements of a 4x4 matrix with a factor
+
+var i: integer;
+
+begin
+  for i := 0 to 15 do matrix[i] := matrix[i] * Factor;
+end;
+
+procedure clsMatrix.Invert(var matrix : array of single);
+
+// finds the inverse of a 4x4 matrix
+
+var Det: Single;
+const   EPSILON  = 1e-100;
+
+begin
+  Det := self.Determinant(matrix);
+  if Abs(Det) < EPSILON then
+    begin
+      matrix[0]  := 1;
+      matrix[1]  := 0;
+      matrix[2]  := 0;
+      matrix[3]  := 0;
+
+      matrix[4]  := 0;
+      matrix[5]  := 1;
+      matrix[6]  := 0;
+      matrix[7]  := 0;
+
+      matrix[8]  := 0;
+      matrix[9]  := 0;
+      matrix[10] := 1;
+      matrix[11] := 0;
+
+      matrix[12] := 0;
+      matrix[13] := 0;
+      matrix[14] := 0;
+      matrix[15] := 1;
+
+    end
+    else
+    begin
+      self.Adjoint(matrix);
+      self.Scale(matrix, 1 / Det);
+    end;
 end;
 
 {------------------------------------------------------------------}

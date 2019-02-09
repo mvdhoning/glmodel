@@ -383,7 +383,7 @@ begin
       f := 0;
       while f < FMesh[m].NumVertex do // go through all vertexes and
       begin
-        tempbone := FMesh[m].BoneId[f];
+        tempbone := trunc(FMesh[m].BoneId[f,0]);
 
         if tempbone<>-1 then
         begin

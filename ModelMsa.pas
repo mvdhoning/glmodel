@@ -166,7 +166,7 @@ begin
 
             FMesh[tcount].Mapping[loop]:=tempmap;
 
-            FMesh[tcount].BoneId[loop] := StrToInt(tsl.Strings[6]);
+            FMesh[tcount].BoneId[loop,0] := StrToInt(tsl.Strings[6]);
 
             tsl.Free;
           end;
@@ -395,7 +395,7 @@ begin
     for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
     begin
       if fmesh[saveloop].NumBones > 0 then
-      ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' '+inttostr(fmesh[saveloop].boneid[subsaveloop]))
+      ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' '+inttostr(fmesh[saveloop].boneid[subsaveloop,0]))
       else
       ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
     end;

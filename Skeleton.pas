@@ -60,7 +60,7 @@ type
     property CurrentFrame: Integer read FCurrentFrame write FCurrentFrame;
     property Name: string read FName write FName;
     property NumBones: Integer read FNumBones;
-    property NumFrames: Integer read FNumFrames;
+    property NumFrames: Integer read FNumFrames write FNumFrames;
   end;
 
 implementation
@@ -134,9 +134,11 @@ var
   m: integer;
 begin
   //init bone structure
+  writeln('initbones');
   If FNumBones > 0 then
   for m := 0 to FNumBones - 1 do
   begin
+    writeln(m);
     FBone[m].Init;
   end;
 end;

@@ -54,17 +54,16 @@ type
 
   //mesh data
 
-    TBaseMesh = class;
+  TBoneIdArray = array [0..3] of single;
+
+  TBaseMesh = class;
 
   TBaseMeshClass = class of TBaseMesh;
 
   TBaseMesh = class(TComponent)
   protected
-    FMatrix: array[0..15] of Single;
+    FMatrix: array of Single;
     FVisible: boolean;
-
-    Fboneid: array of integer;
-//    FDisplaylist: Integer;
 
     FId: Integer;
 
@@ -77,6 +76,8 @@ type
     FVertexIndices: array of word;
     FNormalIndices: array of word;
     FMappingIndices: array of word;
+    fBoneIndices: array of TBoneIdArray;
+    fBoneWeights: array of TBoneIdArray;
 
     FNumVertexIndices: Integer;
     FNumVertex: Integer;
@@ -93,6 +94,11 @@ type
     Fvertex: array of T3dpoint;
     Fvnormal: array of T3dPoint;
     Fmapping: array of TMap;
+    fNumBones: integer;
+    //fBoneId: TBoneIdArray; //array of bone id that can incluence a single vertex
+
+    function GetBoneWeight(VertexIndex, WeightIndex: integer): single;
+    procedure SetBoneWeight(VertexIndex, WeightIndex: integer; aValue: single);
 
     function GetVertexIndex(Index: integer): Word;
     procedure SetVertexIndex(Index: integer; Value: Word);
@@ -102,7 +108,7 @@ type
     procedure SetFace(Index: integer; Value: Word);
     function GetNormal(Index: integer): Word;
     procedure SetNormal(Index: integer; Value: Word);
-    function GetBoneId(Index: integer): Integer;
+    function GetBoneId(VertexIndex, BoneIndex: integer): single;
  //   function GetFaces(Index: integer): TFace;
  //   procedure SetFaces(Index: integer; Value: TFace);
     function GetMapping(Index: integer): TMap;
@@ -121,13 +127,14 @@ type
     procedure SetNumberOfMappings(Value: Integer);
     procedure SetNumberOfMappingIndices(Value: Integer);
 
-    procedure SetBoneId(Index: integer; Value: Integer);
+    procedure SetBoneId(VertexIndex, BoneIndex: integer; aValue: single);
     function GetMatName(Index: integer): string;
     procedure SetMatName(Index: integer; Value: string);
     function GetValFromMatrix(Index: integer): Single;
     procedure SetValInMatrix(Index: integer; Value: Single);
     function GetNumMaterials: integer;
-    function GetNumBones: integer;
+    function GetNumBones(): integer;
+    procedure SetNumBones(aValue: integer);
   public
     destructor Destroy; override;
     procedure Init; virtual; abstract;
@@ -143,7 +150,8 @@ type
     property Map[Index: integer]: Word read GetMap write SetMap;
     //property Faces[Index: integer]: TFace read GetFaces write SetFaces;
     property MatName[Index: integer]: string read GetMatName write SetMatName;
-    property BoneId[Index: integer]: Integer read GetBoneId write SetBoneId;
+    property BoneId[VertexIndex, BoneIndex: integer]: single read GetBoneId write SetBoneId;
+    property BoneWeight[VertexIndex, WeightIndex: integer]: single read GetBoneWeight write SetBoneWeight;
     property Id: Integer read FId write FId;
     property Mapping[Index: integer]: TMap read GetMapping write SetMapping;
     property MatID[Index: integer]: Word read GetMatID write SetMatId;
@@ -162,7 +170,7 @@ type
     property NumMappings: Integer read FNumMappings write SetNumberofMappings;
 
     property NumMaterials: Integer read GetNumMaterials;
-    property NumBones: Integer read GetNumBones;
+    property NumBones: Integer read GetNumBones write SetNumBones; //number of bones that can influence a vertex in a mesh
 
     //    property NumFaceRecords: Integer read FNumFaces write SetNumberOfFaces;
     property Vertex[Index: integer]: T3dPoint read GetVertex write SetVertex;
@@ -186,7 +194,12 @@ end;
 
 function TBaseMesh.GetNumBones: integer;
 begin
-  if FBoneId = nil then result:=0 else result:=High(FBoneId);
+  result := fnumbones;
+end;
+
+procedure TBaseMesh.SetNumBones(AValue: integer);
+begin
+  fnumbones:=aValue;
 end;
 
 destructor TBaseMesh.Destroy;
@@ -200,7 +213,9 @@ begin
   SetLength(FVertexIndices, 0);
   Setlength(FNormalIndices, 0);
   Setlength(FMappingIndices,0);
-  SetLength(FBoneId, 0);
+  //SetLength(FBoneId, 0);
+  SetLength(FBoneIndices, 0);
+  SetLength(FBoneWeights, 0);
   FVertex := nil;
   FMatName := nil;
   FVnormal := nil;
@@ -209,7 +224,9 @@ begin
   FVertexIndices := nil;
   FNormalIndices := nil;
   FMappingIndices := nil;
-  FBoneId := nil;
+  FBoneIndices := nil;
+  FBoneWeights := nil;
+  //FBoneId := nil;
   inherited Destroy;
 end;
 
@@ -225,7 +242,9 @@ begin
     begin
       self.FMatrix:=FMatrix;
       self.FVisible:=FVisible;
-      self.Fboneid:= Fboneid;
+      //self.Fboneid:= Fboneid;
+      self.FboneIndices:= FboneIndices;
+      self.FBoneWeights:= FboneWeights;
       //self.FDisplaylist:= FDisplaylist;
       self.FId:= FId;
       self.FVertexIndices:= FVertexIndices;
@@ -363,9 +382,14 @@ begin
   Result := FVertexIndices[index];
 end;
 
-function TBaseMesh.GetBoneId(Index: integer): Integer;
+function TBaseMesh.GetBoneId(VertexIndex, BoneIndex: integer): single;
 begin
-  Result := FBoneId[index];
+  Result := FBoneIndices[VertexIndex][BoneIndex];
+end;
+
+function TBaseMesh.GetBoneWeight(VertexIndex, WeightIndex: integer): single;
+begin
+  Result := FBoneWeights[VertexIndex][WeightIndex];
 end;
 
 function TBaseMesh.GetMapping(Index: integer): TMap;
@@ -473,13 +497,21 @@ procedure TBaseMesh.SetNumberOfVertex(Value: Integer);
 begin
    FNumVertex:=Value;
    SetLength(FVertex, Value);
-   SetLength(FBoneId, Value);
+   SetLength(FBoneIndices, Value);
+   SetLength(FBoneWeights, Value);
    SetLength(FMapping, Value);
 end;
 
-procedure TBaseMesh.SetBoneId(Index: Integer; Value: Integer);
+procedure TBaseMesh.SetBoneId(VertexIndex, BoneIndex: integer; aValue: single);
 begin
-  FBoneId[Index] := Value;
+  FBoneIndices[VertexIndex][BoneIndex] := aValue;
+  //writeln(avalue);
+end;
+
+procedure TBaseMesh.SetBoneWeight(VertexIndex, WeightIndex: integer; aValue: single);
+begin
+  FBoneWeights[VertexIndex][WeightIndex] := aValue;
+  //writeln(avalue);
 end;
 
 procedure TBaseMesh.SetMatName(Index: Integer; Value: string);

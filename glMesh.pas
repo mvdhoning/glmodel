@@ -125,11 +125,11 @@ begin
         begin
           //if there is a bone then apply bone translate etc...
           if TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].NumBones>0 then
-            if FBoneId <> nil then
+            if FBoneIndices <> nil then
             begin
-              id1 := FBoneId[FVertexIndices[f]] ;
-              id2 := FBoneId[FVertexIndices[f + 1]] ;
-              id3 := FBoneId[FVertexIndices[f + 2]] ;
+              id1 := trunc(FBoneIndices[FVertexIndices[f],0]);
+              id2 := trunc(FBoneIndices[FVertexIndices[f + 1],0]);
+              id3 := trunc(FBoneIndices[FVertexIndices[f + 2],0]);
 
               if id1 <> -1 then
               begin

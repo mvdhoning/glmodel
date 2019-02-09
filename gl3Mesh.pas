@@ -45,8 +45,8 @@ type
     Position: T3dPoint;
     Normal: T3dPoint;
     Color: TGLColor;
-    BoneIndex: T4dPoint;
-    BoneWeight: T4dPoint;
+    BoneIndex: TBoneIdArray;
+    BoneWeight: TBoneIdArray;
   end;
 
   TVBOBuffer = array of TVBOVertex;
@@ -58,11 +58,17 @@ type
      FvboBuffer: TvboBuffer;
      FvboIndices: array of word;
      fDrawStyle: GLenum;
+     fBoneAttribId: GlInt;
+     fBoneAttribWeight: GlInt;
+     fBones: GlInt;
   public
     destructor Destroy; override;
     procedure Init; override;
     procedure Render; override;
     property DrawStyle: GLenum read fDrawStyle write fDrawStyle;
+    property BoneAttribId: GLInt read fBoneAttribId write fBoneAttribId;
+    property BoneAttribWeight: GLInt read fBoneAttribWeight write fBoneAttribWeight;
+    property Bones: GLInt read fBones write fBones;
   end;
 
 implementation
@@ -92,6 +98,27 @@ begin
     fVboBuffer[i].Color.green:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseGreen;
     fVboBuffer[i].Color.blue:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseBlue;
     fVboBuffer[i].Color.alpha:=1.0;
+
+    fVboBuffer[i].BoneIndex[0]:=fBoneIndices[FVertexIndices[i]][0];
+    fVboBuffer[i].BoneIndex[1]:=fBoneIndices[FVertexIndices[i]][1];
+    fVboBuffer[i].BoneIndex[2]:=fBoneIndices[FVertexIndices[i]][2];
+    fVboBuffer[i].BoneIndex[3]:=fBoneIndices[FVertexIndices[i]][3];
+
+    fVboBuffer[i].BoneWeight[0]:=fBoneWeights[FVertexIndices[i]][0];
+    fVboBuffer[i].BoneWeight[1]:=fBoneWeights[FVertexIndices[i]][1];
+    fVboBuffer[i].BoneWeight[2]:=fBoneWeights[FVertexIndices[i]][2];
+    fVboBuffer[i].BoneWeight[3]:=fBoneWeights[FVertexIndices[i]][3];
+
+    writeln('');
+    writeln('-----------------------------------');
+    writeln(FVertexIndices[i]);
+    writeln('-----------------------------------');
+    writeln(fVboBuffer[i].BoneWeight[0]);
+    writeln(fVboBuffer[i].BoneWeight[1]);
+    writeln(fVboBuffer[i].BoneWeight[2]);
+    writeln(fVboBuffer[i].BoneWeight[3]);
+    writeln('===================================');
+
   end;
   // make a new index buffer
   setLength(FVBOIndices, fNumVertexIndices);
@@ -124,7 +151,14 @@ begin
 end;
 
 procedure Tgl3Mesh.Render;
+var
+  bonematrices:array [0..(4*16)-1] of single;
+  mmatrix : array[0..15] of single;
+  imatrix : array[0..15] of single;
+  mat: array[0..15] of single;
+  i: integer;
 begin
+
 
   (* //static draw
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -143,10 +177,47 @@ begin
   glDisableClientState(GL_VERTEX_ARRAY);
   *)
 
+  if TBaseModel(owner).NumSkeletons >= 1 then
+    begin
+      //if there is a bone then apply bone translate etc...
+      if TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].NumBones>0 then
+         if FBoneIndices <> nil then
+            begin
+              //writeln('bork');
+              TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[0].Matrix.getMatrix(mmatrix);
+              TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[0].InverseMatrix.getMatrix(imatrix);
+              MatrixMultiply(mat,mmatrix,imatrix);
+              for i:=0 to 15 do
+                  bonematrices[i]:=mat[i];
+
+              TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[1].Matrix.getMatrix(mmatrix);
+              TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[1].InverseMatrix.getMatrix(imatrix);
+              MatrixMultiply(mat,mmatrix,imatrix);
+              for i:=0 to 15 do
+                  bonematrices[16+i]:=mat[i];
+
+              TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[2].Matrix.getMatrix(mmatrix);
+              TBaseModel(owner).Skeleton[TBaseModel(owner).CurrentSkeleton].Bone[2].InverseMatrix.getMatrix(imatrix);
+              MatrixMultiply(mat,mmatrix,imatrix);
+              for i:=0 to 15 do
+                  bonematrices[32+i]:=mat[i];
+
+              for i:=0 to 15 do
+                  bonematrices[32+16+i]:=0;
+
+              //for i:=0 to (4*16)-1 do
+              //    writeln(bonematrices[i]);
+              glUniformMatrix4fv(fBones, 4, False, @bonematrices[0] );
+            end;
+    end;
+
+
   glBindBuffer(GL_ARRAY_BUFFER, FVBO);
-  glVertexPointer(3, GL_FLOAT, sizeof(TvboVertex), pointer(0));
-  glNormalPointer(GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint)));
-  glColorPointer(4, GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint)*2));
+  glVertexPointer(3, GL_FLOAT, sizeof(TvboVertex), pointer(0)); //vertex
+  glNormalPointer(GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint))); //normal
+  glColorPointer(4, GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint)*2)); //color
+  glVertexAttribPointer(fBoneAttribId,4,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer((sizeof(T3dPoint)*2)+sizeof(TGLColor))); //bone ids
+  glVertexAttribPointer(fBoneAttribWeight,4,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer((sizeof(T3dPoint)*2)+sizeof(TGLColor)+sizeof(TBoneIdArray))); //bone ids
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, FIBO);
 
   glEnableClientState(GL_VERTEX_ARRAY);

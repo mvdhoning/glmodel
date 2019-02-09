@@ -41,6 +41,7 @@ type
   protected
     FBvhChanneltype: Integer;
     FMatrix: ClsMatrix;
+    FInverseMatrix: ClsMatrix;
     FName: string;
     FNumRotateFrames: Integer;
     FNumTranslateFrames: Integer;
@@ -74,6 +75,7 @@ type
     property Translate: T3DPoint read FTranslate write FTranslate;
     property CurrentFrame: integer read FCurrentFrame write FCurrentFrame;
     property Matrix: ClsMatrix read FMatrix write FMatrix;
+    property InverseMatrix: ClsMatrix read FInverseMatrix write FInverseMatrix;
 
     property NumRotateFrames: integer read FNumRotateFrames write SetNumRotateFrames;
     property NumTranslateFrames: integer read FNumTranslateFrames write SetNumTranslateFrames;
@@ -118,6 +120,7 @@ constructor TBaseBone.Create(AOwner: TComponent);
 begin
   inherited Create(AOWner);
   FMatrix := clsMatrix.Create;
+  FInverseMatrix := clsMatrix.Create;
 end;
 
 destructor TBaseBone.Destroy;
@@ -127,6 +130,12 @@ begin
   begin
     FMatrix.Free();
     FMatrix:=nil;
+  end;
+
+   if FInverseMatrix <> nil then
+  begin
+    FInverseMatrix.Free();
+    FInverseMatrix:=nil;
   end;
 //  if FParent <> nil then
 //  begin
@@ -299,6 +308,11 @@ begin
     FMatrix.setMatrixValues(tempm);
     FMatrix.postMultiply(m_rel);
   end;
+
+  //calculate inversematrix
+  FMatrix.getMatrix(tempm);
+  FMatrix.Invert(tempm);
+  FInverseMatrix.setMatrixValues(tempm);
 
   m_rel.Free;
 
