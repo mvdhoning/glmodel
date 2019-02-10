@@ -58,6 +58,7 @@ type
      FvboBuffer: TvboBuffer;
      FvboIndices: array of word;
      fDrawStyle: GLenum;
+     fVertexAttribId: GlInt;
      fBoneAttribId: GlInt;
      fBoneAttribWeight: GlInt;
      fBones: GlInt;
@@ -66,6 +67,7 @@ type
     procedure Init; override;
     procedure Render; override;
     property DrawStyle: GLenum read fDrawStyle write fDrawStyle;
+    property VertexAttribId: GLInt read fVertexAttribId write fVertexAttribId;
     property BoneAttribId: GLInt read fBoneAttribId write fBoneAttribId;
     property BoneAttribWeight: GLInt read fBoneAttribWeight write fBoneAttribWeight;
     property Bones: GLInt read fBones write fBones;
@@ -113,6 +115,11 @@ begin
     writeln('-----------------------------------');
     writeln(FVertexIndices[i]);
     writeln('-----------------------------------');
+    writeln(fVboBuffer[i].BoneIndex[0]);
+    writeln(fVboBuffer[i].BoneIndex[1]);
+    writeln(fVboBuffer[i].BoneIndex[2]);
+    writeln(fVboBuffer[i].BoneIndex[3]);
+    writeln('===================================');
     writeln(fVboBuffer[i].BoneWeight[0]);
     writeln(fVboBuffer[i].BoneWeight[1]);
     writeln(fVboBuffer[i].BoneWeight[2]);
@@ -213,20 +220,29 @@ begin
 
 
   glBindBuffer(GL_ARRAY_BUFFER, FVBO);
-  glVertexPointer(3, GL_FLOAT, sizeof(TvboVertex), pointer(0)); //vertex
+  //glVertexPointer(3, GL_FLOAT, sizeof(TvboVertex), pointer(0)); //vertex
+  glEnableVertexAttribArray(fVertexAttribId);
+  glVertexAttribPointer(fVertexAttribId,3,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer(0)); //vertex
+
   glNormalPointer(GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint))); //normal
   glColorPointer(4, GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint)*2)); //color
+  glEnableVertexAttribArray(fBoneAttribId);
   glVertexAttribPointer(fBoneAttribId,4,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer((sizeof(T3dPoint)*2)+sizeof(TGLColor))); //bone ids
+  glEnableVertexAttribArray(fBoneAttribWeight);
   glVertexAttribPointer(fBoneAttribWeight,4,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer((sizeof(T3dPoint)*2)+sizeof(TGLColor)+sizeof(TBoneIdArray))); //bone ids
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, FIBO);
 
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_NORMAL_ARRAY);
-  glEnableClientState(GL_COLOR_ARRAY);
+  //glEnableClientState(GL_VERTEX_ARRAY);
+  //glEnableClientState(GL_NORMAL_ARRAY);
+  //glEnableClientState(GL_COLOR_ARRAY);
   glDrawElements(fDrawStyle, fnumvertexindices, GL_UNSIGNED_SHORT, nil);
-  glDisableClientState(GL_COLOR_ARRAY);
-  glDisableClientState(GL_NORMAL_ARRAY );
-  glDisableClientState(GL_VERTEX_ARRAY);
+  //glDisableClientState(GL_COLOR_ARRAY);
+  //glDisableClientState(GL_NORMAL_ARRAY );
+  //glDisableClientState(GL_VERTEX_ARRAY);
+
+  glDisableVertexAttribArray(fBoneAttribWeight);
+  glDisableVertexAttribArray(fBoneAttribId);
+  glDisableVertexAttribArray(fVertexAttribId);
 
 end;
 
