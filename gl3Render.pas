@@ -93,7 +93,7 @@ begin
     writeln('model name: '+fModels[i].Name);
     writeln(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
     fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
-    for j:=0 to FModels[i].Mesh[0].NumVertex-1 do
+    for j:=0 to FModels[i].Mesh[0].NumVertexIndices-1 do
     begin
       //TODO: move to mesh
       test.Position:=FModels[i].Mesh[0].Vertex[FModels[i].Mesh[0].VertexIndices[j]];
