@@ -58,6 +58,8 @@ type
      FvboBuffer: TvboBuffer;
      FvboIndices: array of word;
      fDrawStyle: GLenum;
+     fNormalAttribId: GlInt;
+     fColorAttribId: GlInt;
      fVertexAttribId: GlInt;
      fBoneAttribId: GlInt;
      fBoneAttribWeight: GlInt;
@@ -68,6 +70,8 @@ type
     procedure Render; override;
     property DrawStyle: GLenum read fDrawStyle write fDrawStyle;
     property VertexAttribId: GLInt read fVertexAttribId write fVertexAttribId;
+    property ColorAttribId: GLInt read fColorAttribId write fColorAttribId;
+    property NormalAttribId: GLInt read fNormalAttribId write fNormalAttribId;
     property BoneAttribId: GLInt read fBoneAttribId write fBoneAttribId;
     property BoneAttribWeight: GLInt read fBoneAttribWeight write fBoneAttribWeight;
     property Bones: GLInt read fBones write fBones;
@@ -111,6 +115,7 @@ begin
     fVboBuffer[i].BoneWeight[2]:=fBoneWeights[FVertexIndices[i]][2];
     fVboBuffer[i].BoneWeight[3]:=fBoneWeights[FVertexIndices[i]][3];
 
+    (*
     writeln('');
     writeln('-----------------------------------');
     writeln(FVertexIndices[i]);
@@ -125,6 +130,7 @@ begin
     writeln(fVboBuffer[i].BoneWeight[2]);
     writeln(fVboBuffer[i].BoneWeight[3]);
     writeln('===================================');
+    *)
 
   end;
   // make a new index buffer
@@ -224,8 +230,17 @@ begin
   glEnableVertexAttribArray(fVertexAttribId);
   glVertexAttribPointer(fVertexAttribId,3,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer(0)); //vertex
 
-  glNormalPointer(GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint))); //normal
-  glColorPointer(4, GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint)*2)); //color
+  if fnormalattribid<>-1 then
+     begin
+          //glNormalPointer(GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint))); //normal
+          glEnableVertexAttribArray(fNormalAttribId); //normal
+     end;
+  //glVertexAttribPointer(fNormalAttribId,3,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer(sizeof(T3dPoint))); //normal
+
+  //glColorPointer(4, GL_FLOAT, sizeof(TvboVertex), pointer(sizeof(T3dPoint)*2)); //color
+  glEnableVertexAttribArray(fColorAttribId);
+  glVertexAttribPointer(fColorAttribId,3,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer(sizeof(T3dPoint)*2)); //color
+
   glEnableVertexAttribArray(fBoneAttribId);
   glVertexAttribPointer(fBoneAttribId,4,GL_FLOAT, GL_FALSE, sizeof(TvboVertex), pointer((sizeof(T3dPoint)*2)+sizeof(TGLColor))); //bone ids
   glEnableVertexAttribArray(fBoneAttribWeight);

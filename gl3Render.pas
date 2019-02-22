@@ -37,18 +37,34 @@ unit gl3Render;
  
 interface
 
-uses classes, model, render, dglopengl, gl3mesh, glmodel, glmaterial, glskeleton;
+uses classes, sysutils, model, render, dglopengl, gl3mesh, glmodel, glmaterial, glskeleton, glvbo;
 
 type Tgl3Render = class(TBaseRender)
   protected
+    fvbo: TglVbo;
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy(); override;
     procedure AddModel(Value: TBaseModel); overload; override;
     procedure AddModel; overload; override;
     procedure Render; override;
     procedure Init; override;
+    property VBO: TglVbo read fvbo write fvbo;
 end;
 
 implementation
+
+constructor Tgl3Render.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  fvbo:=TglVbo.Create;
+end;
+
+destructor Tgl3Render.Destroy();
+begin
+  FreeAndNil(fvbo);
+  inherited Destroy;
+end;
 
 procedure Tgl3Render.AddModel(Value: TBaseModel);
 begin
@@ -66,24 +82,62 @@ end;
 
 procedure Tgl3Render.Init;
 var
-  I: Integer;
+  I,J: Integer;
+  test: TVBOVertex;
 begin
+  writeln('gl3render init');
   for I := 0 to FNumModels-1 do
   begin
+    //writeln(i);
     FModels[i].Init;
+    //writeln('model name: '+fModels[i].Name);
+    for j:=0 to FModels[i].Mesh[0].NumVertex-1 do
+    begin
+      test.Position:=FModels[i].Mesh[0].Vertex[FModels[i].Mesh[0].VertexIndices[j]];
+      test.Normal:=FModels[i].Mesh[0].Normals[FModels[i].Mesh[0].Normal[j]];
+      test.Color.red:=FModels[i].material[FModels[i].Mesh[0].matid[j div 3]].DiffuseRed;
+      test.Color.green:=FModels[i].material[FModels[i].Mesh[0].matid[j div 3]].DiffuseGreen;
+      test.Color.blue:=FModels[i].material[FModels[i].Mesh[0].matid[j div 3]].DiffuseBlue;
+      test.Color.alpha:=0.0;
+      fvbo.AddVertex(test);
+    end;
   end;
+  fvbo.init();
 end;
 
 procedure Tgl3Render.Render;
 var
   I: Integer;
 begin
+  fvbo.render;
+  (*
   for I := 0 to FNumModels-1 do
   begin
-    glpushmatrix();
+    //TODO: reimplement glpushmatrix();
     FModels[i].Render;
-    glpopmatrix();
+    //TODO: reimplement glpopmatrix();
   end;
+  *)
+
+  //TODO: make a single vbo here with all static objects and one with all animated object
+  (*
+  GL.VertexPointer(3, VertexPointerType.Double, 0, lineloop1offset); //starting from the beginning of the array
+GL.DrawArrays(BeginMode.LineLoop, lineloop1offset , lineloop1VertexNum  );
+GL.DrawArrays(BeginMode.LineLoop, lineloop2offset , lineloop2VertexNum );
+GL.DrawArrays(BeginMode.LineLoop, lineloop3offset , lineloop3VertexNum );
+
+or
+DrawElement with offset?
+  *)
+
+  //experiment with one cube in vbo and render that multiple times at diffent positions
+
+  //uniforms beter zo doen
+  //https://www.khronos.org/opengl/wiki/Uniform_Buffer_Object
+  //https://learnopengl.com/Advanced-OpenGL/Advanced-GLSL
+
+  //also render gui via this?
+  //read this
 end;
 
 end.
