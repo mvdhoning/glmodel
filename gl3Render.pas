@@ -88,11 +88,14 @@ begin
   writeln('gl3render init');
   for I := 0 to FNumModels-1 do
   begin
-    //writeln(i);
-    FModels[i].Init;
-    //writeln('model name: '+fModels[i].Name);
+    writeln(i);
+    //FModels[i].Init;
+    writeln('model name: '+fModels[i].Name);
+    writeln(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
+    fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
     for j:=0 to FModels[i].Mesh[0].NumVertex-1 do
     begin
+      //TODO: move to mesh
       test.Position:=FModels[i].Mesh[0].Vertex[FModels[i].Mesh[0].VertexIndices[j]];
       test.Normal:=FModels[i].Mesh[0].Normals[FModels[i].Mesh[0].Normal[j]];
       test.Color.red:=FModels[i].material[FModels[i].Mesh[0].matid[j div 3]].DiffuseRed;
@@ -101,6 +104,7 @@ begin
       test.Color.alpha:=0.0;
       fvbo.AddVertex(test);
     end;
+    //TODO: remember models
   end;
   fvbo.init();
 end;
