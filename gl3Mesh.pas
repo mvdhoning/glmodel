@@ -100,10 +100,10 @@ begin
   begin
     fVboBuffer[i].Position:=FVertex[FVertexIndices[i]];
     fVboBuffer[i].Normal:=FvNormal[FNormalIndices[i]];
-    fVboBuffer[i].Color.red:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseRed;
-    fVboBuffer[i].Color.green:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseGreen;
-    fVboBuffer[i].Color.blue:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseBlue;
-    fVboBuffer[i].Color.alpha:=1.0;
+    fVboBuffer[i].Color.r:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseRed;
+    fVboBuffer[i].Color.g:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseGreen;
+    fVboBuffer[i].Color.b:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseBlue;
+    fVboBuffer[i].Color.a:=1.0;
 
     fVboBuffer[i].BoneIndex[0]:=fBoneIndices[FVertexIndices[i]][0];
     fVboBuffer[i].BoneIndex[1]:=fBoneIndices[FVertexIndices[i]][1];

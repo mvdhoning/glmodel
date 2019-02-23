@@ -52,6 +52,7 @@ type
     FMesh: array of TBaseMesh;
     FMinimum: T3dPoint;
     FName: string;
+    FId: integer;
     FNumMaterials: Integer;
     FNumMeshes: Integer;
     FNumSkeletons: Integer;
@@ -107,6 +108,7 @@ type
     property Mesh[Index: integer]: TBaseMesh read GetMesh;
     property Minimum: T3dPoint read FMinimum;
     property Name: string read FName write FName;
+    property Id: integer read FId write FId;
     property NumMaterials: Integer read FNumMaterials;
     property NumMeshes: Integer read FNumMeshes;
     property NumSkeletons: Integer read FNumSkeletons;

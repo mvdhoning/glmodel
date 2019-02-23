@@ -82,7 +82,7 @@ end;
 
 procedure Tgl3Render.Init;
 var
-  I,J: Integer;
+  I,J,M: Integer;
   test: TVBOVertex;
 begin
   writeln('gl3render init');
@@ -91,20 +91,25 @@ begin
     writeln(i);
     //FModels[i].Init;
     writeln('model name: '+fModels[i].Name);
-    writeln(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
-    fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
-    for j:=0 to FModels[i].Mesh[0].NumVertexIndices-1 do
+    fModels[i].Id:=fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
+    writeln('model id: '+inttostr(fModels[i].Id));
+    for m:=0 to FModels[i].NumMeshes-1 do
     begin
-      //TODO: move to mesh
-      test.Position:=FModels[i].Mesh[0].Vertex[FModels[i].Mesh[0].VertexIndices[j]];
-      test.Normal:=FModels[i].Mesh[0].Normals[FModels[i].Mesh[0].Normal[j]];
-      test.Color.red:=FModels[i].material[FModels[i].Mesh[0].matid[j div 3]].DiffuseRed;
-      test.Color.green:=FModels[i].material[FModels[i].Mesh[0].matid[j div 3]].DiffuseGreen;
-      test.Color.blue:=FModels[i].material[FModels[i].Mesh[0].matid[j div 3]].DiffuseBlue;
-      test.Color.alpha:=0.0;
-      fvbo.AddVertex(test);
-    end;
+      //writeln(TGL3Mesh(FModels[i].Mesh[m]).drawStyle);
+      //fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[m]).drawStyle);
+      for j:=0 to FModels[i].Mesh[m].NumVertexIndices-1 do
+      begin
+        //TODO: move to mesh
+        test.Position:=FModels[i].Mesh[m].Vertex[FModels[i].Mesh[m].VertexIndices[j]];
+        test.Normal:=FModels[i].Mesh[m].Normals[FModels[i].Mesh[m].Normal[j]];
+        test.Color.r:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseRed;
+        test.Color.g:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseGreen;
+        test.Color.b:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseBlue;
+        test.Color.a:=0.0;
+        fvbo.AddVertex(test);
+      end;
     //TODO: remember models
+    end;
   end;
   fvbo.init();
 end;
