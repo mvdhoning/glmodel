@@ -1,0 +1,38 @@
+program ReadModel;
+
+//compatibility for FPC
+{$IFDEF FPC}
+  {$MODE Delphi}
+  {$H+}
+  {$M+}
+  {$codepage utf8}
+  {$IFNDEF WINDOWS}
+    {$LINKLIB c}
+  {$ENDIF}
+{$ENDIF}
+
+uses
+  Model,
+  Model3ds,
+  ModelObj,
+  ModelX,
+  ModelMsa;
+
+var
+  Model: TBaseModel;
+
+begin
+  Model := TBaseModel.Create(nil);
+  writeln('Read OBJ model');
+  Model.LoadFromFile('..\..\Models\testcube1.obj');
+  writeln('Write MSA model');
+  Model.SaveToFile('export1.txt');
+  Model.Free;
+
+  Model := TBaseModel.Create(nil);
+  writeln('Read MSA model');
+  Model.LoadFromFile('..\..\Models\testcube1.txt');
+  writeln('Write MSA model');
+  Model.SaveToFile('export2.txt');
+end.
+

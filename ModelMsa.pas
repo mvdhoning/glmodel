@@ -162,7 +162,7 @@ begin
             tempmap.tv := strtofloat(tsl.Strings[5]);
 
             //adjust texture coord v? when and when not?
-            tempmap.tv := 1.0 - tempmap.tv;
+            //tempmap.tv := 1.0 - tempmap.tv;
 
             FMesh[tcount].Mapping[loop]:=tempmap;
 
@@ -177,9 +177,8 @@ begin
         Count := StrToInt(line);
 
         FMesh[tcount].NumNormals := Count;
-        FMesh[tcount].NumNormalIndices := Count; //TODO: should be placed elsewhere
-                                                 //to support less normal indeces then normals
 
+        loop := 0;
         if Count > 0 then
           for loop := 0 to count-1 do
           begin
@@ -204,10 +203,8 @@ begin
         line := sl.Strings[l];
         Count := StrToInt(line);
 
-        FMesh[tcount].NumNormals := count * 3;
-        FMesh[tcount].NumNormalIndices := count * 3; //TODO: support less indices then normals
+        FMesh[tcount].NumNormalIndices := count * 3;
         FMesh[tcount].NumVertexIndices := count * 3;
-        //FMesh[tcount].NumVertexIndices := Count * 3;
         FMesh[tcount].NumMappingIndices := Count * 3;
 
         if Count > 0 then
@@ -217,7 +214,6 @@ begin
             line := sl.Strings[l];
             tsl := TStringList.Create;
             tsl.CommaText := line;
-
             for floop := 1 to 3 do
             begin
               FMesh[tcount].Face[loop * 3 + floop - 1] := StrToInt(tsl.Strings[floop]);
@@ -299,10 +295,25 @@ begin
         if (FMaterial[tcount].SpecularRed<>0) or (FMaterial[tcount].SpecularGreen<>0) or (FMaterial[tcount].SpecularBlue<>0) then FMaterial[tcount].IsSpecular := True;
         tsl.Free;
 
-        l := l + 3; //skip emissive, shininess, transperancy (implement later)
+        //read emissive color data
+        l := l + 1;
+        line := sl.Strings[l];
+        tsl := TStringList.Create;
+        tsl.CommaText := line;
+        FMaterial[tcount].IsEmissive := False;
+        FMaterial[tcount].EmissiveRed := StrToFloat(tsl.strings[0]);
+        FMaterial[tcount].EmissiveGreen := StrToFloat(tsl.strings[1]);
+        FMaterial[tcount].EmissiveBlue := StrToFloat(tsl.strings[2]);
+        if (FMaterial[tcount].EmissiveRed<>0) or (FMaterial[tcount].EmissiveGreen<>0) or (FMaterial[tcount].EmissiveBlue<>0) then FMaterial[tcount].IsEmissive := True;
+        tsl.Free;
 
+        l := l + 1;
         line:=sl.Strings[l];
-        FMaterial[tcount].BumpMapStrength := StrToFloat(line);
+        FMaterial[tcount].Shininess := StrToFloat(line);
+
+        l := l + 1;
+        line:=sl.Strings[l];
+        FMaterial[tcount].Transparency := StrToFloat(line);
 
         l:=l+1;
 
@@ -373,8 +384,8 @@ begin
 
   ms.Add('// MilkShape 3D ASCII');
   ms.Add('');
-  ms.Add('Frames: 0');
-  ms.Add('Frame: 0');
+  ms.Add('Frames: 30');
+  ms.Add('Frame: 1');
   ms.Add('');
 
   //save mesh data
@@ -385,7 +396,7 @@ begin
     tempstring:=StringReplace(fmesh[saveloop].name, ' ', '_', [rfReplaceAll]);
 
     if fmesh[saveloop].NumMaterials > 0 then
-       ms.Add('"'+tempstring+'"'+' 0'+' '+inttostr(fmesh[saveloop].matid[0]))
+       ms.Add('"'+tempstring+'"'+' 0'+' '+inttostr(fmesh[saveloop].matid[0]-1))
     else
        ms.Add('"'+tempstring+'"'+' 0'+' 0');
 
@@ -395,19 +406,18 @@ begin
     for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
     begin
       if fmesh[saveloop].NumBones > 0 then
-      ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' '+inttostr(fmesh[saveloop].boneid[subsaveloop,0]))
+        ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' '+floattostr(fmesh[saveloop].boneid[subsaveloop,0]))
       else
-      ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
+        ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
     end;
+
     //save normals
     ms.Add(inttostr(fmesh[saveloop].NumNormals));
     if fmesh[saveloop].NumNormals > 0 then
     begin
-      for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do //should i use seperate Fnumnormals??
+      for subsaveloop:=0 to fmesh[saveloop].numnormals -1 do //should i use seperate Fnumnormals??
       begin
-
-        ms.Add(floattostr( fmesh[saveloop].Normals[subsaveloop].x )+' '+floattostr(fmesh[saveloop].Normals[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Normals[subsaveloop].z));
-
+        ms.Add(formatfloat('0.000000',fmesh[saveloop].Normals[subsaveloop].x )+' '+formatfloat('0.000000',fmesh[saveloop].Normals[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Normals[subsaveloop].z));
       end;
     end;
 
@@ -430,9 +440,10 @@ begin
         +' 1');
       end;
 
-
     end;
+
   end;
+
 
   ms.Add('');
   //save material data
@@ -440,12 +451,12 @@ begin
   for saveloop:=0 to FNumMaterials-1 do
   begin
     ms.Add('"'+FMaterial[saveloop].name+'"');
-    ms.Add(FloatToStr(FMaterial[saveloop].AmbientRed)+' '+FloatToStr(FMaterial[saveloop].AmbientGreen)+' '+FloatToStr(FMaterial[saveloop].AmbientBlue)+' 1.0');
-    ms.Add(FloatToStr(FMaterial[saveloop].DiffuseRed)+' '+FloatToStr(FMaterial[saveloop].DiffuseGreen)+' '+FloatToStr(FMaterial[saveloop].DiffuseBlue)+' '+FloatToStr(FMaterial[saveloop].Transparency));
-    ms.Add(FloatToStr(FMaterial[saveloop].SpecularRed)+' '+FloatToStr(FMaterial[saveloop].SpecularGreen)+' '+FloatToStr(FMaterial[saveloop].SpecularBlue)+' 1.0');
-    ms.Add('0.0 0.0 0.0 1.0');
-    ms.Add('0.0');
-    ms.Add(FloatToStr(FMaterial[saveloop].bumpmapstrength));
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].AmbientRed)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientBlue)+' 1.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].DiffuseRed)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseBlue)+' '+formatfloat('0.000000',FMaterial[saveloop].Transparency));
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].SpecularRed)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularBlue)+' 1.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].EmissiveRed)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveBlue)+' 1.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].Shininess));
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].Transparency));
     ms.Add('"'+FMaterial[saveloop].filename+'"');
     ms.Add('"'+FMaterial[saveloop].bumpmapfilename+'"');
   end;
@@ -453,8 +464,10 @@ begin
   //fake save bones
   ms.Add('');
   ms.Add('Bones: 0');
-  ms.Add('');
-  ms.Add('');
+  ms.Add('GroupComments: 0');
+  ms.Add('MaterialComments: 0');
+  ms.Add('BoneComments: 0');
+  ms.Add('ModelComment: 0');
 
   ms.SaveToStream(stream);
   ms.Free;

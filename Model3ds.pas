@@ -508,7 +508,7 @@ begin
           begin
             stream.Read(tv, 12);
             FMesh[acount - 1].Vertex[i] := tv;
-            FMesh[acount - 1].BoneId[i] := -1;
+            FMesh[acount - 1].BoneId[i,0] := -1;
 
             //Set dummy values for meshes without mapping
             tempmap.tu := 0;
