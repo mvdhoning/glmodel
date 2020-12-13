@@ -46,6 +46,7 @@ var
   parentvertex, vertex: T3DPoint;
 
 begin
+
   vertex.x := 0;
   vertex.y := 0;
   vertex.z := 0;
@@ -59,24 +60,30 @@ begin
     parentvertex := MatrixTransform(FParent.Matrix, ParentVertex);
   end;
 
-  glPointSize(4.0);
+  //TODO: reimplement
+  (*
+  glPointSize(10.0);
   glBegin(GL_POINTS);
-  glColor3f(255,255,255);
+  glColor3f(255,0,0);
   glvertex3fv(@vertex);
   glend;
 
   if FParent <> nil then
   begin
     glBegin(GL_LINES);
+    glColor3f(0,255,0);
     glvertex3fv(@vertex);
     glvertex3fv(@parentvertex);
     glend;
 
-    glPointSize(4.0);
+    glPointSize(10.0);
     glBegin(GL_POINTS);
+    glColor3f(255,0,0);
     glvertex3fv(@parentvertex);
     glend;
   end;
+  *)
+
 end;
 
 end.

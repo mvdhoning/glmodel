@@ -37,7 +37,7 @@ unit gl3Render;
  
 interface
 
-uses classes, sysutils, model, render, dglopengl, gl3mesh, glmodel, glmaterial, glskeleton, glvbo;
+uses classes, sysutils, model, render, dglopengl, gl3mesh, gl3model, glmaterial, glskeleton, glvbo;
 
 type Tgl3Render = class(TBaseRender)
   protected
@@ -47,7 +47,9 @@ type Tgl3Render = class(TBaseRender)
     destructor Destroy(); override;
     procedure AddModel(Value: TBaseModel); overload; override;
     procedure AddModel; overload; override;
-    procedure Render; override;
+    procedure Render; overload; override;
+    procedure Render(id: integer); overload; override;
+    procedure Render(amodel: TBaseModel); overload; override;
     procedure Init; override;
     property VBO: TglVbo read fvbo write fvbo;
 end;
@@ -56,7 +58,9 @@ implementation
 
 constructor Tgl3Render.Create(AOwner: TComponent);
 begin
+  writeln('TGL3Render.Create');
   inherited Create(AOwner);
+  FName := 'TGL3Render';
   fvbo:=TglVbo.Create;
 end;
 
@@ -69,7 +73,6 @@ end;
 procedure Tgl3Render.AddModel(Value: TBaseModel);
 begin
   inherited;
-
   Models[FNumModels-1].MeshClass := TGL3Mesh;
   Models[FNumModels-1].MaterialClass := TGLMaterial;
   Models[FNumModels-1].SkeletonClass := TGLSkeleton;
@@ -77,7 +80,7 @@ end;
 
 procedure Tgl3Render.AddModel;
 begin
-  AddModel(TGlModel.Create(self));
+  AddModel(TGl3Model.Create(self));
 end;
 
 procedure Tgl3Render.Init;
@@ -85,16 +88,22 @@ var
   I,J,M: Integer;
   test: TVBOVertex;
 begin
+  //uploads models and meshes to the gpu via vbo
+
+  //TODO: calculate model offset and size here and not in glvbo (wrongly called addmesh there)
+  //TODO: also calculate offset and size for individual meshes
+  //TODO: merge glvbo code to here and rename init here to upload
+
   writeln('gl3render init');
   for I := 0 to FNumModels-1 do
   begin
-    writeln(i);
-    //FModels[i].Init;
     writeln('model name: '+fModels[i].Name);
     fModels[i].Id:=fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
+
     writeln('model id: '+inttostr(fModels[i].Id));
     for m:=0 to FModels[i].NumMeshes-1 do
     begin
+      //FModels[i].Mesh[m].Id:=fModels[i].Id; //set model id into mesh id
       //writeln(TGL3Mesh(FModels[i].Mesh[m]).drawStyle);
       //fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[m]).drawStyle);
       for j:=0 to FModels[i].Mesh[m].NumVertexIndices-1 do
@@ -105,48 +114,32 @@ begin
         test.Color.r:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseRed;
         test.Color.g:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseGreen;
         test.Color.b:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseBlue;
-        test.Color.a:=0.0;
+        test.Color.a:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].Transparency;
         fvbo.AddVertex(test);
       end;
     //TODO: remember models
     end;
+
+    Tgl3Model(FModels[i]).Offset:=fvbo.getOffset(fModels[i].Id);
+    Tgl3Model(FModels[i]).Size:=fvbo.getSize(fModels[i].Id);
+
   end;
   fvbo.init();
 end;
 
+procedure Tgl3Render.Render(id: integer);
+begin
+  fvbo.render(id);
+end;
+
+procedure Tgl3Render.Render(amodel: TBaseModel);
+begin
+  glDrawElements(TGL3Mesh(amodel.Mesh[0]).DrawStyle, TGL3Model(amodel).size, GL_UNSIGNED_SHORT, pointer(sizeof(word)*TGL3Model(amodel).offset));
+end;
+
 procedure Tgl3Render.Render;
-var
-  I: Integer;
 begin
   fvbo.render;
-  (*
-  for I := 0 to FNumModels-1 do
-  begin
-    //TODO: reimplement glpushmatrix();
-    FModels[i].Render;
-    //TODO: reimplement glpopmatrix();
-  end;
-  *)
-
-  //TODO: make a single vbo here with all static objects and one with all animated object
-  (*
-  GL.VertexPointer(3, VertexPointerType.Double, 0, lineloop1offset); //starting from the beginning of the array
-GL.DrawArrays(BeginMode.LineLoop, lineloop1offset , lineloop1VertexNum  );
-GL.DrawArrays(BeginMode.LineLoop, lineloop2offset , lineloop2VertexNum );
-GL.DrawArrays(BeginMode.LineLoop, lineloop3offset , lineloop3VertexNum );
-
-or
-DrawElement with offset?
-  *)
-
-  //experiment with one cube in vbo and render that multiple times at diffent positions
-
-  //uniforms beter zo doen
-  //https://www.khronos.org/opengl/wiki/Uniform_Buffer_Object
-  //https://learnopengl.com/Advanced-OpenGL/Advanced-GLSL
-
-  //also render gui via this?
-  //read this
 end;
 
 end.

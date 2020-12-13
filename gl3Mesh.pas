@@ -37,10 +37,10 @@ unit gl3Mesh;
 
 interface
 
-uses classes, dglOpenGl, Mesh, glMath;
+uses classes, dglOpenGl, Mesh, glMath, sysutils;
 
 type
-
+  (*
   TVBOVertex = packed record
     Position: T3dPoint;
     Normal: T3dPoint;
@@ -50,13 +50,10 @@ type
   end;
 
   TVBOBuffer = array of TVBOVertex;
+  *)
 
   Tgl3Mesh = class(TBaseMesh)
   protected
-     FIBO: GLuint;
-     FVBO: GLuint;
-     FvboBuffer: TvboBuffer;
-     FvboIndices: array of word;
      fDrawStyle: GLenum;
      fNormalAttribId: GlInt;
      fColorAttribId: GlInt;
@@ -79,41 +76,58 @@ type
 
 implementation
 
-uses Material, glMatrix, glMaterial, glModel, model;
+uses Material, glMatrix, glMaterial, glModel, model, Render, glvbo;
 
 destructor Tgl3Mesh.Destroy;
 begin
-  glDeleteBuffersARB(1, @FVBO); //remove the buffer (from video/main memory)
-  glDeleteBuffersARB(1, @FIBO);
-  setLength(fvboBuffer,0); //remove the vbo buffer
   inherited;
 end;
 
 procedure Tgl3Mesh.Init;
 var
-  i: integer;
+  i,j,m: integer;
+    test: TVBOVertex;
 begin
-  fDrawStyle:=GL_TRIANGLES;
+  i:=0;
+  m:=0;
+  writeln('gl3mesh init called');
+  writeln(TBaseRender(TBaseModel(Owner).Owner).Name); //call the render function on render class
+  writeln('---');
+  if (fdrawstyle = 0) then fDrawStyle:=GL_TRIANGLES;
   // fill the vbo buffer with vertices and colors and normals (and uv tex coords)
-  setlength(FVBOBuffer, fNumVertexIndices);
-  for i:=0 to fnumvertexindices-1 do
+  //setlength(FVBOBuffer, fNumVertexIndices);
+  for j:=0 to fnumvertexindices-1 do
   begin
-    fVboBuffer[i].Position:=FVertex[FVertexIndices[i]];
-    fVboBuffer[i].Normal:=FvNormal[FNormalIndices[i]];
-    fVboBuffer[i].Color.r:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseRed;
-    fVboBuffer[i].Color.g:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseGreen;
-    fVboBuffer[i].Color.b:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseBlue;
-    fVboBuffer[i].Color.a:=1.0;
 
-    fVboBuffer[i].BoneIndex[0]:=fBoneIndices[FVertexIndices[i]][0];
-    fVboBuffer[i].BoneIndex[1]:=fBoneIndices[FVertexIndices[i]][1];
-    fVboBuffer[i].BoneIndex[2]:=fBoneIndices[FVertexIndices[i]][2];
-    fVboBuffer[i].BoneIndex[3]:=fBoneIndices[FVertexIndices[i]][3];
+    test.Position:=fVertex[fVertexIndices[j]];
+    test.Normal:=fvNormal[fNormalIndices[j]];
+    test.Color.r:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseRed;
+    test.Color.g:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseGreen;
+    test.Color.b:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseBlue;
+    test.Color.a:=TBaseModel(owner).material[fmatid[j div 3]].Transparency;
+    //Tgl3Render(TBaseModel(Owner).Owner).fVBO;
 
-    fVboBuffer[i].BoneWeight[0]:=fBoneWeights[FVertexIndices[i]][0];
-    fVboBuffer[i].BoneWeight[1]:=fBoneWeights[FVertexIndices[i]][1];
-    fVboBuffer[i].BoneWeight[2]:=fBoneWeights[FVertexIndices[i]][2];
-    fVboBuffer[i].BoneWeight[3]:=fBoneWeights[FVertexIndices[i]][3];
+
+    //fVboBuffer[i].Position:=FVertex[FVertexIndices[i]];
+
+    //fVboBuffer[i].Normal:=FvNormal[FNormalIndices[i]];
+    //fVboBuffer[i].Color.r:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseRed;
+    //fVboBuffer[i].Color.g:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseGreen;
+    //fVboBuffer[i].Color.b:=TBaseModel(owner).material[fmatid[i div 3]].DiffuseBlue;
+    //fVboBuffer[i].Color.a:=0.2;//TBaseModel(owner).material[fmatid[i div 3]].Transparency;//1.0;
+
+    //writeln( FloatToStr(fVboBuffer[i].Color.a) );
+
+    //fVboBuffer[i].BoneIndex[0]:=fBoneIndices[FVertexIndices[i]][0];
+    //fVboBuffer[i].BoneIndex[1]:=fBoneIndices[FVertexIndices[i]][1];
+    //fVboBuffer[i].BoneIndex[2]:=fBoneIndices[FVertexIndices[i]][2];
+    //fVboBuffer[i].BoneIndex[3]:=fBoneIndices[FVertexIndices[i]][3];
+
+    //fVboBuffer[i].BoneWeight[0]:=fBoneWeights[FVertexIndices[i]][0];
+    //fVboBuffer[i].BoneWeight[1]:=fBoneWeights[FVertexIndices[i]][1];
+    //fVboBuffer[i].BoneWeight[2]:=fBoneWeights[FVertexIndices[i]][2];
+    //fVboBuffer[i].BoneWeight[3]:=fBoneWeights[FVertexIndices[i]][3];
+
 
     (*
     writeln('');
@@ -133,23 +147,26 @@ begin
     *)
 
   end;
+  (*
   // make a new index buffer
   setLength(FVBOIndices, fNumVertexIndices);
   for i:=0 to fnumvertexindices-1 do
   begin
     fVboIndices[i]:=i;
   end;
+
   //assign the vbo buffer to opengl
   glGenBuffers(1, @FVBO);
   glBindBuffer(GL_ARRAY_BUFFER, FVBO);
   glBufferData(GL_ARRAY_BUFFER, fNumVertexIndices*sizeof(TvboVertex), @FvboBuffer[0], GL_STATIC_DRAW);
   //writeln(glGetError());
+
   //assign the index buffer to opengl
   glGenBuffers(1, @FIBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, FIBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, fNumVertexIndices*sizeof(word), @FVboIndices[0], GL_STATIC_DRAW);
   //writeln(glGetError());
-
+  *)
   (* //buffer draw
   glGenBuffers(1, @FVBO);
   glBindBuffer(GL_ARRAY_BUFFER, FVBO);
@@ -172,6 +189,9 @@ var
   i: integer;
 begin
 
+  //TBaseRender(TBaseModel(Owner).Owner).Render(fId);
+  TBaseRender(TBaseModel(Owner).Owner).Render(TBaseModel(Owner).Id); //render with model id that mesh belongs to
+  //TBaseRender(TBaseModel(Owner).Owner).Render(TBaseModel(Owner));
 
   (* //static draw
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -190,6 +210,7 @@ begin
   glDisableClientState(GL_VERTEX_ARRAY);
   *)
 
+  (*
   if TBaseModel(owner).NumSkeletons >= 1 then
     begin
       //if there is a bone then apply bone translate etc...
@@ -258,6 +279,7 @@ begin
   glDisableVertexAttribArray(fBoneAttribWeight);
   glDisableVertexAttribArray(fBoneAttribId);
   glDisableVertexAttribArray(fVertexAttribId);
+  *)
 
 end;
 

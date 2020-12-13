@@ -29,7 +29,14 @@ unit Model;
 
 interface
 
-uses classes, Material, Skeleton, Mesh, glmatrix, glmath;
+uses classes, Material, Skeleton, Mesh
+, glmatrix, glmath;
+
+//TODO: new math and matrix unit needed that are independend of opengl
+//TODO: inject mesh material and skeleton classes (and vbo like class?)
+//TODO: remove gl3 units
+//TODO: rework glvboRender to work with having one big vbo for multiple meshes
+//TODO: how to refer to vbo in glvbo render by id or inject the vbo into each unit
 
 type
 
@@ -44,7 +51,7 @@ type
     FSkeletonClass: TBaseSkeletonClass;
 
     FCurrentSkeleton: Integer;
-    FDisplayList: Integer;//TGlInt;
+    FDisplayList: Integer;
     FLoadSkeleton: Boolean;
     FMasterScale: Single;
     FMaterial: array of TBaseMaterial;

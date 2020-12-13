@@ -37,6 +37,7 @@ type TBaseRender = class(TComponent)
   protected
     FModels: array of TBaseModel;
     FNumModels: Integer;
+    FName: string;
     function GetModel(Index: integer): TBaseModel;
     procedure SetModel(Index: integer; Value: TBaseModel);
   public
@@ -44,11 +45,14 @@ type TBaseRender = class(TComponent)
     destructor Destroy; override;
     property Models[Index: integer]: TBaseModel read GetModel write SetModel;
     property NumModels: Integer read FNumModels;
+    property Name: string read fname;
     procedure AddModel(Value: TBaseModel); overload; virtual;
     procedure AddModel; overload; virtual; abstract;
     procedure UpdateTextures;
     procedure AdvanceAnimation;
-    procedure Render; virtual; abstract;
+    procedure Render; overload; virtual; abstract;
+    procedure Render(id: integer); overload; virtual; abstract;
+    procedure Render(aModel: TBaseModel); overload; virtual; abstract;
     procedure Init; virtual; abstract;
 end;
 
@@ -79,6 +83,7 @@ end;
 constructor TBaseRender.create(AOwner: TComponent);
 begin
   inherited;
+  FName := 'TBaseRender';
   FNumModels := 0;
 end;
 

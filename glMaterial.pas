@@ -63,52 +63,54 @@ var
 begin
   inherited;
 
-  glPopAttrib; //get back default texture state...
-  glPushAttrib(GL_TEXTURE_BIT); //save default texture state...
+  //TODO: reimplement glPopAttrib; //get back default texture state...
+  //TODO: reimplement glPushAttrib(GL_TEXTURE_BIT); //save default texture state...
 
   gldisable(GL_TEXTURE_2D); //just to make sure...
 
-  diffuse.red := FDifR;
-  diffuse.green := FDifG;
-  diffuse.blue := FDifB;
-  diffuse.alpha := FTransparency;
+  diffuse.r := FDifR;
+  diffuse.g := FDifG;
+  diffuse.b := FDifB;
+  diffuse.a := FTransparency;
 
     //if no ambient color data then also set diffuse for ambient
   if FIsAmbient then
   begin
-    ambient.red := FAmbR;
-    ambient.green := FAmbG;
-    ambient.blue := FAmbB;
-    ambient.alpha := 1.0;
+    ambient.r := FAmbR;
+    ambient.g := FAmbG;
+    ambient.b := FAmbB;
+    ambient.a := 1.0;
   end
   else
   begin
-    ambient.red := FDifR/2;
-    ambient.green := FDifG/2;
-    ambient.blue := FDifB/2;
-    ambient.alpha := 1.0;
+    ambient.r := FDifR/2;
+    ambient.g := FDifG/2;
+    ambient.b := FDifB/2;
+    ambient.a := 1.0;
   end;
 
-  specular.red := FSpcR;
-  specular.green := FSpcG;
-  specular.blue := FSpcB;
-  specular.alpha := 1.0;
+  specular.r := FSpcR;
+  specular.g := FSpcG;
+  specular.b := FSpcB;
+  specular.a := 1.0;
 
   with emissive do
   begin
-    red := 0.0;
-    green := 0.0;
-    blue := 0.0;
-    alpha := 1.0;
+    r := 0.0;
+    g := 0.0;
+    b := 0.0;
+    a := 1.0;
   end;
   power := FShininess;
 
+  //TODO: reimplement
+  (*
   glMaterialfv(GL_FRONT, gl_ambient, @ambient);
   glMaterialfv(GL_FRONT, gl_diffuse, @diffuse);
   glMaterialfv(GL_FRONT, gl_specular, @specular);
   glMaterialfv(GL_FRONT, gl_shininess, @power);
   glMaterialfv(GL_FRONT, gl_emission, @emissive);
-
+  *)
 
 
   if FHastexturemap = True then
@@ -124,7 +126,9 @@ begin
       ftexture.Bind;
     end;
 
-      //the following it not efficient... (maybe i should have a var containing the states)
+    //TODO: reimplement
+    (*
+    //the following it not efficient... (maybe i should have a var containing the states)
     glDisable(GL_ALPHA_TEST);
     if FHasOpacMap then
       begin
@@ -133,6 +137,7 @@ begin
        //glenable(GL_TEXTURE_2D);
        ftexture.Bind;
       end;
+    *)
 
     if FHasBumpMap then
     begin
@@ -142,7 +147,9 @@ begin
       else
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //fake bumpmapping with transparency
 
-        // RGB
+      //TODO: reimplement
+      (*
+      // RGB
       glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
 
       glTexEnvf(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_MODULATE);
@@ -151,10 +158,11 @@ begin
       glTexEnvf(GL_TEXTURE_ENV,GL_SOURCE1_RGB,GL_PREVIOUS);
       glTexEnvf(GL_TEXTURE_ENV,GL_OPERAND1_RGB,GL_SRC_COLOR);
 
-        // alpha
+      // alpha
       glTexEnvf(GL_TEXTURE_ENV,GL_COMBINE_ALPHA,GL_REPLACE);
       glTexEnvf(GL_TEXTURE_ENV,GL_SOURCE0_ALPHA,GL_TEXTURE{0});
       glTexEnvf(GL_TEXTURE_ENV,GL_OPERAND0_ALPHA,GL_SRC_ALPHA);
+      *)
 
     end;
 
@@ -167,6 +175,8 @@ begin
     //glenable(GL_TEXTURE_2D);
     ftexture.Bind;
 
+    //TODO: reimplement
+    (*
       // RGB
     glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
     glTexEnvf(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_REPLACE);
@@ -180,6 +190,8 @@ begin
 
     glTexEnvf(GL_TEXTURE_ENV,GL_SOURCE1_ALPHA,GL_PREVIOUS);
     glTexEnvf(GL_TEXTURE_ENV,GL_OPERAND1_ALPHA,GL_SRC_ALPHA);
+    *)
+
   end;
 
   //Two Sided Materials
