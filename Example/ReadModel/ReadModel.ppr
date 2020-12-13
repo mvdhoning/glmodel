@@ -34,5 +34,20 @@ begin
   Model.LoadFromFile('..\..\Models\testcube1.txt');
   writeln('Write MSA model');
   Model.SaveToFile('export2.txt');
+  Model.Free;
+
+  Model := TBaseModel.Create(nil);
+  writeln('Read MSA model');
+  Model.LoadFromFile('..\..\Models\msa-test1.txt');
+  writeln('Write MSA model');
+  Model.SaveToFile('export3.txt');
+  Model.Free;
+
+  Model := TBaseModel.Create(nil);
+  writeln('Read MSA model with skeleton and animation');
+  Model.LoadFromFile('..\..\Models\msa-test2.txt');
+  writeln('Write MSA model with skeleton and animation');
+  Model.SaveToFile('export4.txt');
+  Model.Free;
 end.
 

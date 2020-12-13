@@ -53,7 +53,7 @@ type
 implementation
 
 uses
-  SysUtils, glMath, Skeleton, SkeletonMsa, Mesh, Material;
+  SysUtils, glMath, Skeleton, SkeletonMsa, Mesh, Material, Bone;
 
 procedure TMsaModel.LoadFromFile(AFileName: string);
 var
@@ -73,6 +73,7 @@ begin
     fnumskeletons:=fnumskeletons+1;
     setlength(fskeleton, fnumskeletons);
     fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
+    fskeleton[fnumskeletons-1].BoneClass := TBaseBone;
     msask := TMsaSkeleton.Create(self);
     msask.BoneClass := fskeleton[fnumskeletons-1].BoneClass;
     msask.LoadFromFile(AFileName);
@@ -118,12 +119,12 @@ begin
         FMesh[tcount] := FMeshClass.Create(self);
         FMesh[tcount].Visible := True;
         FRenderOrder[tcount] := tcount;
-          //read in mesh name and the id of the material for the mesh (only one material?)
+
+        //read in mesh name and the id of the material for the mesh (only one material?)
         l := l + 1;
         line := sl.Strings[l];
         strtemp := copy(line, 0,pos(' ', line) - 1);
         Fmesh[tcount].Name := StringReplace(strtemp, '"', '', [rfReplaceAll]);
-
         strTemp := StringReplace(line, '"', '', [rfReplaceAll]);
         strTemp := copy(strTemp, pos(' ', strTemp) + 1,length(strTemp));
         matid := StrToInt(copy(strTemp, pos(' ', strTemp) + 1,length(strTemp)));
@@ -214,12 +215,17 @@ begin
             line := sl.Strings[l];
             tsl := TStringList.Create;
             tsl.CommaText := line;
-            for floop := 1 to 3 do
-            begin
-              FMesh[tcount].Face[loop * 3 + floop - 1] := StrToInt(tsl.Strings[floop]);
-              FMesh[tcount].Normal[loop * 3 + floop - 1] := StrToInt(tsl.Strings[floop + 3]);
-              FMesh[tcount].Map[loop * 3 + floop - 1] := StrToInt(tsl.Strings[floop]); //texturemapping as vertexindice
-            end;
+
+            FMesh[tcount].Face[(loop * 3) + 0] := StrToInt(tsl.Strings[1]);
+            FMesh[tcount].Face[(loop * 3) + 1] := StrToInt(tsl.Strings[2]);
+            FMesh[tcount].Face[(loop * 3) + 2] := StrToInt(tsl.Strings[3]);
+
+            FMesh[tcount].Normal[(loop * 3) + 0] := StrToInt(tsl.Strings[4]);
+            FMesh[tcount].Normal[(loop * 3) + 1] := StrToInt(tsl.Strings[5]);
+            FMesh[tcount].Normal[(loop * 3) + 2] := StrToInt(tsl.Strings[6]);
+
+            FMesh[tcount].Map[loop * 3 + 0] := StrToInt(tsl.Strings[7]);
+
             tsl.Free;
           end;
 
@@ -240,12 +246,9 @@ begin
     begin
       setlength(FMaterial, 1);
       FMaterial[0] := FMaterialClass.Create(self);
-
       mcount := StrToInt(StringReplace(Line, 'Materials: ', '', [rfReplaceAll]));
       setlength(FMaterial, mcount + 1);
-
       FNumMaterials := mcount;
-
       if FNumMaterials > 0 then
       begin
       for tcount := 0 to mcount - 1 do
@@ -396,7 +399,7 @@ begin
     tempstring:=StringReplace(fmesh[saveloop].name, ' ', '_', [rfReplaceAll]);
 
     if fmesh[saveloop].NumMaterials > 0 then
-       ms.Add('"'+tempstring+'"'+' 0'+' '+inttostr(fmesh[saveloop].matid[0]-1))
+       ms.Add('"'+tempstring+'"'+' 0'+' '+inttostr(fmesh[saveloop].matid[0]))
     else
        ms.Add('"'+tempstring+'"'+' 0'+' 0');
 
@@ -405,8 +408,9 @@ begin
 
     for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
     begin
-      if fmesh[saveloop].NumBones > 0 then
-        ms.Add('0'+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].x)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].y)+' '+floattostr(fmesh[saveloop].Vertex[subsaveloop].z)+' '+floattostr(fmesh[saveloop].Mapping[subsaveloop].tu)+' '+floattostr(1.0-fmesh[saveloop].Mapping[subsaveloop].tv)+' '+floattostr(fmesh[saveloop].boneid[subsaveloop,0]))
+
+      if self.FNumSkeletons > 0 then
+        ms.Add('0'+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tv)+' '+formatfloat('0',fmesh[saveloop].boneid[subsaveloop,0]))
       else
         ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
     end;
@@ -430,14 +434,14 @@ begin
       ms.Add('0 '
         +IntToStr(fmesh[saveloop].Face[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+2])+' '
          +IntToStr(fmesh[saveloop].normal[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].normal[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].normal[subsaveloop*3+2])
-        +' 1');
+        +' '+IntToStr(FMesh[saveloop].Map[subsaveloop*3]) );
       end
       else
       begin
         ms.Add('0 '
         +IntToStr(fmesh[saveloop].Face[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+2])+' '
          +'0 0 0'
-        +' 1');
+        +' '+IntToStr(FMesh[saveloop].Map[subsaveloop*3]) );
       end;
 
     end;
@@ -463,7 +467,7 @@ begin
 
   //fake save bones
   ms.Add('');
-  ms.Add('Bones: 0');
+  ms.Add('Bones: 0'); //TODO write bones with SkeletonMsa
   ms.Add('GroupComments: 0');
   ms.Add('MaterialComments: 0');
   ms.Add('BoneComments: 0');

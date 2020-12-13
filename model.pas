@@ -434,7 +434,7 @@ begin
   CalculateRenderOrder; //set transparency order...
 
   //Needs to be called here and not before or else...
-  InitSkin;
+  //InitSkin; //TODO: temporary not called init skin should not alter base mesh
 end;
 
 
@@ -499,30 +499,8 @@ begin
 end;
 
 procedure TBaseModel.CalculateRenderOrder;
-var
-  m: Integer;
-  found: Integer;
-  matloop: Integer;
 begin
-  found := 0;
-  m := 0;
-  while m < FNumMeshes - 1 do
-  begin
-    if m < FNumMeshes - found then
-    begin
-      for matloop := 0 to FMesh[ RenderOrder[m] ].NumMaterials  do
-      begin
-        if FMaterial[FMesh[RenderOrder[m]].Matid[matloop]].Transparency < 1.0 then
-        begin
-          found := found + 1;
-          FRenderOrder[m] := FNumMeshes - Found;
-          FRenderOrder[FNumMeshes - Found] := m;
-          m := m - 1; //a new mesh is placed at renderorder so it has to be checked again...
-        end;
-      end;
-    end;
-    m := m + 1;
-  end;
+  //TODO: order meshes by transparency
 end;
 
 procedure TBaseModel.CalculateNormals;

@@ -36,6 +36,7 @@ type
     public
       procedure LoadFromFile(AFileName: string); override;
       procedure LoadFromStream(stream: Tstream); override;
+      //TODO: add saving skeleton
   end;
 
 implementation
@@ -93,6 +94,7 @@ begin
       if FNumBones > 0 then
       for tcount := 0 to bcount - 1 do
       begin
+
         FBone[tcount] := FBoneClass.Create(self);
 
         //read bone name

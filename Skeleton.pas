@@ -72,6 +72,7 @@ procedure TBaseSkeleton.Assign(Source: TPersistent);
 var
   i: integer;
 begin
+  FBoneClass:=TBaseBone; //make sure the tbasebone class is set
   if Source is TBaseSkeleton then
   begin
     with TBaseSkeleton(Source) do
@@ -134,11 +135,9 @@ var
   m: integer;
 begin
   //init bone structure
-  writeln('initbones');
   If FNumBones > 0 then
   for m := 0 to FNumBones - 1 do
   begin
-    writeln(m);
     FBone[m].Init;
   end;
 end;

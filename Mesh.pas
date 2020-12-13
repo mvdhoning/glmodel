@@ -482,7 +482,8 @@ begin
   SetLength(FMatID, (FNumVertexIndices div 3));
 
   //TODO: rewrite material usage....
-  FMatId[(FNumVertexIndices div 3) - 1] := fmaterial.TexID;
+  //FMatId[(FNumVertexIndices div 3)] := fmaterial.TexID; //-1
+
   //add mapping...
   SetLength(FMapping, FNumVertexIndices);
   FMapping[FVertexIndices[FNumVertexIndices - 3]].tu := v1.x;
@@ -505,13 +506,11 @@ end;
 procedure TBaseMesh.SetBoneId(VertexIndex, BoneIndex: integer; aValue: single);
 begin
   FBoneIndices[VertexIndex][BoneIndex] := aValue;
-  //writeln(avalue);
 end;
 
 procedure TBaseMesh.SetBoneWeight(VertexIndex, WeightIndex: integer; aValue: single);
 begin
   FBoneWeights[VertexIndex][WeightIndex] := aValue;
-  //writeln(avalue);
 end;
 
 procedure TBaseMesh.SetMatName(Index: Integer; Value: string);
