@@ -381,14 +381,23 @@ var
   saveloop: Integer;
   subsaveloop: Integer;
   tempstring: string;
+    msask: TMsaSkeleton;
 begin
   //this saves meshes and materials to a milkshape ascii file
   ms:=TStringList.Create;
 
   ms.Add('// MilkShape 3D ASCII');
   ms.Add('');
-  ms.Add('Frames: 30');
-  ms.Add('Frame: 1');
+  if (self.NumSkeletons>=1) then
+  begin
+    ms.Add('Frames: '+inttostr(fskeleton[0].NumFrames));
+    ms.Add('Frame: 1');
+  end
+  else
+  begin
+    ms.Add('Frames: 0');
+    ms.Add('Frame: 0');
+  end;
   ms.Add('');
 
   //save mesh data
@@ -465,16 +474,30 @@ begin
     ms.Add('"'+FMaterial[saveloop].bumpmapfilename+'"');
   end;
 
-  //fake save bones
+  //save bones
   ms.Add('');
-  ms.Add('Bones: 0'); //TODO write bones with SkeletonMsa
-  ms.Add('GroupComments: 0');
-  ms.Add('MaterialComments: 0');
-  ms.Add('BoneComments: 0');
-  ms.Add('ModelComment: 0');
+  if (self.NumSkeletons>=1) then
+  begin
+    //write the number of bones in the first (and only) skeleton
+    ms.Add('Bones: '+inttostr(self.Skeleton[0].NumBones));
+  end
+  else
+  begin
+    ms.Add('Bones: 0');
+  end;
 
   ms.SaveToStream(stream);
   ms.Free;
+
+  //write the first skeleton (only one skeleton supported)
+  if (self.NumSkeletons>=1) then
+  begin
+    msask := TMsaSkeleton.Create(self);
+    msask.BoneClass := fskeleton[0].BoneClass;
+    msask.Assign(fskeleton[0]);
+    msask.SaveToStream(stream);
+    msask.Free;
+  end;
 end;
 
 initialization

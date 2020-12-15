@@ -103,7 +103,7 @@ begin
       self.FName := FName;
       self.FNumRotateFrames := FNumRotateFrames;
       self.FNumTranslateFrames := FNumTranslateFrames;
-      //self.FParent := FParent;
+      self.FParent := FParent;
       self.FParentName := FParentName;
       self.FRotate := FRotate;
       self.FRotateFrame := FRotateFrame;

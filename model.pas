@@ -385,6 +385,8 @@ begin
 
   FSkeleton[FCurrentSkeleton].InitBones;
 
+  //TODO: temporary not called init skin should not alter base mesh
+  (*
   for m := 0 to FNumMeshes - 1 do
   begin
     if FMesh[m].NumVertexIndices > 0 then
@@ -415,6 +417,7 @@ begin
       end;
     end;
   end;
+  *)
   end;
 end;
 
@@ -434,7 +437,7 @@ begin
   CalculateRenderOrder; //set transparency order...
 
   //Needs to be called here and not before or else...
-  //InitSkin; //TODO: temporary not called init skin should not alter base mesh
+  InitSkin;
 end;
 
 

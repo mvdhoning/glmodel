@@ -56,6 +56,8 @@ type
     function GetBoneByName(s: string): TBaseBone;
     procedure LoadFromFile(Filename: string); virtual; abstract;
     procedure LoadFromStream(Stream: TStream); virtual; abstract;
+    procedure SaveToFile(AFilename: string); virtual; abstract;
+    procedure SaveToStream(Stream: TStream); virtual; abstract;
     property Bone[Index: integer]: TBaseBone read GetBone;
     property CurrentFrame: Integer read FCurrentFrame write FCurrentFrame;
     property Name: string read FName write FName;

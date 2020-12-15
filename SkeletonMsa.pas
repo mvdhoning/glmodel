@@ -37,6 +37,8 @@ type
       procedure LoadFromFile(AFileName: string); override;
       procedure LoadFromStream(stream: Tstream); override;
       //TODO: add saving skeleton
+      procedure SaveToFile(AFilename: string); override;
+      procedure SaveToStream(Stream: TStream); override;
   end;
 
 implementation
@@ -49,6 +51,15 @@ var
 begin
   stream := TFilestream.Create(AFilename, fmOpenRead);
   LoadFromStream(stream);
+  stream.Free;
+end;
+
+procedure TMsaSkeleton.SaveToFile(AFilename: string);
+var
+  stream: TFileStream;
+begin
+  stream := TFilestream.Create(AFilename, fmOpenRead);
+  SaveToStream(stream);
   stream.Free;
 end;
 
@@ -189,6 +200,51 @@ begin
   end;
   sl.Free;
 
+end;
+
+procedure TMsaSkeleton.SaveToStream(stream: Tstream);
+var
+  ms: TStringList;
+  bcount,i: integer;
+begin
+  ms:=TStringList.Create;
+
+  for bcount:=0 to fNumBones-1 do
+  begin
+    //write bone name
+    ms.add('"'+fBone[bcount].Name+'"');
+
+    //write bone parent name
+    if fBone[bcount].Parent<>nil then
+      ms.add('"'+fBone[bcount].Parent.Name+'"')
+    else
+      ms.add('""');
+    //ms.add('""'+fBone[bcount].ParentName+'""');
+
+    //flags and position and rotation
+    ms.add('0 '+formatfloat('0.000000',fBone[bcount].Translate.x)+' '+formatfloat('0.000000',fBone[bcount].Translate.y)+' '+formatfloat('0.000000',fBone[bcount].Translate.z)+' '
+           +formatfloat('0.000000',fBone[bcount].Rotate.x)+' '+formatfloat('0.000000',fBone[bcount].Rotate.y)+' '+formatfloat('0.000000',fBone[bcount].Rotate.z)
+          );
+    (*
+    //save without animations
+    ms.add('1');
+    ms.add('1.000000 0.000000 0.000000 0.000000'); //time x y z
+    ms.add('1');
+    ms.add('1.000000 0.000000 0.000000 0.000000'); //time x y z
+    *)
+
+    //save with animations
+    ms.add(inttostr(fbone[bcount].NumTranslateFrames));
+    for i:=0 to fbone[bcount].NumTranslateFrames -1 do
+      ms.add(formatfloat('0.000000',fBone[bcount].TranslateFrame[i].time)+' '+formatfloat('0.000000',fBone[bcount].TranslateFrame[i].Value.x)+' '+formatfloat('0.000000',fBone[bcount].TranslateFrame[i].Value.y)+' '+formatfloat('0.000000',fBone[bcount].TranslateFrame[i].Value.z));
+    ms.add(inttostr(fbone[bcount].NumRotateFrames));
+    for i:=0 to fbone[bcount].NumTranslateFrames -1 do
+      ms.add(formatfloat('0.000000',fBone[bcount].RotateFrame[i].time)+' '+formatfloat('0.000000',fBone[bcount].RotateFrame[i].Value.x)+' '+formatfloat('0.000000',fBone[bcount].RotateFrame[i].Value.y)+' '+formatfloat('0.000000',fBone[bcount].RotateFrame[i].Value.z));
+  end;
+
+
+  ms.SaveToStream(stream);
+  ms.Free;
 end;
 
 end.
