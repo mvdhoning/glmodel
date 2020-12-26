@@ -37,3 +37,9 @@ Textures/
 
 #exclude resource files
 *.res
+
+#exclude test folder
+test/
+
+#exclude models folder
+models/
