@@ -1,0 +1,327 @@
+unit ModelMs3d;
+
+(* Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the gl3ds main unit.
+ *
+ * The Initial Developer of the Original Code is
+ * Noeska Software.
+ * Portions created by the Initial Developer are Copyright (C) 2002-2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ *  M van der Honing
+ *  Micronix-TRSI
+ *
+ *)
+
+interface
+
+uses Classes, Model;
+
+type
+  TMs3dModel = class(TBaseModel)
+  public
+    procedure LoadFromFile(AFileName: string); override;
+    procedure LoadFromStream(stream: Tstream); override;
+    procedure SaveToFile(AFileName: string); override;
+    procedure SaveToStream(stream: TStream); override;
+  end;
+
+implementation
+
+uses
+  SysUtils, glMath, Skeleton, {SkeletonMs3d,} Mesh, Material, Bone;
+
+//The milkshape binry reader is inspired by the following example on the pascalgamedev forum:
+//https://www.pascalgamedevelopment.com/showthread.php?13405-Milkshape-MS3D-Animation&s=ecd0bb6d00faba1c4b2308fe06b25bc6
+
+//Milkshape 3D file sturcture records
+type
+  ThreeSingles = array [0..2] of single;
+  FourSingles = array [0..3] of single;
+  ThreeWords = array [0..2] of word;
+  ThreeThreeSingles = array [0..2] of T3dPoint;//ThreeSingles;
+  TMatrix = array [0..3] of array [0..3] of single;
+
+  MS3D_Header = packed record
+    Id: array [0..9] of char;
+    Version: integer
+  end;
+
+  MS3D_Vertex = packed record
+    Flags: byte;
+    Position: T3dpoint;
+    BoneID: shortint;
+    refCount: byte
+  end;
+
+  MS3D_Triangle = packed record
+    Flags: word;
+    VertexIndices: ThreeWords;
+    VertexNormals: ThreeThreeSingles;
+    S, T: ThreeSingles;
+    SmoothingGroup,
+    GroupIndex: byte
+  end;
+
+  MS3D_Group = packed record
+    Flags: byte;
+    Name: array [0..31] of char;
+    nTriangles: word;
+    TriangleIndices: array of word;
+    MaterialIndex: byte
+  end;
+
+  MS3D_Material = packed record
+    Name: array [0..31] of char;
+    Ambient,
+    Diffuse,
+    Specular,
+    Emissive: FourSingles;
+    Shininess,
+    Transparency: single;
+    Mode: byte; //unused!
+    Texture,
+    Alphamap: array [0..127] of char
+  end;
+
+  MS3D_Joint = packed record
+    Flags: byte;
+    Name,
+    ParentName: array [0..31] of char;
+    Rotation,
+    Translation: T3dPoint; //ThreeSingles;
+    nRotKeyframes,
+    nTransKeyframes: word
+  end;
+
+  MS3D_Keyframe = packed record
+    Time: single;
+    Parameter: T3dPoint; //ThreeSingles
+  end;
+
+  TJointName = packed record
+    JointIndex: word;
+    Name: string
+  end;
+
+
+procedure TMs3dModel.LoadFromFile(AFileName: string);
+var
+  stream: TFilestream;
+  //msask: TMs3dSkeleton;
+begin
+  FPath := ExtractFilePath(AFilename);
+  if FTexturePath = '' then
+    FTexturePath := FPath;
+
+  stream := TFilestream.Create(AFilename, $0000);
+  LoadFromStream(stream);
+  stream.Free;
+
+  (*
+  //also load skeleton if needed (this means that when loading from stream only
+  if floadskeleton then
+  begin
+    fnumskeletons:=fnumskeletons+1;
+    setlength(fskeleton, fnumskeletons);
+    fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
+    fskeleton[fnumskeletons-1].BoneClass := TBaseBone;
+    msask := TMsaSkeleton.Create(self);
+    msask.BoneClass := fskeleton[fnumskeletons-1].BoneClass;
+    msask.LoadFromFile(AFileName);
+    fskeleton[fnumskeletons-1].Assign(msask);
+    msask.Free;
+  end;
+  *)
+
+end;
+
+procedure TMs3dModel.LoadFromStream(stream: Tstream);
+var
+  m, c, c2, i: integer;
+  ms3dHeader: MS3D_header;
+  ms3dVertex: MS3D_vertex;
+  ms3dTriangle: MS3D_Triangle;
+  ms3dGroup: MS3D_Group;
+  numVertex, numTriangles, numGroups, nTriangles, triangleidx: word;
+  tempmap: TMap;
+  tempmesh: TBaseMesh;
+  ts, s: string;
+  p: char;
+  //  msask: TMs3dSkeleton;
+begin
+  //Read Header
+  stream.Read(ms3dheader, SizeOf(ms3dheader));
+
+  //First read mesh data into temporary mesh
+  tempmesh := FMeshClass.Create(self);
+  tempmesh.Name := 'Mesh0';
+
+  //Read vertices
+  Stream.Read(numVertex, SizeOf(numVertex));
+
+  tempmesh.numVertex := numVertex;
+  for c := 0 to numVertex - 1 do
+  begin
+    Stream.Read(ms3dvertex, SizeOf(ms3dvertex));
+    tempmesh.Vertex[c] := ms3dvertex.Position;
+    tempmesh.BoneId[c, 0] := ms3dvertex.BoneID;
+  end;
+
+  //Read triangles
+  stream.Read(numTriangles, SizeOf(NumTriangles));
+  tempmesh.NumVertexIndices := numTriangles * 3;
+  tempmesh.NumNormalIndices := numTriangles * 3;
+  tempmesh.NumMappingIndices := numTriangles * 3;
+  tempmesh.NumMappings := numTriangles * 3;
+  tempmesh.NumNormals := numTriangles * 3;
+  for c := 0 to NumTriangles - 1 do
+  begin
+
+    stream.Read(ms3dtriangle, SizeOf(ms3dtriangle));
+    for i := 0 to 2 do
+    begin
+      //indces
+      tempmesh.Face[(c * 3) + i] := ms3dtriangle.VertexIndices[i];
+      //mapping
+      tempmap := tempmesh.Mapping[(c * 3) + i];
+      tempmap.tu := ms3dtriangle.S[i];
+      tempmap.tv := ms3dtriangle.T[i];
+      tempmesh.Mapping[(c * 3) + i] := tempmap;
+      //normals
+      tempmesh.Normal[(c * 3) + i] := (c * 3 + i);
+      tempmesh.Normals[(c * 3) + i] := ms3dtriangle.VertexNormals[i];
+    end;
+
+  end;
+
+  //Read Groups (meshes?)
+  stream.Read(numGroups, SizeOf(NumGroups));
+
+  FNumMeshes := numGroups;
+  SetLength(FMesh, numGroups);
+  SetLength(FRenderOrder, numGroups);
+
+  //For each group make a submesh and copy over data form temp mesh
+  for c := 0 to NumGroups - 1 do
+  begin
+    stream.Read(ms3dgroup.flags, SizeOf(ms3dgroup.flags)); //2 byte
+    stream.Read(ms3dgroup.Name, SizeOf(ms3dgroup.Name));  //32 byte
+    stream.Read(nTriangles, SizeOf(nTriangles));      //2 byte
+
+    //Read all indices at once?
+    //setlength(ms3dgroup.TriangleIndices,ntriangles);
+    //stream.Read(ms3dgroup.TriangleIndices[0],ntriangles*sizeof(word));
+
+
+    FMesh[c] := FMeshClass.Create(self);
+    Fmesh[c].Name := 'Mesh' + IntToStr(c);
+
+    s := '';
+    for i := 0 to high(ms3dgroup.Name) - 1 do
+    begin
+      p := ms3dgroup.Name[i];
+      s := PChar(s + p);
+    end;
+
+    FMesh[c].Name := s;
+    fmesh[c].Id := c;
+    fmesh[c].numVertex := nTriangles * 3;
+    fmesh[c].NumVertexIndices := nTriangles * 3;
+    fmesh[c].NumNormalIndices := nTriangles * 3;
+    fmesh[c].NumMappings := nTriangles * 3;
+    fmesh[c].NumMappingIndices := nTriangles * 3;
+    fmesh[c].NumNormals := nTriangles * 3;
+
+
+    for c2 := 0 to nTriangles - 1 do
+    begin
+      stream.Read(triangleidx, SizeOf(triangleidx)); //read per indice
+      //triangleidx:=ms3dgroup.TriangleIndices[c2];
+      for i := 0 to 2 do
+      begin
+        //indces
+        fMesh[c].Face[(c2 * 3) + i] := (c2 * 3 + i);
+        //vertices
+        fmesh[c].Vertex[(c2 * 3) + i] := tempmesh.Vertex[tempmesh.Face[(triangleidx * 3) + i]];
+        //bone id
+        fmesh[c].BoneId[(c2 * 3) + i, 0] := tempmesh.BoneId[tempmesh.Face[(triangleidx * 3) + i], 0];
+        //mapping
+        fMesh[c].Mapping[(c2 * 3) + i] := tempmesh.Mapping[(triangleidx * 3) + i];
+        //normals
+        fmesh[c].Normal[(c2 * 3) + i] := (c2 * 3 + i);
+        fMesh[c].Normals[(c2 * 3) + i] := tempmesh.Normals[tempmesh.Normal[(triangleidx * 3) + i]];
+      end; //for begin i
+    end; //for begin c2
+
+    stream.Read(ms3dgroup.materialIndex, SizeOf(ms3dgroup.materialIndex));  //2 byte
+    for i := 0 to fMesh[c].NumMappingIndices - 1 do
+      fMesh[c].MatId[i] := ms3dgroup.materialIndex;
+
+    //setlength(ms3dgroup.TriangleIndices,0); //cleanup memory no longer needed
+  end;
+
+  //temp mesh data is no longer needed
+  tempmesh.Free;
+
+  (*
+  //fill matnames into meshes
+  If FnumMeshes > 0 then
+  for m:= 0 to FNumMeshes -1 do
+  begin
+    if (FMesh[m].MatName[0] <> '0') AND (FMesh[m].MatName[0] <> '')  then
+    begin
+      FMesh[m].MatID[0] := StrToInt(FMesh[m].MatName[0]);
+      FMesh[m].MatName[0] := FMaterial[StrToInt(FMesh[m].MatName[0])].Name;
+    end;
+  end;
+  *)
+end;
+
+procedure TMs3dModel.SaveToFile(AFileName: string);
+var
+  stream: TFilestream;
+begin
+  stream := TFilestream.Create(AFilename, fmCreate);
+  SaveToStream(stream);
+  stream.Free;
+end;
+
+procedure TMs3dModel.SaveToStream(stream: Tstream);
+//var
+//  msask: TMs3dSkeleton;
+begin
+
+  (*
+  //write the first skeleton (only one skeleton supported)
+  if (self.NumSkeletons>=1) then
+  begin
+    msask := TMs3dSkeleton.Create(self);
+    msask.BoneClass := fskeleton[0].BoneClass;
+    msask.Assign(fskeleton[0]);
+    msask.SaveToStream(stream);
+    msask.Free;
+  end;
+  *)
+end;
+
+initialization
+  RegisterModelFormat('ms3d', 'Milkshape 3D binary model', TMs3dModel);
+
+finalization
+  UnRegisterModelClass(TMs3dModel);
+
+end.

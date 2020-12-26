@@ -457,10 +457,10 @@ begin
 
   end;
 
-
   ms.Add('');
   //save material data
   ms.Add('Materials: '+IntToStr(FNumMaterials));
+
   for saveloop:=0 to FNumMaterials-1 do
   begin
     ms.Add('"'+FMaterial[saveloop].name+'"');
@@ -498,6 +498,7 @@ begin
     msask.SaveToStream(stream);
     msask.Free;
   end;
+
 end;
 
 initialization

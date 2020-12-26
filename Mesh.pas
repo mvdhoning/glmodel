@@ -500,7 +500,7 @@ begin
    SetLength(FVertex, Value);
    SetLength(FBoneIndices, Value);
    SetLength(FBoneWeights, Value);
-   SetLength(FMapping, Value);
+   //SetLength(FMapping, Value);
 end;
 
 procedure TBaseMesh.SetBoneId(VertexIndex, BoneIndex: integer; aValue: single);
@@ -529,7 +529,11 @@ end;
 procedure TBaseMesh.SetNumberOfIndices(Value: Integer);
 begin
   FNumVertexIndices := Value;
+  fvertexindices:=nil;
+  SetLength(FVertexIndices, 0);
   SetLength(FVertexIndices, Value);
+  fmatid:=nil;
+  SetLength(FMatId, 0);
   SetLength(FMatId, Value);
 end;
 
