@@ -282,7 +282,7 @@ begin
         FMaterial[tcount].DiffuseRed := StrToFloat(tsl.strings[0]);
         FMaterial[tcount].DiffuseGreen := StrToFloat(tsl.strings[1]);
         FMaterial[tcount].DiffuseBlue := StrToFloat(tsl.strings[2]);
-        FMaterial[tcount].Transparency := StrToFloat(tsl.strings[3]);
+        //FMaterial[tcount].Transparency := StrToFloat(tsl.strings[3]);
         if (FMaterial[tcount].DiffuseRed<>0) or (FMaterial[tcount].DiffuseGreen<>0) or (FMaterial[tcount].DiffuseBlue<>0) then FMaterial[tcount].IsDiffuse := True;
         tsl.Free;
 
@@ -464,10 +464,10 @@ begin
   for saveloop:=0 to FNumMaterials-1 do
   begin
     ms.Add('"'+FMaterial[saveloop].name+'"');
-    ms.Add(formatfloat('0.000000',FMaterial[saveloop].AmbientRed)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientBlue)+' 1.000000');
-    ms.Add(formatfloat('0.000000',FMaterial[saveloop].DiffuseRed)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseBlue)+' '+formatfloat('0.000000',FMaterial[saveloop].Transparency));
-    ms.Add(formatfloat('0.000000',FMaterial[saveloop].SpecularRed)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularBlue)+' 1.000000');
-    ms.Add(formatfloat('0.000000',FMaterial[saveloop].EmissiveRed)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveBlue)+' 1.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].AmbientRed)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientBlue)+' 0.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].DiffuseRed)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseBlue)+' 0.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].SpecularRed)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularBlue)+' 0.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].EmissiveRed)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveBlue)+' 0.000000');
     ms.Add(formatfloat('0.000000',FMaterial[saveloop].Shininess));
     ms.Add(formatfloat('0.000000',FMaterial[saveloop].Transparency));
     ms.Add('"'+FMaterial[saveloop].filename+'"');

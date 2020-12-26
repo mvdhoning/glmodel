@@ -34,7 +34,7 @@ uses glmath;
 type
   //keyframe data
   TKeyFrame = packed record
-    time: Integer;
+    time: single;
     Value: T3dPoint;
     bvh_value: T3dPoint;
   end;

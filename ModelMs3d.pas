@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  SysUtils, glMath, Skeleton, {SkeletonMs3d,} Mesh, Material, Bone;
+  SysUtils, glMath, Skeleton, {SkeletonMs3d,} Mesh, Material, Bone, KeyFrame;
 
 //The milkshape binry reader is inspired by the following example on the pascalgamedev forum:
 //https://www.pascalgamedevelopment.com/showthread.php?13405-Milkshape-MS3D-Animation&s=ecd0bb6d00faba1c4b2308fe06b25bc6
@@ -156,12 +156,20 @@ var
   ms3dVertex: MS3D_vertex;
   ms3dTriangle: MS3D_Triangle;
   ms3dmaterial: MS3D_Material;
+
+  ms3dJoint      : MS3D_Joint;
+  ms3dKeyframe   : MS3D_Keyframe;
+
   ms3dGroup: MS3D_Group;
-  numVertex, numTriangles, numGroups, numMat, nTriangles, triangleidx: word;
+  numVertex, numTriangles, numGroups, numMat, numJoints, nTriangles, triangleidx: word;
+  AnimFPS        : SINGLE;
+  CurrentTime    : SINGLE;
+  TotalFrames    : LONGINT;
   tempmap: TMap;
   tempmesh: TBaseMesh;
   ts, s: string;
   p: char;
+    tempkeyframe: TKeyFrame;
   //  msask: TMs3dSkeleton;
 begin
   //Read Header
@@ -275,6 +283,9 @@ begin
     //setlength(ms3dgroup.TriangleIndices,0); //cleanup memory no longer needed
   end;
 
+  //temp mesh data is no longer needed
+  tempmesh.Free;
+
   //Read Materials
   stream.Read ( numMat, SizeOf ( numMat ) );
   setlength(FMaterial, numMat );
@@ -301,8 +312,64 @@ begin
     FMaterial[c].TextureFilename:=ms3dmaterial.texture;
   end;
 
-  //temp mesh data is no longer needed
-  tempmesh.Free;
+  //Read Bones
+  stream.Read ( AnimFPS, SizeOf ( AnimFPS ) );
+  stream.Read ( CurrentTime, SizeOf ( CurrentTime ) );
+  //stream.Position := stream.Position + SizeOf ( Single ); //Skip CurrentTime
+  stream.Read ( TotalFrames, SizeOf ( TotalFrames ) );
+  stream.Read ( numJoints, SizeOf ( NumJoints ) );
+
+  if numJoints > 0 then
+    begin
+      fnumskeletons:=1;
+      setlength(fskeleton, fnumskeletons);
+      fskeleton[0]:=FSkeletonClass.Create(self);
+      fskeleton[0].BoneClass := TBaseBone;
+      fskeleton[0].NumFrames:=TotalFrames;
+      fskeleton[0].CurrentFrame:=1;
+
+      for c := 0 to numJoints - 1 do
+      begin
+        stream.Read(ms3dJoint,SizeOf(ms3dJoint));
+        fskeleton[0].AddBone;
+        fskeleton[0].Bone[c].Name:=ms3dJoint.Name;
+
+        fskeleton[0].Bone[c].Rotate := ms3dJoint.Rotation;
+        fskeleton[0].Bone[c].Translate := ms3dJoint.Translation;
+        fskeleton[0].Bone[c].ParentName:= ms3dJoint.ParentName;
+        //fskeleton[0].Bone[c].parent := ParentIndex;
+        fskeleton[0].Bone[c].NumRotateFrames := ms3dJoint.nRotKeyframes;
+        fskeleton[0].Bone[c].NumTranslateFrames := ms3dJoint.nTransKeyframes;
+
+        //skip animation info
+        //stream.Position := stream.Position + SizeOf ( ms3dKeyframe ) * ( ms3dJoint.nRotKeyframes + ms3dJoint.nTransKeyframes );
+
+        //read animation data
+        for c2 := 0 to ms3dJoint.nRotKeyframes - 1 do
+        begin
+          stream.Read(ms3dKeyframe,sizeof(ms3dKeyframe));
+          tempkeyframe := fskeleton[0].Bone[c].RotateFrame[c2];
+          tempkeyframe.time := ms3dKeyframe.Time*AnimFPS;
+          tempkeyframe.Value.x := ms3dKeyframe.Parameter.x;
+          tempkeyframe.Value.y := ms3dKeyframe.Parameter.y;
+          tempkeyframe.Value.z := ms3dKeyframe.Parameter.z;
+          fskeleton[0].Bone[c].RotateFrame[c2] := tempkeyframe;
+        end;
+
+        for c2 := 0 to ms3dJoint.nTransKeyframes - 1 do
+        begin
+          stream.Read(ms3dKeyframe,sizeof(ms3dKeyframe));
+          tempkeyframe := fskeleton[0].Bone[c].TranslateFrame[c2];
+          tempkeyframe.time := ms3dKeyframe.Time*AnimFPS;
+          tempkeyframe.Value.x := ms3dKeyframe.Parameter.x;
+          tempkeyframe.Value.y := ms3dKeyframe.Parameter.y;
+          tempkeyframe.Value.z := ms3dKeyframe.Parameter.z;
+          fskeleton[0].Bone[c].TranslateFrame[c2] := tempkeyframe;
+        end;
+
+      end;
+
+    end;
 
   (*
   //fill matnames into meshes
