@@ -155,8 +155,9 @@ var
   ms3dHeader: MS3D_header;
   ms3dVertex: MS3D_vertex;
   ms3dTriangle: MS3D_Triangle;
+  ms3dmaterial: MS3D_Material;
   ms3dGroup: MS3D_Group;
-  numVertex, numTriangles, numGroups, nTriangles, triangleidx: word;
+  numVertex, numTriangles, numGroups, numMat, nTriangles, triangleidx: word;
   tempmap: TMap;
   tempmesh: TBaseMesh;
   ts, s: string;
@@ -272,6 +273,32 @@ begin
       fMesh[c].MatId[i] := ms3dgroup.materialIndex;
 
     //setlength(ms3dgroup.TriangleIndices,0); //cleanup memory no longer needed
+  end;
+
+  //Read Materials
+  stream.Read ( numMat, SizeOf ( numMat ) );
+  setlength(FMaterial, numMat );
+  FNumMaterials := numMat;
+  for c := 0 to NumMaterials - 1 do
+  begin
+    stream.Read ( ms3dmaterial, SizeOf ( ms3dmaterial ) );
+    FMaterial[c] := FMaterialClass.Create(self);
+    FMaterial[c].Name:=ms3dMaterial.Name;
+    FMaterial[c].AmbientRed:=ms3dMaterial.Ambient[0];
+    FMaterial[c].AmbientGreen:=ms3dMaterial.Ambient[1];
+    FMaterial[c].AmbientBlue:=ms3dMaterial.Ambient[2];
+    FMaterial[c].DiffuseRed:=ms3dMaterial.Diffuse[0];
+    FMaterial[c].DiffuseGreen:=ms3dMaterial.Diffuse[1];
+    FMaterial[c].DiffuseBlue:=ms3dMaterial.Diffuse[2];
+    FMaterial[c].SpecularRed:=ms3dMaterial.Specular[0];
+    FMaterial[c].SpecularGreen:=ms3dMaterial.Specular[1];
+    FMaterial[c].SpecularBlue:=ms3dMaterial.Specular[2];
+    FMaterial[c].EmissiveRed:=ms3dMaterial.Emissive[0];
+    FMaterial[c].EmissiveGreen:=ms3dMaterial.Emissive[1];
+    FMaterial[c].EmissiveBlue:=ms3dMaterial.Emissive[2];
+    FMaterial[c].Shininess:=ms3dMaterial.Shininess;
+    FMaterial[c].Transparency:=ms3dMaterial.Transparency;
+    FMaterial[c].TextureFilename:=ms3dmaterial.texture;
   end;
 
   //temp mesh data is no longer needed
