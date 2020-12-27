@@ -43,7 +43,7 @@ type
 
 implementation
 
-uses dglOpenGl, {glMesh,} glBone, glMaterial;
+uses dglOpenGl;
 
 procedure TglModel.Init;
 var
@@ -63,10 +63,9 @@ begin
     begin
       if FMesh[FRenderOrder[m]].Visible then
       begin
-        //TODO: reimplement glpushmatrix();
+        glpushmatrix();
         FMesh[FRenderOrder[m]].Render;
-        if m >=1 then writeln('overdraw ERROR! fix render models with multiple meshes');
-        //TODO: reimplement glpopmatrix();
+        glpopmatrix();
       end;
     end;
 end;
@@ -80,8 +79,7 @@ begin
     begin
       fmesh[loop].RenderBoundBox;
     end;
-  //TODO: reimplement
-  (*
+
   glBegin(GL_LINE_LOOP);
     glVertex3f(minimum.x, minimum.y, minimum.z);
     glVertex3f(maximum.x, minimum.y, minimum.z);
@@ -104,7 +102,7 @@ begin
     glVertex3f(minimum.x, maximum.y, minimum.z);
     glVertex3f(minimum.x, maximum.y, maximum.z);
   glEnd;
-  *)
+
 end;
 
 procedure TglModel.RenderSkeleton;

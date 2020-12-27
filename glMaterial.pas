@@ -62,10 +62,6 @@ var
   power: Single;
 begin
   inherited;
-
-  //TODO: reimplement glPopAttrib; //get back default texture state...
-  //TODO: reimplement glPushAttrib(GL_TEXTURE_BIT); //save default texture state...
-
   gldisable(GL_TEXTURE_2D); //just to make sure...
 
   diffuse.r := FDifR;
@@ -103,14 +99,13 @@ begin
   end;
   power := FShininess;
 
-  //TODO: reimplement
-  (*
+
   glMaterialfv(GL_FRONT, gl_ambient, @ambient);
   glMaterialfv(GL_FRONT, gl_diffuse, @diffuse);
   glMaterialfv(GL_FRONT, gl_specular, @specular);
   glMaterialfv(GL_FRONT, gl_shininess, @power);
   glMaterialfv(GL_FRONT, gl_emission, @emissive);
-  *)
+
 
 
   if FHastexturemap = True then
@@ -126,18 +121,17 @@ begin
       ftexture.Bind;
     end;
 
-    //TODO: reimplement
-    (*
+
     //the following it not efficient... (maybe i should have a var containing the states)
     glDisable(GL_ALPHA_TEST);
     if FHasOpacMap then
       begin
        glEnable(GL_ALPHA_TEST);
        glActiveTexture(GL_TEXTURE1);
-       //glenable(GL_TEXTURE_2D);
+       glenable(GL_TEXTURE_2D);
        ftexture.Bind;
       end;
-    *)
+
 
     if FHasBumpMap then
     begin
@@ -147,8 +141,7 @@ begin
       else
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //fake bumpmapping with transparency
 
-      //TODO: reimplement
-      (*
+
       // RGB
       glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
 
@@ -162,7 +155,7 @@ begin
       glTexEnvf(GL_TEXTURE_ENV,GL_COMBINE_ALPHA,GL_REPLACE);
       glTexEnvf(GL_TEXTURE_ENV,GL_SOURCE0_ALPHA,GL_TEXTURE{0});
       glTexEnvf(GL_TEXTURE_ENV,GL_OPERAND0_ALPHA,GL_SRC_ALPHA);
-      *)
+
 
     end;
 
@@ -172,11 +165,9 @@ begin
   if FHasBumpmap = True then
   begin
     glActiveTexture(GL_TEXTURE1);
-    //glenable(GL_TEXTURE_2D);
+    glenable(GL_TEXTURE_2D);
     ftexture.Bind;
 
-    //TODO: reimplement
-    (*
       // RGB
     glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
     glTexEnvf(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_REPLACE);
@@ -190,7 +181,6 @@ begin
 
     glTexEnvf(GL_TEXTURE_ENV,GL_SOURCE1_ALPHA,GL_PREVIOUS);
     glTexEnvf(GL_TEXTURE_ENV,GL_OPERAND1_ALPHA,GL_SRC_ALPHA);
-    *)
 
   end;
 

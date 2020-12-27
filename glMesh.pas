@@ -57,16 +57,12 @@ end;
 procedure TglMesh.BuildDisplayList;
 begin
   fdisplaylist:=0;
-  //TODO: reimplement
-  (*
   // create one display list
   fdisplaylist := glGenLists(1);
-
   // compile the display list, store the mesh in it
   glNewList(fdisplaylist, GL_COMPILE);
     self.Render;
   glEndList;
-  *)
 end;
 
 procedure TglMesh.Render;
@@ -83,7 +79,7 @@ begin
   if fdisplaylist<>0
   then
   begin
-    //glcalllist(fdisplaylist);
+    glcalllist(fdisplaylist);
   end
   else
   begin
