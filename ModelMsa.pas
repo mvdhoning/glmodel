@@ -129,7 +129,8 @@ begin
         strTemp := copy(strTemp, pos(' ', strTemp) + 1,length(strTemp));
         matid := StrToInt(copy(strTemp, pos(' ', strTemp) + 1,length(strTemp)));
 
-        if matid = -1 then FMesh[tcount].MatName[0] := ''
+        if matid = -1 then
+          FMesh[tcount].MatName[0] := ''
         else
           FMesh[tcount].MatName[0] := IntToStr(matid);
 
@@ -358,7 +359,7 @@ begin
   If FnumMeshes > 0 then
   for m:= 0 to FNumMeshes -1 do
   begin
-    if (FMesh[m].MatName[0] <> '0') AND (FMesh[m].MatName[0] <> '')  then
+    if (FMesh[m].NumMaterials>0) AND (FMesh[m].MatName[0] <> '-1') AND (FMesh[m].MatName[0] <> '')  then
     begin
       FMesh[m].MatID[0] := StrToInt(FMesh[m].MatName[0]);
       FMesh[m].MatName[0] := FMaterial[StrToInt(FMesh[m].MatName[0])].Name;
@@ -408,7 +409,10 @@ begin
     tempstring:=StringReplace(fmesh[saveloop].name, ' ', '_', [rfReplaceAll]);
 
     if fmesh[saveloop].NumMaterials > 0 then
-       ms.Add('"'+tempstring+'"'+' 0'+' '+inttostr(fmesh[saveloop].matid[0]))
+       if (fmesh[saveloop].matid[0]<>255) then //a material with id 255 means no material
+         ms.Add('"'+tempstring+'"'+' 0'+' '+inttostr(fmesh[saveloop].matid[0]))
+       else
+         ms.Add('"'+tempstring+'"'+' 0'+' -1')
     else
        ms.Add('"'+tempstring+'"'+' 0'+' 0');
 

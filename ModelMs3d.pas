@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  SysUtils, glMath, Skeleton, {SkeletonMs3d,} Mesh, Material, Bone, KeyFrame;
+  SysUtils, glMath, Skeleton, Mesh, Material, Bone, KeyFrame;
 
 //The milkshape binry reader is inspired by the following example on the pascalgamedev forum:
 //https://www.pascalgamedevelopment.com/showthread.php?13405-Milkshape-MS3D-Animation&s=ecd0bb6d00faba1c4b2308fe06b25bc6
@@ -52,8 +52,7 @@ type
   ThreeSingles = array [0..2] of single;
   FourSingles = array [0..3] of single;
   ThreeWords = array [0..2] of word;
-  ThreeThreeSingles = array [0..2] of T3dPoint;//ThreeSingles;
-  TMatrix = array [0..3] of array [0..3] of single;
+  ThreeThreeSingles = array [0..2] of T3dPoint;
 
   MS3D_Header = packed record
     Id: array [0..9] of char;
@@ -102,26 +101,19 @@ type
     Name,
     ParentName: array [0..31] of char;
     Rotation,
-    Translation: T3dPoint; //ThreeSingles;
+    Translation: T3dPoint;
     nRotKeyframes,
     nTransKeyframes: word
   end;
 
   MS3D_Keyframe = packed record
     Time: single;
-    Parameter: T3dPoint; //ThreeSingles
+    Parameter: T3dPoint;
   end;
-
-  TJointName = packed record
-    JointIndex: word;
-    Name: string
-  end;
-
 
 procedure TMs3dModel.LoadFromFile(AFileName: string);
 var
   stream: TFilestream;
-  //msask: TMs3dSkeleton;
 begin
   FPath := ExtractFilePath(AFilename);
   if FTexturePath = '' then
@@ -131,21 +123,8 @@ begin
   LoadFromStream(stream);
   stream.Free;
 
-  (*
-  //also load skeleton if needed (this means that when loading from stream only
-  if floadskeleton then
-  begin
-    fnumskeletons:=fnumskeletons+1;
-    setlength(fskeleton, fnumskeletons);
-    fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
-    fskeleton[fnumskeletons-1].BoneClass := TBaseBone;
-    msask := TMsaSkeleton.Create(self);
-    msask.BoneClass := fskeleton[fnumskeletons-1].BoneClass;
-    msask.LoadFromFile(AFileName);
-    fskeleton[fnumskeletons-1].Assign(msask);
-    msask.Free;
-  end;
-  *)
+  // Skeleton will be loaded if available from ModelMs3d
+  // maybe later introduce a SkeletonMs3d class
 
 end;
 
@@ -156,10 +135,8 @@ var
   ms3dVertex: MS3D_vertex;
   ms3dTriangle: MS3D_Triangle;
   ms3dmaterial: MS3D_Material;
-
   ms3dJoint      : MS3D_Joint;
   ms3dKeyframe   : MS3D_Keyframe;
-
   ms3dGroup: MS3D_Group;
   numVertex, numTriangles, numGroups, numMat, numJoints, nTriangles, triangleidx: word;
   AnimFPS        : SINGLE;
@@ -167,10 +144,10 @@ var
   TotalFrames    : LONGINT;
   tempmap: TMap;
   tempmesh: TBaseMesh;
-  ts, s: string;
+  s: string;
   p: char;
-    tempkeyframe: TKeyFrame;
-  //  msask: TMs3dSkeleton;
+ tempkeyframe: TKeyFrame;
+
 begin
   //Read Header
   stream.Read(ms3dheader, SizeOf(ms3dheader));
@@ -230,12 +207,9 @@ begin
     stream.Read(ms3dgroup.flags, SizeOf(ms3dgroup.flags)); //2 byte
     stream.Read(ms3dgroup.Name, SizeOf(ms3dgroup.Name));  //32 byte
     stream.Read(nTriangles, SizeOf(nTriangles));      //2 byte
-
     //Read all indices at once?
     //setlength(ms3dgroup.TriangleIndices,ntriangles);
     //stream.Read(ms3dgroup.TriangleIndices[0],ntriangles*sizeof(word));
-
-
     FMesh[c] := FMeshClass.Create(self);
     Fmesh[c].Name := 'Mesh' + IntToStr(c);
 
@@ -259,7 +233,7 @@ begin
     for c2 := 0 to nTriangles - 1 do
     begin
       stream.Read(triangleidx, SizeOf(triangleidx)); //read per indice
-      //triangleidx:=ms3dgroup.TriangleIndices[c2];
+      //triangleidx:=ms3dgroup.TriangleIndices[c2]; //read pre read indices
       for i := 0 to 2 do
       begin
         //indces
@@ -277,8 +251,8 @@ begin
     end; //for begin c2
 
     stream.Read(ms3dgroup.materialIndex, SizeOf(ms3dgroup.materialIndex));  //2 byte
-    for i := 0 to fMesh[c].NumMappingIndices - 1 do
-      fMesh[c].MatId[i] := ms3dgroup.materialIndex;
+    fMesh[c].MatId[0] := ms3dgroup.materialIndex;
+    fMesh[c].MatName[0] := '';
 
     //setlength(ms3dgroup.TriangleIndices,0); //cleanup memory no longer needed
   end;
@@ -315,7 +289,6 @@ begin
   //Read Bones
   stream.Read ( AnimFPS, SizeOf ( AnimFPS ) );
   stream.Read ( CurrentTime, SizeOf ( CurrentTime ) );
-  //stream.Position := stream.Position + SizeOf ( Single ); //Skip CurrentTime
   stream.Read ( TotalFrames, SizeOf ( TotalFrames ) );
   stream.Read ( numJoints, SizeOf ( NumJoints ) );
 
@@ -337,7 +310,6 @@ begin
         fskeleton[0].Bone[c].Rotate := ms3dJoint.Rotation;
         fskeleton[0].Bone[c].Translate := ms3dJoint.Translation;
         fskeleton[0].Bone[c].ParentName:= ms3dJoint.ParentName;
-        //fskeleton[0].Bone[c].parent := ParentIndex;
         fskeleton[0].Bone[c].NumRotateFrames := ms3dJoint.nRotKeyframes;
         fskeleton[0].Bone[c].NumTranslateFrames := ms3dJoint.nTransKeyframes;
 
@@ -371,18 +343,16 @@ begin
 
     end;
 
-  (*
   //fill matnames into meshes
   If FnumMeshes > 0 then
   for m:= 0 to FNumMeshes -1 do
   begin
-    if (FMesh[m].MatName[0] <> '0') AND (FMesh[m].MatName[0] <> '')  then
+    if (fMesh[m].MatId[0]<>255)  then
     begin
-      FMesh[m].MatID[0] := StrToInt(FMesh[m].MatName[0]);
-      FMesh[m].MatName[0] := FMaterial[StrToInt(FMesh[m].MatName[0])].Name;
+      FMesh[m].MatName[0] := FMaterial[fMesh[m].MatId[0]].Name;
     end;
   end;
-  *)
+
 end;
 
 procedure TMs3dModel.SaveToFile(AFileName: string);
@@ -395,21 +365,8 @@ begin
 end;
 
 procedure TMs3dModel.SaveToStream(stream: Tstream);
-//var
-//  msask: TMs3dSkeleton;
 begin
-
-  (*
-  //write the first skeleton (only one skeleton supported)
-  if (self.NumSkeletons>=1) then
-  begin
-    msask := TMs3dSkeleton.Create(self);
-    msask.BoneClass := fskeleton[0].BoneClass;
-    msask.Assign(fskeleton[0]);
-    msask.SaveToStream(stream);
-    msask.Free;
-  end;
-  *)
+  //TODO: write export code for ms3d binary format
 end;
 
 initialization
