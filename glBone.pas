@@ -60,8 +60,6 @@ begin
     parentvertex := MatrixTransform(FParent.Matrix, ParentVertex);
   end;
 
-  //TODO: reimplement
-  (*
   glPointSize(10.0);
   glBegin(GL_POINTS);
   glColor3f(255,0,0);
@@ -82,7 +80,6 @@ begin
     glvertex3fv(@parentvertex);
     glend;
   end;
-  *)
 
 end;
 

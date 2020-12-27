@@ -19,7 +19,12 @@ uses
   Model3ds,
   ModelObj,
   ModelX,
-  ModelMsa, ModelMs3d, ModelBvh, SkeletonBvh, ModelFbx;
+  ModelMsa,
+  ModelMs3d,
+  ModelBvh,
+  Skeleton,
+  SkeletonBvh,
+  ModelFbx;
 
 var
   Model: TBaseModel;
@@ -63,7 +68,7 @@ begin
 
   Model := TBaseModel.Create(nil);
   writeln('Read MS3D model');
-  Model.LoadFromFile('..\..\Models\ms3d-test2.ms3d');
+  Model.LoadFromFile('..\..\Models\ninja.ms3d');
   writeln('Write MSA model');
   Model.SaveToFile('export7.txt');
   Model.Free;

@@ -73,7 +73,7 @@ begin
     fnumskeletons:=fnumskeletons+1;
     setlength(fskeleton, fnumskeletons);
     fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
-    fskeleton[fnumskeletons-1].BoneClass := TBaseBone;
+    //fskeleton[fnumskeletons-1].BoneClass := TBaseBone;
     msask := TMsaSkeleton.Create(self);
     msask.BoneClass := fskeleton[fnumskeletons-1].BoneClass;
     msask.LoadFromFile(AFileName);

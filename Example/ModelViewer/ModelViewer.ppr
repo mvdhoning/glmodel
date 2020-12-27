@@ -18,6 +18,12 @@ uses
   {$IFDEF WINDOWS}windows,{$ENDIF}
   classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, glrender;
 
+type
+  clsCamera = record
+	  xangle, yangle, zangle : double;
+  	dist : double;
+  end;
+
 var
   window: PSDL_Window;
   context: TSDL_GLContext;
@@ -25,6 +31,12 @@ var
   screenHeight: integer = 480;
   running: boolean = true;
   scene1: TglRender;
+  xSpeed, ySpeed : glFloat;
+  xAngle, yAngle : glFloat;
+  angle_speed : double;
+  dist_speed : double;
+  show_bones : boolean;
+  camera : clsCamera;
 
 //initializes SDL
 function InitializeSDL: Boolean;
@@ -48,10 +60,50 @@ end;
 //init game logic pre render
 procedure Init();
 begin
+  camera.xangle := 10.0;
+  camera.yangle := 90.0;
+  camera.zangle := 0.0;
+  camera.dist := 500.0;
+
+  angle_speed := 0.5;
+  dist_speed := 0.5;
+  show_bones := true;
+
+  glClearColor(0.0, 0.0, 0.0, 0.0); 	   // Black Background
+  glShadeModel(GL_SMOOTH);                 // Enables Smooth Color Shading
+  glClearDepth(1.0);                       // Depth Buffer Setup
+  glEnable(GL_DEPTH_TEST);                 // Enable Depth Buffer
+  glDepthFunc(GL_LESS);		           // The Type Of Depth Test To Do
+
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
+
+  glEnable(GL_TEXTURE_2D);                     // Enable Texture Mapping
+
+  xSpeed :=0.1;   // start with some movement
+  ySpeed :=0.1;
+
   scene1 := TglRender.Create(nil);
   scene1.Init;
   scene1.AddModel();
-  scene1.Models[0].LoadFromFile('..\..\Models\msa-test1.txt');
+  scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt');
+
+  glShadeModel (GL_SMOOTH);
+
+  // Set the polygon mode to fill
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  glPolygonMode (GL_BACK, GL_POINTS);
+
+  glEnable (GL_DEPTH_TEST);
+
+  glCullFace (GL_BACK);
+  glEnable (GL_CULL_FACE);
+
+  glEnable (GL_TEXTURE_2D);
+  glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+  glFrustum (-1.0, 1.0, -1.0, 1.0, 1.0, 1500.0);
 end;
 
 //Event-Handler
@@ -93,7 +145,25 @@ begin
   glClearColor(0.0,0.0,0.0,0.0); //hard bleu debug background
   glClear(GL_COLOR_BUFFER_BIT or GL_STENCIL_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   //Render 3D scene here
+
+  // Set the modelview matrix to be the identity matrix
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity();
+
+  // Set camera position
+  glTranslatef ( 0.0, 0.0, -camera.dist);
+  glRotatef (camera.xangle, 1.0, 0.0, 0.0);
+  glRotatef (camera.yangle, 0.0, 1.0, 0.0);
+  glRotatef (camera.zangle, 0.0, 0.0, 1.0);
+
   scene1.Render;
+
+  if(show_bones) then
+  begin
+    glClear( GL_DEPTH_BUFFER_BIT);  // clear z buffer
+    scene1.Models[0].RenderSkeleton;  // render bones
+  end;
+
   // Done
   glFlush(); //for opengl to do its thing
 end;

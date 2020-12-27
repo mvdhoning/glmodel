@@ -47,6 +47,7 @@ type
     FNumFrames: Integer;
     function GetBone(Index: integer): TBaseBone;
   public
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property BoneClass: TBaseBoneClass read FBoneClass write FBoneClass;
     procedure AddBone;
@@ -74,7 +75,6 @@ procedure TBaseSkeleton.Assign(Source: TPersistent);
 var
   i: integer;
 begin
-  FBoneClass:=TBaseBone; //make sure the tbasebone class is set
   if Source is TBaseSkeleton then
   begin
     with TBaseSkeleton(Source) do
@@ -98,6 +98,12 @@ begin
   else
     inherited;
 
+end;
+
+constructor TBaseSkeleton.Create(AOwner: TComponent);
+begin
+  inherited;
+  FBoneClass := TBaseBone; //Make sure a bone class is set
 end;
 
 destructor TBaseSkeleton.Destroy;

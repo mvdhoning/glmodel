@@ -36,7 +36,6 @@ type
     public
       procedure LoadFromFile(AFileName: string); override;
       procedure LoadFromStream(stream: Tstream); override;
-      //TODO: add saving skeleton
       procedure SaveToFile(AFilename: string); override;
       procedure SaveToStream(Stream: TStream); override;
   end;
