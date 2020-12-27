@@ -1,0 +1,180 @@
+program ModelViewer;
+
+//compatibility for FPC
+{$IFDEF FPC}
+  {$MODE Delphi}
+  {$H+}
+  {$M+}
+  {$codepage utf8}
+  {$IFNDEF WINDOWS}
+    {$LINKLIB c}
+  {$ENDIF}
+{$ENDIF}
+
+//for logs
+{$APPTYPE CONSOLE}
+
+uses
+  {$IFDEF WINDOWS}windows,{$ENDIF}
+  classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, glrender;
+
+var
+  window: PSDL_Window;
+  context: TSDL_GLContext;
+  screenWidth: integer = 640;
+  screenHeight: integer = 480;
+  running: boolean = true;
+  scene1: TglRender;
+
+//initializes SDL
+function InitializeSDL: Boolean;
+begin
+  Result := false;
+  //only the video system is needed
+  if SDL_Init(SDL_INIT_VIDEO) = 0 then
+    Result := true;
+
+  //SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+  //SDL_SetRelativeMouseMode(SDL_TRUE); //TODO: camera bug when net done in time
+end;
+
+procedure InitializeOpenGL;
+begin
+  InitOpenGL;                   //core-functions
+  ReadExtensions;               //Extensions
+  ReadImplementationProperties; //Extension-Support-Bools
+end;
+
+//init game logic pre render
+procedure Init();
+begin
+  scene1 := TglRender.Create(nil);
+  scene1.Init;
+  scene1.AddModel();
+  scene1.Models[0].LoadFromFile('..\..\Models\msa-test1.txt');
+end;
+
+//Event-Handler
+procedure HandleEvents;
+var
+  event: TSDL_Event;
+begin
+
+  while SDL_PollEvent(@event) > 0 do
+  begin
+
+    case event.type_ of
+      SDL_QUITEV: //this only works with one window
+        running := false; //stop main-loop
+
+      SDL_KEYDOWN:
+        begin
+          case event.key.keysym.scancode of
+            SDL_SCANCODE_ESCAPE: running:=false; //stop main-loop
+          end;
+       end;
+
+    end;
+
+  end;
+end;
+
+//update game logic pre render
+procedure Update();
+begin
+end;
+
+//Render
+procedure Render;
+begin
+  //Start Drawing
+  glViewPort(0,0,screenWidth,screenHeight);
+  glClearDepth(1.0);
+  glClearColor(0.0,0.0,0.0,0.0); //hard bleu debug background
+  glClear(GL_COLOR_BUFFER_BIT or GL_STENCIL_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+  //Render 3D scene here
+  scene1.Render;
+  // Done
+  glFlush(); //for opengl to do its thing
+end;
+
+//Cleanup game logic pre render
+procedure Cleanup();
+begin
+  scene1.Free;
+end;
+
+//Main Application Loop
+begin
+
+  {$IFDEF WINDOWS}
+    //Force using UTF8
+    SetConsoleOutputCP(CP_UTF8);
+    SetTextCodePage(Output, CP_UTF8);
+    DefaultSystemCodePage := CP_UTF8;
+  {$ENDIF}
+
+  window := nil;
+  context := nil;
+
+  try
+    
+	//initialize SDL
+    if not InitializeSDL then
+    begin
+      WriteLn('Couldn''t initialize SDL!');
+      Exit;
+    end;
+    
+    //set opengl screen buffer attributes
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2 ); //force opengl version
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1 ); //force opengl version
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); //doublebuffer
+
+    //create the window,
+    //caption - first parameter
+    //position: 100,100
+    //640x480
+    //OpenGL-Support
+    window := SDL_CreateWindow('OpenGL with SDL ', 100+400, 100, screenWidth, screenHeight, SDL_WINDOW_OPENGL);
+
+    //the opengl-context
+    context := SDL_GL_CreateContext(window);
+    
+	//initialize OpenGL
+    InitializeOpenGL;
+
+    SDL_GL_SetSwapInterval(0); //no vsync
+    //SDL_FlushEvents(SDL_MOUSEMOTION, SDL_LASTEVENT);
+    //SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+    //SDL_SetRelativeMouseMode(SDL_TRUE);
+
+    //Initialize resources and game locic
+    Init();
+    while running do
+      begin
+        //Handle events
+        HandleEvents;
+        //Update game logic
+        Update;
+        //Draw
+        Render;
+        //Swap Window
+        SDL_GL_SwapWindow(window);
+        sleep(1 div 60); //prevent cpu hog
+      end;
+  finally
+    Cleanup();
+    //clean up SDL and OpenGL
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+    SDL_Quit;
+  end;
+
+end.
