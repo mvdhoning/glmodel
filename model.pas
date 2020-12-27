@@ -385,8 +385,7 @@ begin
 
   FSkeleton[FCurrentSkeleton].InitBones;
 
-  //TODO: temporary not called init skin should not alter base mesh
-  (*
+  //TODO: how to to apply skin without affecting original mesh
   for m := 0 to FNumMeshes - 1 do
   begin
     if FMesh[m].NumVertexIndices > 0 then
@@ -417,7 +416,7 @@ begin
       end;
     end;
   end;
-  *)
+
   end;
 end;
 

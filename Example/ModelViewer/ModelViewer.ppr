@@ -134,6 +134,7 @@ end;
 //update game logic pre render
 procedure Update();
 begin
+  scene1.Models[0].Skeleton[0].AdvanceAnimation();
 end;
 
 //Render
@@ -156,6 +157,7 @@ begin
   glRotatef (camera.yangle, 0.0, 1.0, 0.0);
   glRotatef (camera.zangle, 0.0, 0.0, 1.0);
 
+  glColor3f(255,255,255);
   scene1.Render;
 
   if(show_bones) then

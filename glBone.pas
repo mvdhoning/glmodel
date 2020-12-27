@@ -60,24 +60,24 @@ begin
     parentvertex := MatrixTransform(FParent.Matrix, ParentVertex);
   end;
 
-  glPointSize(10.0);
-  glBegin(GL_POINTS);
-  glColor3f(255,0,0);
-  glvertex3fv(@vertex);
-  glend;
-
   if FParent <> nil then
   begin
+    glLineWidth(1.0);
+    glColor3f(1.0,0,0);
     glBegin(GL_LINES);
-    glColor3f(0,255,0);
     glvertex3fv(@vertex);
-    glvertex3fv(@parentvertex);
+    if fparent <> nil then
+      glvertex3fv(@parentvertex)
+    else
+      glvertex3fv(@vertex);
     glend;
 
-    glPointSize(10.0);
+    glPointSize(2.0);
+    glColor3f(1.0,0,1.0);
     glBegin(GL_POINTS);
-    glColor3f(255,0,0);
-    glvertex3fv(@parentvertex);
+    glvertex3fv(@vertex);
+    if fparent <> nil then
+      glvertex3fv(@parentvertex);
     glend;
   end;
 
