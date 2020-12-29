@@ -210,9 +210,11 @@ begin
     FTexture:=TglBitmap2D.Create;
     //haal pad uit scene weg, moet anders nl dmv pad uit scene doorgeven aan materiaal
     if TglModel(self.owner).TexturePath <> '' then
-       FTexture.LoadFromFile(TglModel(self.owner).TexturePath + FFileName)
+      if fileexists(TglModel(self.owner).TexturePath + fileName) then
+        FTexture.LoadFromFile(TglModel(self.owner).TexturePath + FFileName)
     else
-       FTexture.LoadFromFile(FFileName);
+      if fileexists(fileName) then
+        FTexture.LoadFromFile(FFileName);
   end;
 
   //load the opacmap into the alpha channel when needed

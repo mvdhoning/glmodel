@@ -60,10 +60,10 @@ end;
 //init game logic pre render
 procedure Init();
 begin
-  camera.xangle := 10.0;
-  camera.yangle := 90.0;
-  camera.zangle := 0.0;
-  camera.dist := 500.0;
+  camera.xangle := 0.0; //10
+  camera.yangle := 0.0; //90
+  camera.zangle := 0.0; //0
+  camera.dist := 5.0;   //500
 
   angle_speed := 0.5;
   dist_speed := 0.5;
@@ -86,7 +86,7 @@ begin
 
   scene1.Init;
   scene1.AddModel();
-  scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt');
+  scene1.Models[0].LoadFromFile('..\..\Models\msa-test2.txt');
   scene1.UpdateTextures;
 
   glShadeModel (GL_SMOOTH);

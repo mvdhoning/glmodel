@@ -150,24 +150,22 @@ begin
             tsl := TStringList.Create;
             tsl.CommaText := line;
 
+            //vertex
             tempvertex := FMesh[tcount].Vertex[loop];
-
             tempvertex.x := strtofloat(tsl.Strings[1]);
             tempvertex.y := strtofloat(tsl.Strings[2]);
             tempvertex.z := strtofloat(tsl.Strings[3]);
-
             FMesh[tcount].Vertex[loop] := tempvertex;
 
+            //texture coords
             tempmap := FMesh[tcount].Mapping[loop];
-
             tempmap.tu := strtofloat(tsl.Strings[4]);
             tempmap.tv := strtofloat(tsl.Strings[5]);
-
-            //adjust texture coord v? when and when not?
-            //tempmap.tv := 1.0 - tempmap.tv;
-
+            //adjust texture coord v?
+            tempmap.tv := 1.0 - tempmap.tv;
             FMesh[tcount].Mapping[loop]:=tempmap;
 
+            //bones
             FMesh[tcount].BoneId[loop,0] := StrToInt(tsl.Strings[6]);
 
             tsl.Free;
@@ -225,7 +223,14 @@ begin
             FMesh[tcount].Normal[(loop * 3) + 1] := StrToInt(tsl.Strings[5]);
             FMesh[tcount].Normal[(loop * 3) + 2] := StrToInt(tsl.Strings[6]);
 
-            FMesh[tcount].Map[loop * 3 + 0] := StrToInt(tsl.Strings[7]);
+            FMesh[tcount].Map[(loop * 3) + 0] := StrToInt(tsl.Strings[1]);
+            FMesh[tcount].Map[(loop * 3) + 1] := StrToInt(tsl.Strings[2]);
+            FMesh[tcount].Map[(loop * 3) + 2] := StrToInt(tsl.Strings[3]);
+
+            //TODO: what to do with element 7?
+            //FMesh[tcount].Map[loop * 3 + 0] := StrToInt(tsl.Strings[7]);
+            //FMesh[tcount].Map[loop * 3 + 1] := StrToInt(tsl.Strings[7]);
+            //FMesh[tcount].Map[loop * 3 + 2] := StrToInt(tsl.Strings[7]);
 
             tsl.Free;
           end;
@@ -423,9 +428,9 @@ begin
     begin
 
       if self.FNumSkeletons > 0 then
-        ms.Add('0'+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tv)+' '+formatfloat('0',fmesh[saveloop].boneid[subsaveloop,0]))
+        ms.Add('0'+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' '+formatfloat('0',fmesh[saveloop].boneid[subsaveloop,0]))
       else
-        ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
+        ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
     end;
 
     //save normals
