@@ -244,6 +244,7 @@ begin
         //bone id
         fmesh[c].BoneId[(c2 * 3) + i, 0] := tempmesh.BoneId[tempmesh.Face[(triangleidx * 3) + i], 0];
         //mapping
+        fMesh[c].map[(c2 * 3) + i] :=(c2 * 3 + i);
         fMesh[c].Mapping[(c2 * 3) + i] := tempmesh.Mapping[(triangleidx * 3) + i];
         //normals
         fmesh[c].Normal[(c2 * 3) + i] := (c2 * 3 + i);
@@ -285,6 +286,8 @@ begin
     FMaterial[c].Shininess:=ms3dMaterial.Shininess;
     FMaterial[c].Transparency:=ms3dMaterial.Transparency;
     FMaterial[c].TextureFilename:=ms3dmaterial.texture;
+    if FMaterial[c].TextureFilename <> '' then
+      FMaterial[c].Hastexturemap := True;
   end;
 
   //Read Bones

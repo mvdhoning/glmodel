@@ -107,7 +107,6 @@ begin
   glMaterialfv(GL_FRONT, gl_emission, @emissive);
 
 
-
   if (FHastexturemap = True) AND (ftexture<>nil) then
   begin
     glActiveTexture(GL_TEXTURE0);
@@ -210,7 +209,7 @@ begin
     FTexture:=TglBitmap2D.Create;
     //haal pad uit scene weg, moet anders nl dmv pad uit scene doorgeven aan materiaal
     if TglModel(self.owner).TexturePath <> '' then
-      if fileexists(TglModel(self.owner).TexturePath + fileName) then
+      if fileexists(TglModel(self.owner).TexturePath + ExtractFileName(fileName)) then
         FTexture.LoadFromFile(TglModel(self.owner).TexturePath + FFileName)
     else
       if fileexists(fileName) then

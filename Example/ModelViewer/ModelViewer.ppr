@@ -86,8 +86,8 @@ begin
 
   scene1.Init;
   scene1.AddModel();
-  //scene1.Models[0].LoadFromFile('..\..\Models\msa-test1.txt');
-  scene1.Models[0].LoadFromFile('..\..\Models\ms3d-test2.ms3d');
+  //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt');
+  scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
   scene1.UpdateTextures;
 
   glShadeModel (GL_SMOOTH);
