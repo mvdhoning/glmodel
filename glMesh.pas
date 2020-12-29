@@ -195,22 +195,24 @@ begin
           end;
 
         //render the face
-          if FNumNormals >=1 then
-            glNormal3fv(@FVnormal[FNormalIndices[f]]);
-          glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f]].tu, FMapping[FMappingIndices[f]].tv);
-          glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f]].tu + (lightv1.x*offset), FMapping[FMappingIndices[f]].tv + (lightv1.y*offset));
+
+          glNormal3fv(@FVnormal[FNormalIndices[f]]);
+
+          glTexCoord2f(FMapping[FMappingIndices[f]].tu, FMapping[FMappingIndices[f]].tv);
+          //glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f]].tu, FMapping[FMappingIndices[f]].tv);
+          //glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f]].tu + (lightv1.x*offset), FMapping[FMappingIndices[f]].tv + (lightv1.y*offset));
           glVertex3fv(@v1);
 
-          if FNumNormals >=1 then
-            glNormal3fv(@FVnormal[FNormalIndices[f + 1]]);
-          glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f + 1]].tu, FMapping[FMappingIndices[f + 1]].tv);
-          glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f + 1]].tu + (lightv2.x*offset), FMapping[FMappingIndices[f + 1]].tv + (lightv2.y*offset));
+          glNormal3fv(@FVnormal[FNormalIndices[f + 1]]);
+          glTexCoord2f(FMapping[FMappingIndices[f+1]].tu, FMapping[FMappingIndices[f+1]].tv);
+          //glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f + 1]].tu, FMapping[FMappingIndices[f + 1]].tv);
+          //glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f + 1]].tu + (lightv2.x*offset), FMapping[FMappingIndices[f + 1]].tv + (lightv2.y*offset));
           glVertex3fv(@v2);
 
-          if FNumNormals >=1 then
-            glNormal3fv(@FVnormal[FNormalIndices[f + 2]]);
-          glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f + 2]].tu, FMapping[FMappingIndices[f + 2]].tv);
-          glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f + 2]].tu + (lightv3.x*offset), FMapping[FMappingIndices[f + 2]].tv + (lightv3.y*offset));
+          glNormal3fv(@FVnormal[FNormalIndices[f + 2]]);
+          glTexCoord2f(FMapping[FMappingIndices[f+2]].tu, FMapping[FMappingIndices[f+2]].tv);
+          //glMultiTexCoord2f(GL_TEXTURE0,FMapping[FMappingIndices[f + 2]].tu, FMapping[FMappingIndices[f + 2]].tv);
+          //glMultiTexCoord2f(GL_TEXTURE1,FMapping[FMappingIndices[f + 2]].tu + (lightv3.x*offset), FMapping[FMappingIndices[f + 2]].tv + (lightv3.y*offset));
           glVertex3fv(@v3);
         f := f + 3;
       end;

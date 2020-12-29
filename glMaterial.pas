@@ -62,7 +62,6 @@ var
   power: Single;
 begin
   inherited;
-  gldisable(GL_TEXTURE_2D); //just to make sure...
 
   diffuse.r := FDifR;
   diffuse.g := FDifG;
@@ -108,19 +107,18 @@ begin
 
 
 
-  if FHastexturemap = True then
+  if (FHastexturemap = True) AND (ftexture<>nil) then
   begin
-    glActiveTexture(GL_TEXTURE0); //MVDH 2005 march
-    glenable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, self.FTexId);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ftexture.ID);
 
-    if ftexture <> nil then
-    begin
-      ftexture.Bind;
-    end;
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  {Texture blends with object background}
+//  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);  {Texture does NOT blend with object background}
 
+    //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); { only first two can be used }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); { all of the above can be used }
 
     //the following it not efficient... (maybe i should have a var containing the states)
     glDisable(GL_ALPHA_TEST);
@@ -131,6 +129,7 @@ begin
        glenable(GL_TEXTURE_2D);
        ftexture.Bind;
       end;
+
 
 
     if FHasBumpMap then
@@ -155,12 +154,9 @@ begin
       glTexEnvf(GL_TEXTURE_ENV,GL_COMBINE_ALPHA,GL_REPLACE);
       glTexEnvf(GL_TEXTURE_ENV,GL_SOURCE0_ALPHA,GL_TEXTURE{0});
       glTexEnvf(GL_TEXTURE_ENV,GL_OPERAND0_ALPHA,GL_SRC_ALPHA);
-
-
     end;
 
   end;
-
 
   if FHasBumpmap = True then
   begin
