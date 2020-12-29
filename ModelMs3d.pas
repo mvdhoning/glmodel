@@ -211,6 +211,7 @@ begin
     //setlength(ms3dgroup.TriangleIndices,ntriangles);
     //stream.Read(ms3dgroup.TriangleIndices[0],ntriangles*sizeof(word));
     FMesh[c] := FMeshClass.Create(self);
+    FMesh[c].Visible := True;
     Fmesh[c].Name := 'Mesh' + IntToStr(c);
 
     s := '';
@@ -297,7 +298,6 @@ begin
       fnumskeletons:=1;
       setlength(fskeleton, fnumskeletons);
       fskeleton[0]:=FSkeletonClass.Create(self);
-      fskeleton[0].BoneClass := TBaseBone;
       fskeleton[0].NumFrames:=TotalFrames;
       fskeleton[0].CurrentFrame:=1;
 

@@ -16,7 +16,7 @@ program ModelViewer;
 
 uses
   {$IFDEF WINDOWS}windows,{$ENDIF}
-  classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, glrender;
+  classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, ModelMS3D, glrender;
 
 type
   clsCamera = record
@@ -86,7 +86,8 @@ begin
 
   scene1.Init;
   scene1.AddModel();
-  scene1.Models[0].LoadFromFile('..\..\Models\msa-test2.txt');
+  //scene1.Models[0].LoadFromFile('..\..\Models\msa-test1.txt');
+  scene1.Models[0].LoadFromFile('..\..\Models\ms3d-test2.ms3d');
   scene1.UpdateTextures;
 
   glShadeModel (GL_SMOOTH);
