@@ -53,6 +53,7 @@ uses
 destructor TglMaterial.Destroy;
 begin
   if HasTexturemap = True then gldeletetextures(1, @TexId); //lets clean up afterwards...
+  if HasTexturemap = True then ftexture.Free;
   inherited Destroy;
 end;
 

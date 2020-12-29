@@ -226,10 +226,10 @@ end;
 
 function TBaseModel.GetMaterial(Index: integer): TBaseMaterial;
 begin
-  if fmaterial <> nil then
+  //if fmaterial <> nil then
     Result := FMaterial[index]
-  else
-    Result := FMaterialClass.Create(nil);
+  //else
+  //  Result := FMaterialClass.Create(nil);
 end;
 
 function TBaseModel.GetMaterialByName(s: string): TBaseMaterial;

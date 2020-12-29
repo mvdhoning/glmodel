@@ -137,7 +137,8 @@ end;
 //update game logic pre render
 procedure Update();
 begin
-  scene1.Models[0].Skeleton[0].AdvanceAnimation();
+  if scene1.Models[0].NumSkeletons>=1 then
+    scene1.Models[0].Skeleton[0].AdvanceAnimation();
 end;
 
 //Render
@@ -163,8 +164,7 @@ begin
   glColor3f(255,255,255);
   scene1.Render;
 
-  //glDisable(GL_TEXTURE_2D);
-  if(show_bones) then
+  if(show_bones) AND (scene1.Models[0].NumSkeletons>=1) then
   begin
     glClear( GL_DEPTH_BUFFER_BIT);  // clear z buffer
     scene1.Models[0].RenderSkeleton;  // render bones

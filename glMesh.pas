@@ -97,9 +97,12 @@ begin
           begin
             glend;
 
+
             imatid := FMatId[f div 3];
-            if (TBaseModel(owner).material[imatid] is TBaseMaterial) then
-              TBaseModel(owner).material[imatid].apply;
+            if TBaseModel(owner).NumMaterials >0 then
+              if (TBaseModel(owner).material[imatid]<>nil) then
+                if (TBaseModel(owner).material[imatid] is TBaseMaterial) then
+                  TBaseModel(owner).material[imatid].apply;
 
             glbegin(GL_TRIANGLES);
           end;
@@ -156,6 +159,7 @@ begin
 
         offset:=0;
         if FMatId<>nil then
+          if TBaseModel(owner).NumMaterials >0 then
           if TBaseModel(owner).material[imatid].Hasbumpmap then
           begin
             //calculate bumpmapping
