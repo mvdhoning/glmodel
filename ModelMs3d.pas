@@ -206,6 +206,7 @@ begin
   //For each group make a submesh and copy over data form temp mesh
   for c := 0 to NumGroups - 1 do
   begin
+    FRenderOrder[c] := c;
     stream.Read(ms3dgroup.flags, SizeOf(ms3dgroup.flags)); //2 byte
     stream.Read(ms3dgroup.Name, SizeOf(ms3dgroup.Name));  //32 byte
     stream.Read(nTriangles, SizeOf(nTriangles));      //2 byte
@@ -224,6 +225,7 @@ begin
     end;
 
     FMesh[c].Name := s;
+
     fmesh[c].Id := c;
     fmesh[c].numVertex := nTriangles * 3;
     fmesh[c].NumVertexIndices := nTriangles * 3;
