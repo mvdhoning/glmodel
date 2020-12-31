@@ -185,10 +185,12 @@ begin
       //mapping
       tempmap := tempmesh.Mapping[(c * 3) + i];
       tempmap.tu := ms3dtriangle.S[i];
-      tempmap.tv := ms3dtriangle.T[i];
+      tempmap.tv := 1.0-ms3dtriangle.T[i];
+      tempmesh.Map[(c * 3) + i] := (c * 3) + i;
       tempmesh.Mapping[(c * 3) + i] := tempmap;
+
       //normals
-      tempmesh.Normal[(c * 3) + i] := (c * 3 + i);
+      tempmesh.Normal[(c * 3) + i] := (c * 3) + i;
       tempmesh.Normals[(c * 3) + i] := ms3dtriangle.VertexNormals[i];
     end;
 
@@ -245,7 +247,7 @@ begin
         fmesh[c].BoneId[(c2 * 3) + i, 0] := tempmesh.BoneId[tempmesh.Face[(triangleidx * 3) + i], 0];
         //mapping
         fMesh[c].map[(c2 * 3) + i] :=(c2 * 3 + i);
-        fMesh[c].Mapping[(c2 * 3) + i] := tempmesh.Mapping[(triangleidx * 3) + i];
+        fMesh[c].Mapping[(c2 * 3) + i] := tempmesh.Mapping[tempmesh.map[(triangleidx * 3) + i]];
         //normals
         fmesh[c].Normal[(c2 * 3) + i] := (c2 * 3 + i);
         fMesh[c].Normals[(c2 * 3) + i] := tempmesh.Normals[tempmesh.Normal[(triangleidx * 3) + i]];
@@ -345,6 +347,29 @@ begin
       end;
 
     end;
+
+  //read additional info from file if not end of file
+
+  //read comments
+
+  //read vertex info is still not end of file
+
+  //can have 2 subersions
+
+  //for each vertex in model there is the following extra data
+  //1: 3 bone id's, 3 weights
+  //2: 3 bone id's, 3 weights, extra
+  //with the already read bone id that makes 4 bones pers vertice
+
+  //read extra joint info from file if not end of file
+  //one subversion known
+  //for each join
+  //1: color
+
+  //read extra model info from file if not end of file
+  //one subversion knwon
+  //1: jointsize, transparenency mode, alpharef
+
 
   //fill matnames into meshes
   If FnumMeshes > 0 then
