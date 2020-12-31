@@ -41,7 +41,7 @@ type
   protected
     FBoneClass : TBaseBoneClass;
     FBone: array of TBaseBone;
-    FCurrentFrame: Integer;
+    FCurrentFrame: single;//Integer;
     FName: string;
     FNumBones: Integer;
     FNumFrames: Integer;
@@ -54,13 +54,14 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure InitBones;
     procedure AdvanceAnimation;
+    procedure AdvanceAnimation(time: single);
     function GetBoneByName(s: string): TBaseBone;
     procedure LoadFromFile(Filename: string); virtual; abstract;
     procedure LoadFromStream(Stream: TStream); virtual; abstract;
     procedure SaveToFile(AFilename: string); virtual; abstract;
     procedure SaveToStream(Stream: TStream); virtual; abstract;
     property Bone[Index: integer]: TBaseBone read GetBone;
-    property CurrentFrame: Integer read FCurrentFrame write FCurrentFrame;
+    property CurrentFrame: single read FCurrentFrame write FCurrentFrame;
     property Name: string read FName write FName;
     property NumBones: Integer read FNumBones;
     property NumFrames: Integer read FNumFrames write FNumFrames;
@@ -151,11 +152,16 @@ begin
 end;
 
 procedure TBaseSkeleton.AdvanceAnimation;
+begin
+  self.AdvanceAnimation(1);
+end;
+
+procedure TBaseSkeleton.AdvanceAnimation(time: single);
 var
   m: Integer;
 begin
   //increase the currentframe
-  FCurrentFrame := FCurrentFrame + 1;
+  FCurrentFrame := FCurrentFrame + time; //TODO: do not just add 1 but feed time
   if FCurrentFrame > FNumFrames then FCurrentFrame := 1; //reset when needed
 
   //set the bones to their new positions

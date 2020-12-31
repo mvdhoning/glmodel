@@ -51,7 +51,7 @@ type
     FRotateFrame: array of TKeyFrame;
     FTranslate: T3DPoint;
     FTranslateFrame: array of TKeyFrame;
-    FCurrentFrame: Integer;
+    FCurrentFrame: single;
     function GetRotateFrame(Index: integer): TKeyFrame;
     procedure SetRotateFrame(Index: integer; Value: TKeyFrame);
 
@@ -66,6 +66,7 @@ type
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     procedure AdvanceAnimation;
+    //procedure AdvanceAnimation(time: single);
     procedure Init;
     procedure Render; virtual; abstract;
     property Name: string read FName write FName;
@@ -73,7 +74,7 @@ type
     property Parent: TBaseBone read FParent write FParent;
     property Rotate: T3DPoint read FRotate write FRotate;
     property Translate: T3DPoint read FTranslate write FTranslate;
-    property CurrentFrame: integer read FCurrentFrame write FCurrentFrame;
+    property CurrentFrame: single read FCurrentFrame write FCurrentFrame;
     property Matrix: ClsMatrix read FMatrix write FMatrix;
     property InverseMatrix: ClsMatrix read FInverseMatrix write FInverseMatrix;
 
