@@ -81,6 +81,9 @@ begin
   begin
     line := sl.Strings[l];
 
+    //set fps to 24 (milkhspe default?)
+    fAnimFps := 24;
+
     //read in frames data...
     if (pos('Frames: ', line) = 1) then
     begin

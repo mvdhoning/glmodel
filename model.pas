@@ -429,14 +429,8 @@ begin
   Delete(Ext, 1, 1);
   GraphicClass := FileFormats.FindExt(Ext);
   LoadFromFile(GraphicClass, AFilename);
-
-  //Check if model is loaded
-
   Calculatesize;        //calculate min and max size
   CalculateRenderOrder; //set transparency order...
-
-  //Needs to be called here and not before or else...
-  InitSkin;
 end;
 
 

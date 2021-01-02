@@ -45,6 +45,7 @@ type
     FName: string;
     FNumBones: Integer;
     FNumFrames: Integer;
+    FAnimFps: Single;
     function GetBone(Index: integer): TBaseBone;
   public
     constructor Create(AOwner: TComponent); override;
@@ -65,6 +66,7 @@ type
     property Name: string read FName write FName;
     property NumBones: Integer read FNumBones;
     property NumFrames: Integer read FNumFrames write FNumFrames;
+    property AnimFps: Single read FAnimFps write FAnimFps;
   end;
 
 implementation
@@ -90,6 +92,7 @@ begin
         end;
 
       self.FCurrentFrame :=FCurrentFrame;
+      self.FAnimFps:= FAnimFps;
       self.FName := FName;
 
       self.FNumFrames :=FNumFrames;

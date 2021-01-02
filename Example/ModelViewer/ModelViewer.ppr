@@ -94,6 +94,7 @@ begin
   scene1.AddModel();
   //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
   scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+  scene1.Models[0].InitSkin; //bind mesh to bones
   scene1.UpdateTextures;
 
   glShadeModel (GL_SMOOTH);
@@ -154,7 +155,7 @@ begin
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
   if scene1.Models[0].NumSkeletons>=1 then
-    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*24);
+    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps);
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;
