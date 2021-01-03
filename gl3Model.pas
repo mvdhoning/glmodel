@@ -22,8 +22,6 @@ unit gl3Model;
  * Contributor(s):
  *
  *  M van der Honing
- *  Sascha Willems
- *  Jan Michalowsky
  *
  *)
 
@@ -74,31 +72,6 @@ begin
     begin
       fmesh[loop].RenderBoundBox;
     end;
-  //TODO: reimplement
-  (*
-  glBegin(GL_LINE_LOOP);
-    glVertex3f(minimum.x, minimum.y, minimum.z);
-    glVertex3f(maximum.x, minimum.y, minimum.z);
-    glVertex3f(maximum.x, maximum.y, minimum.z);
-    glVertex3f(minimum.x, maximum.y, minimum.z);
-  glEnd;
-  glBegin(GL_LINE_LOOP);
-    glVertex3f(minimum.x, minimum.y, maximum.z);
-    glVertex3f(maximum.x, minimum.y, maximum.z);
-    glVertex3f(maximum.x, maximum.y, maximum.z);
-    glVertex3f(minimum.x, maximum.y, maximum.z);
-  glEnd;
-  glBegin(GL_LINES);
-    glVertex3f(minimum.x, minimum.y, minimum.z);
-    glVertex3f(minimum.x, minimum.y, maximum.z);
-    glVertex3f(maximum.x, minimum.y, minimum.z);
-    glVertex3f(maximum.x, minimum.y, maximum.z);
-    glVertex3f(maximum.x, maximum.y, minimum.z);
-    glVertex3f(maximum.x, maximum.y, maximum.z);
-    glVertex3f(minimum.x, maximum.y, minimum.z);
-    glVertex3f(minimum.x, maximum.y, maximum.z);
-  glEnd;
-  *)
 end;
 
 procedure Tgl3Model.RenderSkeleton;

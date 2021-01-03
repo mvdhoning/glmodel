@@ -29,7 +29,7 @@ unit Mesh;
 
 interface
 
-uses classes, glmatrix, glmath, Material;
+uses classes, glmath, Material;
 
 type
   //texturemapping coords

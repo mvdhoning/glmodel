@@ -37,7 +37,7 @@ unit gl3Render;
  
 interface
 
-uses classes, sysutils, model, render, dglopengl, gl3mesh, gl3model, glmaterial, glskeleton, glvbo;
+uses classes, sysutils, model, render, dglopengl, gl3mesh, gl3model, gl3material, gl3skeleton, glvbo;
 
 type Tgl3Render = class(TBaseRender)
   protected
@@ -58,7 +58,6 @@ implementation
 
 constructor Tgl3Render.Create(AOwner: TComponent);
 begin
-  writeln('TGL3Render.Create');
   inherited Create(AOwner);
   FName := 'TGL3Render';
   fvbo:=TglVbo.Create;
@@ -74,8 +73,8 @@ procedure Tgl3Render.AddModel(Value: TBaseModel);
 begin
   inherited;
   Models[FNumModels-1].MeshClass := TGL3Mesh;
-  Models[FNumModels-1].MaterialClass := TGLMaterial;
-  Models[FNumModels-1].SkeletonClass := TGLSkeleton;
+  Models[FNumModels-1].MaterialClass := TGL3Material;
+  Models[FNumModels-1].SkeletonClass := TGL3Skeleton;
 end;
 
 procedure Tgl3Render.AddModel;
@@ -94,18 +93,11 @@ begin
   //TODO: also calculate offset and size for individual meshes
   //TODO: merge glvbo code to here and rename init here to upload
 
-  writeln('gl3render init');
   for I := 0 to FNumModels-1 do
   begin
-    writeln('model name: '+fModels[i].Name);
-    fModels[i].Id:=fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[0]).drawStyle);
-
-    writeln('model id: '+inttostr(fModels[i].Id));
+    fModels[i].Id:=fvbo.AddMesh(GL_TRIANGLES);
     for m:=0 to FModels[i].NumMeshes-1 do
     begin
-      //FModels[i].Mesh[m].Id:=fModels[i].Id; //set model id into mesh id
-      //writeln(TGL3Mesh(FModels[i].Mesh[m]).drawStyle);
-      //fvbo.AddMesh(TGL3Mesh(FModels[i].Mesh[m]).drawStyle);
       for j:=0 to FModels[i].Mesh[m].NumVertexIndices-1 do
       begin
         //TODO: move to mesh
@@ -115,11 +107,11 @@ begin
         test.Color.g:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseGreen;
         test.Color.b:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseBlue;
         test.Color.a:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].Transparency;
+        test.TexCoord.tu:=FModels[i].Mesh[m].Mapping[FModels[i].Mesh[m].Map[j]].tu;
+        test.TexCoord.tv:=FModels[i].Mesh[m].Mapping[FModels[i].Mesh[m].Map[j]].tv;
         fvbo.AddVertex(test);
       end;
-    //TODO: remember models
     end;
-
     Tgl3Model(FModels[i]).Offset:=fvbo.getOffset(fModels[i].Id);
     Tgl3Model(FModels[i]).Size:=fvbo.getSize(fModels[i].Id);
 
@@ -139,7 +131,9 @@ end;
 
 procedure Tgl3Render.Render;
 begin
+  fvbo.PreRender;
   fvbo.render;
+  fvbo.PostRender;
 end;
 
 end.
