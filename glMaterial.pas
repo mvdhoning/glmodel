@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  SysUtils, glModel;
+  SysUtils, Model;
 
 destructor TglMaterial.Destroy;
 begin
@@ -208,9 +208,9 @@ begin
   begin
     FTexture:=TglBitmap2D.Create;
     //haal pad uit scene weg, moet anders nl dmv pad uit scene doorgeven aan materiaal
-    if TglModel(self.owner).TexturePath <> '' then
-      if fileexists(TglModel(self.owner).TexturePath + ExtractFileName(fileName)) then
-        FTexture.LoadFromFile(TglModel(self.owner).TexturePath + FFileName)
+    if TBaseModel(self.owner).TexturePath <> '' then
+      if fileexists(TBaseModel(self.owner).TexturePath + ExtractFileName(fileName)) then
+        FTexture.LoadFromFile(TBaseModel(self.owner).TexturePath + FFileName)
     else
       if fileexists(fileName) then
         FTexture.LoadFromFile(FFileName);
@@ -225,7 +225,7 @@ begin
       FTexture:=TglBitmap2D.Create;
       //First load opacmap to determine size
       if self.owner <> nil then
-        Ftexture.LoadFromFile(TglModel(self.owner).TexturePath + FOpacMapFileName)
+        Ftexture.LoadFromFile(TBaseModel(self.owner).TexturePath + FOpacMapFileName)
       else
         Ftexture.LoadFromFile(FOpacMapFileName);
       x:=Ftexture.Width;
@@ -238,7 +238,7 @@ begin
     end;
     //now realy load in the alpha channel
     if self.owner <> nil then
-      Ftexture.AddAlphaFromFile(TglModel(self.owner).TexturePath + FOpacMapFileName)
+      Ftexture.AddAlphaFromFile(TBaseModel(self.owner).TexturePath + FOpacMapFileName)
     else
       Ftexture.AddAlphaFromFile(lowercase(FOpacMapFileName));
 
@@ -256,7 +256,7 @@ begin
       FTexture:=TglBitmap2D.Create;
       //First load bumpmap to determine size
       if self.owner <> nil then
-        Ftexture.LoadFromFile(lowercase(TglModel(self.owner).TexturePath + FBumpMapFileName))
+        Ftexture.LoadFromFile(lowercase(TBaseModel(self.owner).TexturePath + FBumpMapFileName))
       else
         Ftexture.LoadFromFile(FBumpMapFileName);
       x:=Ftexture.Width;
@@ -269,7 +269,7 @@ begin
     end;
     //now realy load in the alpha channel
     if self.owner <> nil then
-      Ftexture.AddAlphaFromFile(lowercase(TglModel(self.owner).TexturePath + FBumpMapFileName))
+      Ftexture.AddAlphaFromFile(lowercase(TBaseModel(self.owner).TexturePath + FBumpMapFileName))
     else
       Ftexture.AddAlphaFromFile(lowercase(FBumpMapFileName));
   end;
