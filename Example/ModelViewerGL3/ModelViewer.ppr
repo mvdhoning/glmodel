@@ -40,6 +40,10 @@ var
   glslsimplefrag: TGLSLShader;        // a Fragment Shader
   glslsimpleprog: TGLSLProgram;       // a Shader Program
 
+  gBoneMatLocation: GLint;
+
+
+
 //initializes SDL
 function InitializeSDL: Boolean;
 begin
@@ -62,13 +66,16 @@ end;
 //init game logic pre render
 procedure Init();
 var
-  i: integer;
+  i,j: integer;
   gVertexLocation: GLint;
   gColorLocation: GLint;
   gTextureLocation: GLint;
   gTexCoordLocation: GLint;
   gNormalLocation: GLint;
   gModelViewLocation: GLint;
+
+  gBoneIndexLocation: GLint;
+  gBoneWeightLocation: GLint;
   gProjectionLocation: GLint;
   projection: glMatrix;
   model: glMatrix;
@@ -84,14 +91,20 @@ begin
   glslsimpleprog.Attach(glslsimplevert);
   glslsimpleprog.Attach(glslsimplefrag);
   glslsimpleprog.Link;
+  writeln(glslsimpleprog.Log());
   glslsimpleprog.Enable; //Enable once is enough if only one glsl prog is used...
 
   gProjectionLocation := glslsimpleprog.GetUniformLocation('projectionMatrix');
   gModelViewLocation := glslsimpleprog.GetUniformLocation('modelViewMatrix');
   gTextureLocation := glslsimpleprog.GetUniformLocation('firstTexture');
+  gBoneMatLocation := glslsimpleprog.GetUniformLocation('bonemat');
+
   gVertexLocation := glslsimpleprog.GetAttribLocation('vertex');
   gNormalLocation := glslsimpleprog.GetAttribLocation('normal');
   gColorLocation := glslsimpleprog.GetAttribLocation('color');
+  gBoneIndexLocation := glslsimpleprog.GetAttribLocation('boneindex');
+  gBoneWeightLocation := glslsimpleprog.GetAttribLocation('boneweight');
+
   gTexCoordLocation := glslsimpleprog.GetAttribLocation('texCoord');
 
   //set camera position
@@ -121,10 +134,12 @@ begin
   scene1.VBO.ColorAttribId:=gColorLocation;
   scene1.VBO.NormalAttribId:=gNormalLocation;
   scene1.VBO.TexCoordAttribId:=gTexCoordLocation;
+  scene1.VBO.BoneIndexAttribId:=gBoneIndexLocation;
+  //scene1.VBO.BoneWeightAttribId:=gBoneWeightLocation;
 
   scene1.Init; //Init vbo with mesh info
 
-  //scene1.Models[0].InitSkin; //bind mesh to bones
+  scene1.Models[0].InitSkin; //bind mesh to bones
 
   //Load and set texture/material info
   scene1.UpdateTextures;
@@ -187,6 +202,12 @@ end;
 
 //update game logic pre render
 procedure Update();
+var
+  i: integer;
+  bonematrix: glMatrix;
+  ibonematrix: glMatrix;
+  tempm: glMatrix;
+  bone: packed array[0..49] of glMatrix;
 begin
   QueryPerformanceCounter(ftick); //currentime
 
@@ -197,6 +218,16 @@ begin
   //call AdvanceAnimation with elapsedtime * fps
   if scene1.Models[0].NumSkeletons>=1 then
     scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps);
+
+  //upload bone structure in current animation pose
+  for i:=0 to scene1.Models[0].Skeleton[0].NumBones-1 do
+  begin
+    scene1.models[0].Skeleton[0].Bone[i].Matrix.getMatrix(bonematrix);
+    scene1.models[0].Skeleton[0].Bone[i].InverseMatrix.getMatrix(ibonematrix);
+    multMatrix(tempm,bonematrix,ibonematrix);
+    bone[i]:=tempm;
+  end;
+  glUniformMatrix4fv(gBoneMatLocation, 50, false, @bone[0]);
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;
@@ -212,12 +243,13 @@ begin
 
   scene1.Render;
 
+  (*
   if(show_bones) AND (scene1.Models[0].NumSkeletons>=1) then
   begin
     glClear( GL_DEPTH_BUFFER_BIT);  // clear z buffer
     scene1.Models[0].RenderSkeleton;  // render bones
   end;
-
+  *)
 
   // Done
   glFlush(); //for opengl to do its thing

@@ -109,6 +109,10 @@ begin
         test.Color.a:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].Transparency;
         test.TexCoord.tu:=FModels[i].Mesh[m].Mapping[FModels[i].Mesh[m].Map[j]].tu;
         test.TexCoord.tv:=FModels[i].Mesh[m].Mapping[FModels[i].Mesh[m].Map[j]].tv;
+        test.BoneIndex.x:=trunc(FModels[i].Mesh[m].BoneId[FModels[i].Mesh[m].VertexIndices[j],0]); //only one bone for now
+        test.BoneIndex.y:=0.0;
+        test.BoneIndex.z:=0.0;
+        test.BoneIndex.w:=0.0;
         fvbo.AddVertex(test);
       end;
     end;
