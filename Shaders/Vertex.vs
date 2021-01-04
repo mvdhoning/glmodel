@@ -23,8 +23,14 @@ void main(void)
     int index;
 
 	index=int(boneindex.x);
-    newVertex = (bonemat[index] * vertex) * 1.0;
-    newNormal = (bonemat[index] * vec4(normal, 0.0))* 1.0;
+	if(index >= 0) {
+      newVertex = (bonemat[index] * vertex);
+      newNormal = (bonemat[index] * vec4(normal, 0.0));
+	}
+	else {
+	  newVertex = vertex;
+      newNormal = vec4(normal, 0.0);
+	}
 	
     fragmentColor = color;
 	
@@ -32,5 +38,5 @@ void main(void)
 	
 	fragmentNormal = (modelViewMatrix*newNormal).xyz;
 
-	gl_Position = projectionMatrix*modelViewMatrix*vec4(newVertex.xyz, 1.0);
+	gl_Position = projectionMatrix*modelViewMatrix*newVertex;
 }

@@ -14,5 +14,5 @@ void main(void)
 	
 	intensity = max(dot(fragmentNormal, vec3(0.0, 0.0, 1.0)), 0.0);
 	
-	fragColor = texture2D(firstTexture, fragmentTexCoord)*vec4(fragmentColor, 1.0)*intensity;
+	fragColor = texture2D(firstTexture, fragmentTexCoord)* vec4(fragmentColor, 1.0)*intensity;
 }

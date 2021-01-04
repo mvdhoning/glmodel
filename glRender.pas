@@ -41,8 +41,17 @@ end;
 implementation
 
 procedure TglRender.Init;
+var
+  i: integer;
 begin
-  //nothing to do here
+  for i := 0 to FNumModels-1 do
+  begin
+    if fModels[i].NumSkeletons >= 1 then
+    begin
+      fModels[i].Skeleton[0].InitBones; //initialize bone matrices
+      fModels[i].InitSkin;              //bind mesh to bones
+    end;
+  end;
 end;
 
 procedure TglRender.AddModel(Value: TBaseModel);

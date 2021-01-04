@@ -46,16 +46,20 @@ type
 
 implementation
 
-uses dglOpenGl, Render;
+uses dglOpenGl, Render, gl3Render;
 
 procedure Tgl3Model.Init;
 var
   m: Integer;
 begin
+    fId := Tgl3Render(Owner).VBO.AddMesh(GL_TRIANGLES);
     for m := 0 to FNumMeshes - 1 do
     begin
       FMesh[FRenderOrder[m]].Init;
     end;
+    fOffset:=Tgl3Render(Owner).VBO.getOffset(fId);
+    fSize:=Tgl3Render(Owner).VBO.getSize(fId);
+
 end;
 
 procedure Tgl3Model.Render;

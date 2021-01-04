@@ -37,11 +37,12 @@ unit gl3Render;
  
 interface
 
-uses classes, sysutils, model, render, dglopengl, gl3mesh, gl3model, gl3material, gl3skeleton, glvbo;
+uses classes, sysutils, model, render, dglopengl, gl3mesh, gl3model, gl3material, gl3skeleton, glvbo, glshader;
 
 type Tgl3Render = class(TBaseRender)
   protected
-    fvbo: TglVbo;
+    fvbo: TglVbo;                       // a vertex buffer object
+    fBoneMatLocation: GLint;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
@@ -52,6 +53,7 @@ type Tgl3Render = class(TBaseRender)
     procedure Render(amodel: TBaseModel); overload; override;
     procedure Init; override;
     property VBO: TglVbo read fvbo write fvbo;
+    property BoneMatLocation: GLint read fBoneMatLocation write fBoneMatLocation;
 end;
 
 implementation
@@ -84,42 +86,30 @@ end;
 
 procedure Tgl3Render.Init;
 var
-  I,J,M: Integer;
-  test: TVBOVertex;
+  i: Integer;
 begin
+
+
   //uploads models and meshes to the gpu via vbo
 
   //TODO: calculate model offset and size here and not in glvbo (wrongly called addmesh there)
   //TODO: also calculate offset and size for individual meshes
   //TODO: merge glvbo code to here and rename init here to upload
 
-  for I := 0 to FNumModels-1 do
+  for i := 0 to FNumModels-1 do
   begin
-    fModels[i].Id:=fvbo.AddMesh(GL_TRIANGLES);
-    for m:=0 to FModels[i].NumMeshes-1 do
+
+
+    if fModels[i].NumSkeletons >= 1 then
     begin
-      for j:=0 to FModels[i].Mesh[m].NumVertexIndices-1 do
-      begin
-        //TODO: move to mesh
-        test.Position:=FModels[i].Mesh[m].Vertex[FModels[i].Mesh[m].VertexIndices[j]];
-        test.Normal:=FModels[i].Mesh[m].Normals[FModels[i].Mesh[m].Normal[j]];
-        test.Color.r:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseRed;
-        test.Color.g:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseGreen;
-        test.Color.b:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].DiffuseBlue;
-        test.Color.a:=FModels[i].material[FModels[i].Mesh[m].matid[j div 3]].Transparency;
-        test.TexCoord.tu:=FModels[i].Mesh[m].Mapping[FModels[i].Mesh[m].Map[j]].tu;
-        test.TexCoord.tv:=FModels[i].Mesh[m].Mapping[FModels[i].Mesh[m].Map[j]].tv;
-        test.BoneIndex.x:=trunc(FModels[i].Mesh[m].BoneId[FModels[i].Mesh[m].VertexIndices[j],0]); //only one bone for now
-        test.BoneIndex.y:=0.0;
-        test.BoneIndex.z:=0.0;
-        test.BoneIndex.w:=0.0;
-        fvbo.AddVertex(test);
-      end;
+      fModels[i].Skeleton[0].InitBones; //initialize bone matrices
+      //fModels[i].InitSkin;              //bind mesh to bones
     end;
-    Tgl3Model(FModels[i]).Offset:=fvbo.getOffset(fModels[i].Id);
-    Tgl3Model(FModels[i]).Size:=fvbo.getSize(fModels[i].Id);
+
+    fModels[i].Init;
 
   end;
+
   fvbo.init();
 end;
 

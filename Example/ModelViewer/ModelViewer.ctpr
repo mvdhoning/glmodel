@@ -64,6 +64,12 @@
         <TrashVariables Value="True"/>
       </Debugging>
     </Linking>
+    <Other>
+      <CustomOptions Value="-dDGL_DEPRECATED"/>
+      <OtherDefines Count="1">
+        <Define0 Value="DGL_DEPRECATED"/>
+      </OtherDefines>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

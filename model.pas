@@ -383,7 +383,7 @@ begin
   if FNumSkeletons >= 1 then
   begin
 
-  FSkeleton[FCurrentSkeleton].InitBones;
+  //FSkeleton[FCurrentSkeleton].InitBones;
 
   //TODO: how to to apply skin without affecting original mesh
   for m := 0 to FNumMeshes - 1 do

@@ -65,7 +65,7 @@ type
 
 implementation
 
-uses Material, model, Render, glvbo;
+uses Material, model, Render, gl3Render, glvbo;
 
 destructor Tgl3Mesh.Destroy;
 begin
@@ -79,6 +79,7 @@ var
 begin
 
   if (fdrawstyle = 0) then fDrawStyle:=GL_TRIANGLES;
+
   // fill the vbo buffer with vertices and colors and normals (and uv tex coords)
   for j:=0 to fnumvertexindices-1 do
   begin
@@ -90,6 +91,11 @@ begin
     test.Color.a:=TBaseModel(owner).material[fmatid[j div 3]].Transparency;
     test.TexCoord.tu:=fMapping[fMappingIndices[j]].tu;
     test.TexCoord.tv:=fMapping[fMappingIndices[j]].tv;
+    test.BoneIndex.x:=fBoneIndices[FVertexIndices[j],0]; //only one bone for now
+    test.BoneIndex.y:=0.0;
+    test.BoneIndex.z:=0.0;
+    test.BoneIndex.w:=0.0;
+    Tgl3Render(TBaseModel(Owner).Owner).VBO.AddVertex(test);
   end;
   //TODO: implement further
 end;

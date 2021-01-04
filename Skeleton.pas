@@ -55,7 +55,7 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure InitBones;
     procedure AdvanceAnimation; overload;
-    procedure AdvanceAnimation(time: single); overload;
+    procedure AdvanceAnimation(time: single); overload; virtual;
     function GetBoneByName(s: string): TBaseBone;
     procedure LoadFromFile(Filename: string); virtual; abstract;
     procedure LoadFromStream(Stream: TStream); virtual; abstract;

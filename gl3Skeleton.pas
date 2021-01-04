@@ -27,20 +27,44 @@ unit gl3skeleton;
 
 interface
 
-uses classes, Skeleton, gl3bone;
+uses classes, Skeleton, gl3bone, DglOpenGL;
 
 type
   Tgl3Skeleton = class(TBaseSkeleton)
   public
     constructor Create(AOwner: TComponent); override;
+    procedure AdvanceAnimation(time: single); overload; override;
   end;
 
 implementation
+
+uses glMath, gl3Render, model;
 
 constructor TGL3Skeleton.Create(AOwner: TComponent);
 begin
   inherited;
   FBoneClass := TGL3Bone;
+end;
+
+procedure Tgl3Skeleton.AdvanceAnimation(time: single);
+var
+  i: integer;
+  bonematrix: glMatrix;
+  ibonematrix: glMatrix;
+  tempm: glMatrix;
+  bonemat: packed array[0..49] of glMatrix;
+begin
+  inherited;
+
+  for i:=0 to fNumBones-1 do
+  begin
+    fBone[i].Matrix.getMatrix(bonematrix);
+    fBone[i].InverseMatrix.getMatrix(ibonematrix);
+    multMatrix(tempm,bonematrix,ibonematrix);
+    bonemat[i]:=tempm;
+  end;
+  glUniformMatrix4fv(Tgl3Render(TBaseModel(Owner).Owner).BoneMatLocation, 50, false, @bonemat[0]);
+
 end;
 
 end.

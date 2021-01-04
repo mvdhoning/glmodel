@@ -36,12 +36,11 @@ var
 
   ftick,flasttick: int64;
   PerformanceFrequency: int64;
+  gBoneMatLocation: GLint;
+
   glslsimplevert: TGLSLShader;        // a Vertex Shader
   glslsimplefrag: TGLSLShader;        // a Fragment Shader
   glslsimpleprog: TGLSLProgram;       // a Shader Program
-
-  gBoneMatLocation: GLint;
-
 
 
 //initializes SDL
@@ -111,7 +110,7 @@ begin
   camera.xangle := 45.0; //10
   camera.yangle := 90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 15.0;   //500
+  camera.dist := 500.0;   //500
 
   show_bones := true;
 
@@ -126,8 +125,8 @@ begin
   scene1 := Tgl3Render.Create(nil);
 
   scene1.AddModel();
-  //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
-  scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+  scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
+  //scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
 
   //pass attrib info from shade on to vbo
   scene1.VBO.VertexAttribId:=gVertexLocation;
@@ -137,9 +136,9 @@ begin
   scene1.VBO.BoneIndexAttribId:=gBoneIndexLocation;
   //scene1.VBO.BoneWeightAttribId:=gBoneWeightLocation;
 
-  scene1.Init; //Init vbo with mesh info
+  scene1.BoneMatLocation:=gBoneMatLocation;
 
-  scene1.Models[0].InitSkin; //bind mesh to bones
+  scene1.Init; //Init vbo with mesh info
 
   //Load and set texture/material info
   scene1.UpdateTextures;
@@ -202,12 +201,6 @@ end;
 
 //update game logic pre render
 procedure Update();
-var
-  i: integer;
-  bonematrix: glMatrix;
-  ibonematrix: glMatrix;
-  tempm: glMatrix;
-  bone: packed array[0..49] of glMatrix;
 begin
   QueryPerformanceCounter(ftick); //currentime
 
@@ -218,16 +211,6 @@ begin
   //call AdvanceAnimation with elapsedtime * fps
   if scene1.Models[0].NumSkeletons>=1 then
     scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps);
-
-  //upload bone structure in current animation pose
-  for i:=0 to scene1.Models[0].Skeleton[0].NumBones-1 do
-  begin
-    scene1.models[0].Skeleton[0].Bone[i].Matrix.getMatrix(bonematrix);
-    scene1.models[0].Skeleton[0].Bone[i].InverseMatrix.getMatrix(ibonematrix);
-    multMatrix(tempm,bonematrix,ibonematrix);
-    bone[i]:=tempm;
-  end;
-  glUniformMatrix4fv(gBoneMatLocation, 50, false, @bone[0]);
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;

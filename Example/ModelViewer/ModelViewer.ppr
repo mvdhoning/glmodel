@@ -69,7 +69,7 @@ begin
   camera.xangle := 45.0; //10
   camera.yangle := 90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 15.0;   //500
+  camera.dist := 500;//15.0;   //500
 
   angle_speed := 0.5;
   dist_speed := 0.5;
@@ -89,12 +89,12 @@ begin
   ySpeed :=0.1;
 
   scene1 := TglRender.Create(nil);
-
-  scene1.Init;
   scene1.AddModel();
-  //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
-  scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
-  scene1.Models[0].InitSkin; //bind mesh to bones
+  //scene1.Models[0].LoadFromFile('..\..\Models\msa-test1.txt'); //24fps?
+  scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
+  //scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+  //scene1.Models[0].InitSkin; //bind mesh to bones
+  scene1.Init;
   scene1.UpdateTextures;
 
   glShadeModel (GL_SMOOTH);
