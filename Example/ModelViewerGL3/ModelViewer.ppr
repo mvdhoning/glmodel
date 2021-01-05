@@ -107,10 +107,10 @@ begin
   gTexCoordLocation := glslsimpleprog.GetAttribLocation('texCoord');
 
   //set camera position
-  camera.xangle := 45.0; //10
+  camera.xangle := 0;//45.0; //10
   camera.yangle := 90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 500.0;   //500
+  camera.dist := 5.0;   //500
 
   show_bones := true;
 
@@ -125,8 +125,8 @@ begin
   scene1 := Tgl3Render.Create(nil);
 
   scene1.AddModel();
-  scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
-  //scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+  //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
+  scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
 
   //pass attrib info from shade on to vbo
   scene1.VBO.VertexAttribId:=gVertexLocation;
@@ -134,7 +134,7 @@ begin
   scene1.VBO.NormalAttribId:=gNormalLocation;
   scene1.VBO.TexCoordAttribId:=gTexCoordLocation;
   scene1.VBO.BoneIndexAttribId:=gBoneIndexLocation;
-  //scene1.VBO.BoneWeightAttribId:=gBoneWeightLocation;
+  scene1.VBO.BoneWeightAttribId:=gBoneWeightLocation;
 
   scene1.BoneMatLocation:=gBoneMatLocation;
 
@@ -159,7 +159,7 @@ begin
 
   // Calculate the model matrix ...
   loadIdentity(model);
-  translateMatrix(model,0.0,0.0,-camera.dist);
+  translateMatrix(model,0.0,-5.0,-camera.dist);
   rotateRzRyRxMatrixf(model, camera.xangle, 0, 0);
   rotateRzRyRxMatrixf(model, 0, camera.yangle, 0);
   rotateRzRyRxMatrixf(model, 0, 0, camera.zangle);

@@ -167,6 +167,7 @@ begin
 
             //bones
             FMesh[tcount].BoneId[loop,0] := StrToInt(tsl.Strings[6]);
+            fmesh[tcount].BoneWeight[loop, 0] := 1.0; //with only one bone set weight to 1.0
 
             tsl.Free;
           end;

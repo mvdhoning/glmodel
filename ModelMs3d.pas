@@ -247,6 +247,7 @@ begin
         fmesh[c].Vertex[(c2 * 3) + i] := tempmesh.Vertex[tempmesh.Face[(triangleidx * 3) + i]];
         //bone id
         fmesh[c].BoneId[(c2 * 3) + i, 0] := tempmesh.BoneId[tempmesh.Face[(triangleidx * 3) + i], 0];
+        fmesh[c].BoneWeight[(c2 * 3) + i, 0] := 1.0; //with only one bone set weight to 1.0
         //mapping
         fMesh[c].map[(c2 * 3) + i] :=(c2 * 3 + i);
         fMesh[c].Mapping[(c2 * 3) + i] := tempmesh.Mapping[tempmesh.map[(triangleidx * 3) + i]];

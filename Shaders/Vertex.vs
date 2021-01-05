@@ -20,23 +20,22 @@ void main(void)
 {
     vec4 newVertex;
     vec4 newNormal;
-    int index;
-
-	index=int(boneindex.x);
-	if(index >= 0) {
-      newVertex = (bonemat[index] * vertex);
-      newNormal = (bonemat[index] * vec4(normal, 0.0));
-	}
-	else {
+    
+	if (int(boneindex.x) >=0)  {
+      newVertex = ((bonemat[int(boneindex.x)] * vertex) * boneweight.x)+((bonemat[int(boneindex.y)] * vertex) * boneweight.y)+((bonemat[int(boneindex.z)] * vertex) * boneweight.z)+((bonemat[int(boneindex.w)] * vertex) * boneweight.w);
+      newNormal = ((bonemat[int(boneindex.x)] * vec4(normal, 0.0)) * boneweight.x)+((bonemat[int(boneindex.y)] * vec4(normal, 0.0)) * boneweight.y)+((bonemat[int(boneindex.z)] * vec4(normal, 0.0)) * boneweight.z)+((bonemat[int(boneindex.w)] * vec4(normal, 0.0)) * boneweight.w);
+	}	
+	else
+	{
 	  newVertex = vertex;
-      newNormal = vec4(normal, 0.0);
+	  newNormal = vec4(normal, 0.0);
 	}
-	
     fragmentColor = color;
 	
 	fragmentTexCoord = texCoord;
 	
+	//fragmentNormal = vec3(boneindex.x, boneindex.y, boneindex.z) / (3 - 1.) * 2. - 1.; //debug bone indices
 	fragmentNormal = (modelViewMatrix*newNormal).xyz;
 
-	gl_Position = projectionMatrix*modelViewMatrix*newVertex;
+	gl_Position = projectionMatrix*modelViewMatrix*vec4(newVertex.xyz, 1.0);
 }

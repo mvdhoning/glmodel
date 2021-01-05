@@ -92,9 +92,13 @@ begin
     test.TexCoord.tu:=fMapping[fMappingIndices[j]].tu;
     test.TexCoord.tv:=fMapping[fMappingIndices[j]].tv;
     test.BoneIndex.x:=fBoneIndices[FVertexIndices[j],0]; //only one bone for now
-    test.BoneIndex.y:=0.0;
-    test.BoneIndex.z:=0.0;
-    test.BoneIndex.w:=0.0;
+    test.BoneIndex.y:=fBoneIndices[FVertexIndices[j],1];
+    test.BoneIndex.z:=fBoneIndices[FVertexIndices[j],2];
+    test.BoneIndex.w:=fBoneIndices[FVertexIndices[j],3];
+    test.BoneWeight.x:=fBoneWeights[FVertexIndices[j],0]; //only one bone for now
+    test.BoneWeight.y:=fBoneWeights[FVertexIndices[j],1];
+    test.BoneWeight.z:=fBoneWeights[FVertexIndices[j],2];
+    test.BoneWeight.w:=fBoneWeights[FVertexIndices[j],3];
     Tgl3Render(TBaseModel(Owner).Owner).VBO.AddVertex(test);
   end;
   //TODO: implement further

@@ -55,7 +55,6 @@ var
   bonemat: packed array[0..49] of glMatrix;
 begin
   inherited;
-
   for i:=0 to fNumBones-1 do
   begin
     fBone[i].Matrix.getMatrix(bonematrix);

@@ -13,6 +13,8 @@ void main(void)
 	float intensity;
 	
 	intensity = max(dot(fragmentNormal, vec3(0.0, 0.0, 1.0)), 0.0);
-	
-	fragColor = texture2D(firstTexture, fragmentTexCoord)* vec4(fragmentColor, 1.0)*intensity;
+
+	fragColor = texture2D(firstTexture, fragmentTexCoord) * vec4(fragmentColor, 1.0)*intensity;
+	//fragColor = vec4(normalize(fragmentNormal) * .5 + .5, 1); //visualize normals
+	//fragColor = vec4(1.0,0.0,0.0,1.0); //RED
 }
