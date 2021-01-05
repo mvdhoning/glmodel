@@ -78,6 +78,7 @@ var
   test: TVBOVertex;
 begin
 
+
   if (fdrawstyle = 0) then fDrawStyle:=GL_TRIANGLES;
 
   // fill the vbo buffer with vertices and colors and normals (and uv tex coords)
@@ -85,12 +86,33 @@ begin
   begin
     test.Position:=fVertex[fVertexIndices[j]];
     test.Normal:=fvNormal[fNormalIndices[j]];
-    test.Color.r:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseRed;
-    test.Color.g:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseGreen;
-    test.Color.b:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseBlue;
-    test.Color.a:=TBaseModel(owner).material[fmatid[j div 3]].Transparency;
-    test.TexCoord.tu:=fMapping[fMappingIndices[j]].tu;
-    test.TexCoord.tv:=fMapping[fMappingIndices[j]].tv;
+
+    if TBaseModel(owner).NumMaterials>=1 then
+    begin
+      test.Color.r:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseRed;
+      test.Color.g:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseGreen;
+      test.Color.b:=TBaseModel(owner).material[fmatid[j div 3]].DiffuseBlue;
+      test.Color.a:=TBaseModel(owner).material[fmatid[j div 3]].Transparency;
+    end
+    else
+    begin
+      test.Color.r:=1.0;
+      test.Color.g:=1.0;
+      test.Color.b:=1.0;
+      test.Color.a:=1.0;
+    end;
+
+    if high(fMappingIndices)>=1 then
+    begin
+      test.TexCoord.tu:=fMapping[fMappingIndices[j]].tu;
+      test.TexCoord.tv:=fMapping[fMappingIndices[j]].tv;
+    end
+    else
+    begin
+      test.TexCoord.tu:=0.0;
+      test.TexCoord.tv:=0.0;
+    end;
+
     test.BoneIndex.x:=fBoneIndices[FVertexIndices[j],0]; //only one bone for now
     test.BoneIndex.y:=fBoneIndices[FVertexIndices[j],1];
     test.BoneIndex.z:=fBoneIndices[FVertexIndices[j],2];

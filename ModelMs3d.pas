@@ -147,7 +147,9 @@ var
   s: string;
   p: char;
  tempkeyframe: TKeyFrame;
-
+ ms3dsubversion: word;
+ numcomments,commentindex, commentsize: word;
+ comment: string;
 begin
   //Read Header
   stream.Read(ms3dheader, SizeOf(ms3dheader));
@@ -353,8 +355,41 @@ begin
     end;
 
   //read additional info from file if not end of file
-
-  //read comments
+  (*
+  if stream.Position < stream.Size then
+    begin
+      writeln('check for comments');
+      stream.Read(ms3dsubversion,sizeof(ms3dsubversion));
+      writeln(ms3dsubversion);
+      if ms3dsubversion=1 then
+        begin
+          writeln('comments');
+          //read group comments
+          stream.Read(numComments,sizeof(numComments));
+          writeln(numComments);
+          for i:=0 to numComments-1 do
+          begin
+            writeln('group');
+            //index
+            stream.Read(commentindex,sizeof(commentindex));
+            //commentsize
+            stream.Read(commentsize,sizeof(commentsize));
+            //comment
+            SetLength(comment,commentsize);
+            stream.Read(comment,sizeof(commentsize));
+            writeln(comment);
+          end;
+          //read material comments
+          stream.Read(numComments,sizeof(numComments));
+          writeln(numComments);
+          //read joint comments
+          stream.Read(numComments,sizeof(numComments));
+          writeln(numComments);
+          //read model
+          stream.Read(numComments,sizeof(numComments));
+          writeln(numComments);
+        end;
+    end;
 
   //read vertex info is still not end of file
 
@@ -365,15 +400,43 @@ begin
   //2: 3 bone id's, 3 weights, extra
   //with the already read bone id that makes 4 bones pers vertice
 
+  if stream.Position < stream.Size then
+  begin
+    writeln('check for extra vertex info');
+    stream.Read(ms3dsubversion,sizeof(ms3dsubversion));
+    writeln(ms3dsubversion);
+    if ms3dsubversion=1 then
+      begin
+      end;
+  end;
+
   //read extra joint info from file if not end of file
   //one subversion known
   //for each join
   //1: color
+  if stream.Position < stream.Size then
+  begin
+    writeln('check for extra joint info');
+    stream.Read(ms3dsubversion,sizeof(ms3dsubversion));
+    writeln(ms3dsubversion);
+    if ms3dsubversion=1 then
+      begin
+      end;
+  end;
 
   //read extra model info from file if not end of file
   //one subversion knwon
   //1: jointsize, transparenency mode, alpharef
-
+  if stream.Position < stream.Size then
+  begin
+    writeln('check for extra model info');
+    stream.Read(ms3dsubversion,sizeof(ms3dsubversion));
+    writeln(ms3dsubversion);
+    if ms3dsubversion=1 then
+      begin
+      end;
+  end;
+  *)
 
   //fill matnames into meshes
   If FnumMeshes > 0 then

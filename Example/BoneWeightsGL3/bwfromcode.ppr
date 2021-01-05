@@ -1,0 +1,574 @@
+program bwfromcode;
+
+//compatibility for FPC
+{$IFDEF FPC}
+  {$MODE Delphi}
+  {$H+}
+  {$M+}
+  {$codepage utf8}
+  {$IFNDEF WINDOWS}
+    {$LINKLIB c}
+  {$ENDIF}
+{$ENDIF}
+
+//for logs
+{$APPTYPE CONSOLE}
+
+uses
+  {$IFDEF WINDOWS}windows,{$ENDIF}
+  classes, sysutils, dglOpenGL, SDL2, Model, gl3render, gl3mesh, glShader, glMath, keyframe;
+
+type
+  clsCamera = record
+    xangle, yangle, zangle : double;
+    dist : double;
+  end;
+
+var
+  window: PSDL_Window;
+  context: TSDL_GLContext;
+  screenWidth: integer = 640;
+  screenHeight: integer = 480;
+  running: boolean = true;
+  scene1: Tgl3Render;
+  show_bones : boolean;
+  camera : clsCamera;
+
+  ftick,flasttick: int64;
+  PerformanceFrequency: int64;
+  gBoneMatLocation: GLint;
+
+  glslsimplevert: TGLSLShader;        // a Vertex Shader
+  glslsimplefrag: TGLSLShader;        // a Fragment Shader
+  glslsimpleprog: TGLSLProgram;       // a Shader Program
+
+
+//initializes SDL
+function InitializeSDL: Boolean;
+begin
+  Result := false;
+  //only the video system is needed
+  if SDL_Init(SDL_INIT_VIDEO) = 0 then
+    Result := true;
+
+  //SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+  //SDL_SetRelativeMouseMode(SDL_TRUE); //TODO: camera bug when net done in time
+end;
+
+procedure InitializeOpenGL;
+begin
+  InitOpenGL;                   //core-functions
+  ReadExtensions;               //Extensions
+  ReadImplementationProperties; //Extension-Support-Bools
+end;
+
+//init game logic pre render
+procedure Init();
+var
+  i,j: integer;
+  gVertexLocation: GLint;
+  gColorLocation: GLint;
+  gTextureLocation: GLint;
+  gTexCoordLocation: GLint;
+  gNormalLocation: GLint;
+  gModelViewLocation: GLint;
+
+  gBoneIndexLocation: GLint;
+  gBoneWeightLocation: GLint;
+  gProjectionLocation: GLint;
+  projection: glMatrix;
+  model: glMatrix;
+  view: glMatrix;
+  modelview: glMatrix;
+  tempkeyframe: TKeyFrame;
+
+begin
+
+  //load simple glsl shader
+  glslsimpleprog := TGLSLProgram.Create();
+  glslsimplevert := TGLSLShader.Create('..\..\shaders\Vertex.vs');
+  glslsimplefrag := TGLSLShader.Create('..\..\shaders\Fragment.fs', GL_FRAGMENT_SHADER_ARB);
+  glslsimpleprog.Attach(glslsimplevert);
+  glslsimpleprog.Attach(glslsimplefrag);
+  glslsimpleprog.Link;
+  writeln(glslsimpleprog.Log());
+  glslsimpleprog.Enable; //Enable once is enough if only one glsl prog is used...
+
+  gProjectionLocation := glslsimpleprog.GetUniformLocation('projectionMatrix');
+  gModelViewLocation := glslsimpleprog.GetUniformLocation('modelViewMatrix');
+  gTextureLocation := glslsimpleprog.GetUniformLocation('firstTexture');
+  gBoneMatLocation := glslsimpleprog.GetUniformLocation('bonemat');
+
+  gVertexLocation := glslsimpleprog.GetAttribLocation('vertex');
+  gNormalLocation := glslsimpleprog.GetAttribLocation('normal');
+  gColorLocation := glslsimpleprog.GetAttribLocation('color');
+  gBoneIndexLocation := glslsimpleprog.GetAttribLocation('boneindex');
+  gBoneWeightLocation := glslsimpleprog.GetAttribLocation('boneweight');
+
+  gTexCoordLocation := glslsimpleprog.GetAttribLocation('texCoord');
+
+  //set camera position
+  camera.xangle := 0.0;//45.0; //10
+  camera.yangle := 0.0; //90
+  camera.zangle := 0.0; //0
+  camera.dist := 15.0; //15.0;   //500
+
+  show_bones := true;
+
+  glClearColor(0.0, 0.0, 0.0, 0.0); 	   // Black Background
+
+  glClearDepth(1.0);                       // Depth Buffer Setup
+  glEnable(GL_DEPTH_TEST);                 // Enable Depth Buffer
+  glDepthFunc(GL_LESS);		           // The Type Of Depth Test To Do
+
+  glEnable(GL_TEXTURE_2D);                 // Enable Texture Mapping
+
+  scene1 := Tgl3Render.Create(nil);
+
+  scene1.AddModel();
+
+  with scene1.models[0] do
+  begin
+    name:='bonetest';
+    //White Material
+    AddMaterial;
+    material[0].diffusered:=1;
+    material[0].diffusegreen:=1;
+    material[0].diffuseblue:=1;
+
+    //Grid
+    AddMesh;
+    TGL3Mesh(mesh[0]).DrawStyle:=GL_LINES;
+    with mesh[0] do
+    begin
+      Visible:=true;
+
+      NumNormals:=1;
+      Normals[0]:=CreateT3dPoint(1,1,1);
+
+      NumVertex:=10;
+      Vertex[0]:=CreateT3DPoint(0, 1, 0);
+      Vertex[1]:=CreateT3DPoint(0,-1, 0);
+      Vertex[2]:=CreateT3DPoint(2, 1, 0);
+      Vertex[3]:=CreateT3DPoint(2,-1, 0);
+
+      Vertex[4]:=CreateT3DPoint(4, 1, 0);
+      Vertex[5]:=CreateT3DPoint(4,-1, 0);
+      Vertex[6]:=CreateT3DPoint(6, 1, 0);
+      Vertex[7]:=CreateT3DPoint(6,-1, 0);
+
+      Vertex[8]:=CreateT3DPoint(8, 1, 0);
+      Vertex[9]:=CreateT3DPoint(8,-1, 0);
+
+      NumNormalIndices:=24;
+      for i :=0 to NumNormalIndices-1 do
+        Normal[i]:=0;
+
+      NumVertexIndices:=24;
+
+      VertexIndices[ 0]:=0;
+      VertexIndices[ 1]:=1;
+      VertexIndices[ 2]:=2;
+
+      VertexIndices[ 3]:=1;
+      VertexIndices[ 4]:=3;
+      VertexIndices[ 5]:=2;
+
+      VertexIndices[ 6]:=3;
+      VertexIndices[ 7]:=4;
+      VertexIndices[ 8]:=2;
+
+      VertexIndices[ 9]:=3;
+      VertexIndices[10]:=5;
+      VertexIndices[11]:=4;
+
+      VertexIndices[12]:=5;
+      VertexIndices[13]:=6;
+      VertexIndices[14]:=4;
+
+      VertexIndices[15]:=5;
+      VertexIndices[16]:=7;
+      VertexIndices[17]:=6;
+
+      VertexIndices[18]:=7;
+      VertexIndices[19]:=8;
+      VertexIndices[20]:=6;
+
+      VertexIndices[21]:=7;
+      VertexIndices[22]:=9;
+      VertexIndices[23]:=8;
+
+      MatId[0]:=0;
+      MatId[1]:=0;
+      MatId[2]:=0;
+      MatId[3]:=0;
+      MatId[4]:=0;
+      MatId[5]:=0;
+      MatId[6]:=0;
+      MatId[7]:=0;
+      MatId[8]:=0;
+      MatId[9]:=0;
+
+      BoneId[0,0]:=0; //vertex1
+      BoneId[0,1]:=0;
+      BoneId[0,2]:=0;
+      BoneId[0,3]:=0;
+
+      BoneId[1,0]:=0; //vertex2
+      BoneId[1,1]:=0;
+      BoneId[1,2]:=0;
+      BoneId[1,3]:=0;
+
+      BoneId[2,0]:=0; //vertex3
+      BoneId[2,1]:=1;
+      BoneId[2,2]:=0;
+      BoneId[2,3]:=0;
+
+      BoneId[3,0]:=0; //vertex4
+      BoneId[3,1]:=1;
+      BoneId[3,2]:=0;
+      BoneId[3,3]:=0;
+
+      BoneId[4,0]:=1; //vertex5
+      BoneId[4,1]:=0;
+      BoneId[4,2]:=0;
+      BoneId[4,3]:=0;
+
+      BoneId[5,0]:=1; //vertex6
+      BoneId[5,1]:=0;
+      BoneId[5,2]:=0;
+      BoneId[5,3]:=0;
+
+      BoneId[6,0]:=1; //vertex7
+      BoneId[6,1]:=2;
+      BoneId[6,2]:=0;
+      BoneId[6,3]:=0;
+
+      BoneId[7,0]:=1; //vertex8
+      BoneId[7,1]:=2;
+      BoneId[7,2]:=0;
+      BoneId[7,3]:=0;
+
+      BoneId[8,0]:=2; //vertex9
+      BoneId[8,1]:=0;
+      BoneId[8,2]:=0;
+      BoneId[8,3]:=0;
+
+      BoneId[9,0]:=2; //vertex10
+      BoneId[9,1]:=0;
+      BoneId[9,2]:=0;
+      BoneId[9,3]:=0;
+
+
+      BoneWeight[0,0]:=1; //vertex1
+      BoneWeight[0,1]:=0;
+      BoneWeight[0,2]:=0;
+      BoneWeight[0,3]:=0;
+
+      BoneWeight[1,0]:=1; //vertex2
+      BoneWeight[1,1]:=0;
+      BoneWeight[1,2]:=0;
+      BoneWeight[1,3]:=0;
+
+      BoneWeight[2,0]:=0.5; //vertex3
+      BoneWeight[2,1]:=0.5;
+      BoneWeight[2,2]:=0;
+      BoneWeight[2,3]:=0;
+
+      BoneWeight[3,0]:=0.5; //vertex4
+      BoneWeight[3,1]:=0.5;
+      BoneWeight[3,2]:=0;
+      BoneWeight[3,3]:=0;
+
+      BoneWeight[4,0]:=1; //vertex5
+      BoneWeight[4,1]:=0;
+      BoneWeight[4,2]:=0;
+      BoneWeight[4,3]:=0;
+
+      BoneWeight[5,0]:=1; //vertex6
+      BoneWeight[5,1]:=0;
+      BoneWeight[5,2]:=0;
+      BoneWeight[5,3]:=0;
+
+      BoneWeight[6,0]:=0.5; //vertex7
+      BoneWeight[6,1]:=0.5;
+      BoneWeight[6,2]:=0;
+      BoneWeight[6,3]:=0;
+
+      BoneWeight[7,0]:=0.5; //vertex8
+      BoneWeight[7,1]:=0.5;
+      BoneWeight[7,2]:=0;
+      BoneWeight[7,3]:=0;
+
+      BoneWeight[8,0]:=1; //vertex9
+      BoneWeight[8,1]:=0;
+      BoneWeight[8,2]:=0;
+      BoneWeight[8,3]:=0;
+
+      BoneWeight[9,0]:=1; //vertex10
+      BoneWeight[9,1]:=0;
+      BoneWeight[9,2]:=0;
+      BoneWeight[9,3]:=0;
+    end;
+
+    //Skeleton with bones
+    AddSkeleton();
+    with skeleton[0] do
+    begin
+      AnimFps:=24;
+      NumFrames:=360;
+      CurrentFrame:=1;
+      AddBone();
+      bone[0].name:='0';
+      bone[0].parentname:='';
+      bone[0].translate:=CreateT3dPoint(0,0,0);
+      bone[0].rotate:=CreateT3dPoint(0,0,0);
+
+      AddBone();
+      bone[1].name:='1';
+      bone[1].parentname:='0';
+      bone[1].translate:=CreateT3dPoint(4,0,0);
+      bone[1].rotate:=CreateT3dPoint(0,0,0);
+
+      AddBone();
+      bone[2].name:='2';
+      bone[2].parentname:='1';
+      bone[2].translate:=CreateT3dPoint(4,0,0);
+      bone[2].rotate:=CreateT3dPoint(0,0,0);
+
+      for i:=0 to 2 do //for all bones add keyframes
+        begin
+          bone[i].NumTranslateFrames:=3;
+          bone[i].NumRotateFrames:=1;
+
+          tempkeyframe:=bone[i].RotateFrame[0];
+          tempkeyframe.time:=1;
+          tempkeyframe.Value.x:=0;
+          tempkeyframe.Value.y:=0;
+          tempkeyframe.Value.z:=0;
+          bone[i].RotateFrame[0]:=tempkeyframe;
+
+          tempkeyframe:=bone[i].TranslateFrame[0];
+          tempkeyframe.time:=1;
+          tempkeyframe.Value.x:=0;
+          tempkeyframe.Value.y:=0;
+          tempkeyframe.Value.z:=0;
+          bone[i].TransLateFrame[0]:=tempkeyframe;
+
+          tempkeyframe:=bone[i].TranslateFrame[1];
+          tempkeyframe.time:=180;
+          tempkeyframe.Value.x:=0;
+          tempkeyframe.Value.y:=0;
+          tempkeyframe.Value.z:=0;
+          if i = 1 then tempkeyframe.Value.y:=4;
+          //if i = 2 then tempkeyframe.Value.y:=6;
+          //if i = 2 then tempkeyframe.Value.x:=-2;
+          bone[i].TransLateFrame[1]:=tempkeyframe;
+
+          tempkeyframe:=bone[i].TranslateFrame[2];
+          tempkeyframe.time:=359;
+          tempkeyframe.Value.x:=0;
+          tempkeyframe.Value.y:=0;
+          tempkeyframe.Value.z:=0;
+          bone[i].TransLateFrame[2]:=tempkeyframe;
+
+        end;
+
+    end;
+
+  end;
+
+
+  //pass attrib info from shade on to vbo
+  scene1.VBO.VertexAttribId:=gVertexLocation;
+  scene1.VBO.ColorAttribId:=gColorLocation;
+  scene1.VBO.NormalAttribId:=gNormalLocation;
+  scene1.VBO.TexCoordAttribId:=gTexCoordLocation;
+  scene1.VBO.BoneIndexAttribId:=gBoneIndexLocation;
+  scene1.VBO.BoneWeightAttribId:=gBoneWeightLocation;
+
+  scene1.BoneMatLocation:=gBoneMatLocation;
+
+  scene1.Init; //Init vbo with mesh info
+
+  //Load and set texture/material info
+  scene1.UpdateTextures;
+  glUniform1i(gTextureLocation, 0); //use the first texture
+
+  // Set the polygon mode to fill
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  glPolygonMode (GL_BACK, GL_POINTS);
+
+  glEnable (GL_DEPTH_TEST);
+
+  glCullFace (GL_BACK);
+  glEnable (GL_CULL_FACE);
+
+  // Calculate the projection matrix and set it
+  Frustum(projection,-1.0, 1.0, -1.0, 1.0, 1.0, 1500.0);
+  glUniformMatrix4fv(gProjectionLocation, 1, false, @projection);
+
+  // Calculate the model matrix ...
+  loadIdentity(model);
+  translateMatrix(model,0.0,0.0,-camera.dist);
+  rotateRzRyRxMatrixf(model, camera.xangle, 0, 0);
+  rotateRzRyRxMatrixf(model, 0, camera.yangle, 0);
+  rotateRzRyRxMatrixf(model, 0, 0, camera.zangle);
+  // ... and the view matrix ...
+  lookAt(view, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); //default opengl settings
+  // ... to get the final model view matrix
+  multMatrix(modelView, view, model);
+  glUniformMatrix4fv(gModelViewLocation, 1, false, @modelView);
+
+  //keep track of time
+  QueryPerformanceCounter(fLastTick); //lasttime
+  QueryPerformanceFrequency(PerformanceFrequency) //frequency
+end;
+
+//Event-Handler
+procedure HandleEvents;
+var
+  event: TSDL_Event;
+begin
+
+  while SDL_PollEvent(@event) > 0 do
+  begin
+
+    case event.type_ of
+      SDL_QUITEV: //this only works with one window
+        running := false; //stop main-loop
+
+      SDL_KEYDOWN:
+        begin
+          case event.key.keysym.scancode of
+            SDL_SCANCODE_ESCAPE: running:=false; //stop main-loop
+          end;
+       end;
+
+    end;
+
+  end;
+end;
+
+//update game logic pre render
+procedure Update();
+begin
+  QueryPerformanceCounter(ftick); //currentime
+
+  //advance the animation in accordance to
+  //elapsed time since last call
+  //elapsed time = currentime - lasttime
+  //adjust elapsed time with performancefrequency
+  //call AdvanceAnimation with elapsedtime * fps
+  if scene1.Models[0].NumSkeletons>=1 then
+    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps);
+
+  QueryPerformanceCounter(fLastTick); //lasttime
+end;
+
+//Render
+procedure Render;
+begin
+  //Start Drawing
+  glViewPort(0,0,screenWidth,screenHeight);
+  glClearDepth(1.0);
+  glClearColor(0.0,0.0,0.0,0.0); //hard bleu debug background
+  glClear(GL_COLOR_BUFFER_BIT or GL_STENCIL_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+
+  scene1.Render;
+
+
+  if(show_bones) AND (scene1.Models[0].NumSkeletons>=1) then
+  begin
+    glClear( GL_DEPTH_BUFFER_BIT);  // clear z buffer
+    scene1.Models[0].RenderSkeleton;  // render bones
+  end;
+
+
+  // Done
+  glFlush(); //for opengl to do its thing
+end;
+
+//Cleanup game logic pre render
+procedure Cleanup();
+begin
+  scene1.Free;
+  glslsimpleprog.Free();
+  glslsimplefrag.Free();
+  glslsimplevert.Free();
+end;
+
+//Main Application Loop
+begin
+
+  {$IFDEF WINDOWS}
+    //Force using UTF8
+    SetConsoleOutputCP(CP_UTF8);
+    SetTextCodePage(Output, CP_UTF8);
+    DefaultSystemCodePage := CP_UTF8;
+  {$ENDIF}
+
+  window := nil;
+  context := nil;
+
+  try
+    
+	//initialize SDL
+    if not InitializeSDL then
+    begin
+      WriteLn('Couldn''t initialize SDL!');
+      Exit;
+    end;
+    
+    //set opengl screen buffer attributes
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3 ); //force opengl version
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1 ); //force opengl version
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); //doublebuffer
+
+    //create the window,
+    //caption - first parameter
+    //position: 100,100
+    //640x480
+    //OpenGL-Support
+    window := SDL_CreateWindow('OpenGL 3 with SDL ', 100+400, 100, screenWidth, screenHeight, SDL_WINDOW_OPENGL);
+
+    //the opengl-context
+    context := SDL_GL_CreateContext(window);
+    
+	//initialize OpenGL
+    InitializeOpenGL;
+
+    SDL_GL_SetSwapInterval(0); //no vsync
+    //SDL_FlushEvents(SDL_MOUSEMOTION, SDL_LASTEVENT);
+    //SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+    //SDL_SetRelativeMouseMode(SDL_TRUE);
+
+    //Initialize resources and game locic
+    Init();
+    while running do
+      begin
+        //Handle events
+        HandleEvents;
+        //Update game logic
+        Update;
+        //Draw
+        Render;
+        //Swap Window
+        SDL_GL_SwapWindow(window);
+        sleep(1 div 60); //prevent cpu hog
+      end;
+  finally
+    Cleanup();
+    //clean up SDL and OpenGL
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+    SDL_Quit;
+  end;
+
+end.

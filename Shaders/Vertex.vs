@@ -34,8 +34,8 @@ void main(void)
 	
 	fragmentTexCoord = texCoord;
 	
-	//fragmentNormal = vec3(boneindex.x, boneindex.y, boneindex.z) / (3 - 1.) * 2. - 1.; //debug bone indices
-	fragmentNormal = (modelViewMatrix*newNormal).xyz;
+	fragmentNormal = vec3(boneindex.x, boneindex.y, boneindex.z) / (3 - 1.) * 2. - 1.; //debug bone indices
+	//fragmentNormal = (modelViewMatrix*newNormal).xyz;
 
 	gl_Position = projectionMatrix*modelViewMatrix*vec4(newVertex.xyz, 1.0);
 }
