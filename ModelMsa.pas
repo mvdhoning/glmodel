@@ -428,11 +428,10 @@ begin
 
     for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
     begin
-
       if self.FNumSkeletons > 0 then
         ms.Add('0'+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' '+formatfloat('0',fmesh[saveloop].boneid[subsaveloop,0]))
       else
-        ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
+        ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[fmesh[saveloop].Map[subsaveloop]].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[fmesh[saveloop].Map[subsaveloop]].tv)+' -1');
     end;
 
     //save normals
