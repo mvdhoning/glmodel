@@ -228,7 +228,7 @@ begin
             FMesh[tcount].Map[(loop * 3) + 1] := StrToInt(tsl.Strings[2]);
             FMesh[tcount].Map[(loop * 3) + 2] := StrToInt(tsl.Strings[3]);
 
-            //TODO: what to do with element 7?
+            //no support for smoothing group.
             //FMesh[tcount].Map[loop * 3 + 0] := StrToInt(tsl.Strings[7]);
             //FMesh[tcount].Map[loop * 3 + 1] := StrToInt(tsl.Strings[7]);
             //FMesh[tcount].Map[loop * 3 + 2] := StrToInt(tsl.Strings[7]);
@@ -389,6 +389,7 @@ var
   subsaveloop: Integer;
   tempstring: string;
     msask: TMsaSkeleton;
+    mapstr: string;
 begin
   //this saves meshes and materials to a milkshape ascii file
   ms:=TStringList.Create;
@@ -448,19 +449,20 @@ begin
     ms.Add(inttostr(fmesh[saveloop].numvertexindices div 3));
     for subsaveloop:=0 to (fmesh[saveloop].numvertexindices div 3) -1 do
     begin
+
       if fmesh[saveloop].NumNormals > 0 then
       begin
       ms.Add('0 '
         +IntToStr(fmesh[saveloop].Face[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+2])+' '
          +IntToStr(fmesh[saveloop].normal[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].normal[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].normal[subsaveloop*3+2])
-        +' '+IntToStr(FMesh[saveloop].Map[subsaveloop*3]) );
+        +' 0' ); //no support for saving smoothing groups
       end
       else
       begin
         ms.Add('0 '
         +IntToStr(fmesh[saveloop].Face[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+2])+' '
-         +'0 0 0'
-        +' '+IntToStr(FMesh[saveloop].Map[subsaveloop*3]) );
+         +'0 0 0' //no normals?
+        +' 0' ); //no support for saving smoothing groups
       end;
 
     end;
