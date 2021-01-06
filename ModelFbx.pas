@@ -345,7 +345,7 @@ begin
                 begin
                   self.AddMesh;
                   //TODO: read meshname from tsl[0]
-                  self.Mesh[self.NumMeshes-1].Name:='FbxMesh'+inttostr(self.NumMeshes);
+                  self.Mesh[self.NumMeshes-1].Name:=tsl[0];//'FbxMesh'+inttostr(self.NumMeshes);
                   self.Mesh[self.NumMeshes-1].Visible:=true;
                   writeln('Add Mesh '+ tsl[0]);
                end;
@@ -356,10 +356,18 @@ begin
             begin
               //TODO: is the best place?
               //add a mesh to the model
-              self.AddMesh;
-              self.Mesh[self.NumMeshes-1].Name:='FbxMesh'+inttostr(self.NumMeshes);
-              self.Mesh[self.NumMeshes-1].Visible:=true;
-              writeln('Add Mesh');
+              value:=trim(copy(value,0,pos('{',value)-1)); //trim {
+              tsl := TStringList.Create;
+              tsl.CommaText := value;
+              if tsl[2] = 'Mesh' then
+              begin
+                self.AddMesh;
+                writeln(value);
+                self.Mesh[self.NumMeshes-1].Name:=tsl[1];//'FbxMesh'+inttostr(self.NumMeshes);
+                self.Mesh[self.NumMeshes-1].Visible:=true;
+                writeln('Add Mesh' + tsl[1] +' ('+ tsl[0]+')');
+              end;
+              tsl.free;
             end;
           //writeln('FBXVERSION: '+inttostr(fbxversion));
 
@@ -376,7 +384,13 @@ begin
             writeln(value);
           end;
           *)
-
+          if key='ReferenceInformationType' then
+          begin
+            writeln(key + ': '+ value);
+            //todo: use this to determine if data is indexed or not (do not use fbxfileformat for this !!!)
+            //Direct: no indices supplied
+            //IndexToDerict: inidces are supplied
+          end;
           if (key='Vertices') and (fbxversion>=7300) then
             begin
               //set number of vetrices in mesh
@@ -445,9 +459,22 @@ begin
           if (key='a') and (parentkey='Vertices') then AddVertices(value);
           if (key='a') and (parentkey='PolygonVertexIndex') then AddVertexIndices(value);
           if (key='a') and (parentkey='Normals') then AddNormals(value);
-          if (key='a') and (parentkey='NormalsIndex') then AddNormalIndices(value);
+          if (key='a') and (parentkey='NormalsIndex') then
+          begin
+            AddNormalIndices(value);
+            //prevent parsing twice
+            key:=parentkey;
+            value:='';
+          end;
           if (key='a') and (parentkey='UV') then AddUVMapping(value);
-          if (key='a') and (parentkey='UVIndex') then AddUVMappingIndices(value);
+          if (key='a') and (parentkey='UVIndex') then
+          begin
+            AddUVMappingIndices(value);
+            //prevent parsing twice
+            key:=parentkey;
+            value:='';
+          end;
+          //does this belong here?
           if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMappingIndices(value);
         end;
       l:=l+1;
