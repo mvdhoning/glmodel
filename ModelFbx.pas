@@ -41,7 +41,7 @@ type
 implementation
 
 uses
-  SysUtils, glMath;
+  SysUtils, glMath, Mesh;
 
 procedure TFbxModel.LoadFromFile(AFileName: string);
 var
@@ -65,6 +65,7 @@ var
   n,i,f,l: integer;
   tsl: TStringList;
   tempvertex: T3dPoint;
+  tempmap: TMap;
   fbxnumberofvetexindices: integer;
   fbxindicecount: integer;
 begin
@@ -116,6 +117,24 @@ begin
               fbxnumberofvetexindices:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1)));
               writeln('Number of Vertex Indices: '+inttostr(fbxnumberofvetexindices));
             end;
+          if key='Normals' then
+            begin
+              self.Mesh[self.FNumMeshes-1].NumNormals:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1)));
+              writeln('Number of Normals: '+inttostr(self.Mesh[self.NumMeshes-1].NumNormals));
+            end;
+          if key='NormalsIndex' then
+            begin
+              //Do nothing
+            end;
+          if key='UV' then
+            begin
+              self.Mesh[self.FNumMeshes-1].NumMappings:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1)));
+              writeln('Number of UV Mappings: '+inttostr(self.Mesh[self.NumMeshes-1].NumMappings));
+            end;
+          if key='UVIndex' then
+            begin
+              //Do nothing
+            end;
           (*
           if (pos('{',value)>0) then
             begin
@@ -161,9 +180,7 @@ begin
                     self.Mesh[self.NumMeshes-1].Vertex[(f div 3)] := tempvertex;
                     f:=f+3;
                   until f >= tsl.count;
-
                   tsl.Free;
-
                 end;
           if (key='a') and (parentkey='PolygonVertexIndex') then
                 begin
@@ -213,10 +230,108 @@ begin
                     if fbxindicecount = 3 then i:=i+6 else i:=i+3;
                     f:=f+fbxindicecount+1;
                   until f >= tsl.count;
-
-                  //TOOD: parse
                   tsl.Free;
-
+                end;
+          if (key='a') and (parentkey='Normals') then
+                begin
+                  writeln('Add Normals');
+                  value:=trim(copy(value,0,pos('}',value)-1)); //trim {
+                  tsl := TStringList.Create;
+                  tsl.Delimiter:=',';
+                  tsl.StrictDelimiter := true;
+                  tsl.DelimitedText := StringReplace(value,#13#10,'',[rfReplaceAll]);
+                  f:=0;
+                  repeat
+                    tempvertex := self.Mesh[self.NumMeshes-1].Normals[(f div 3)];
+                    tempvertex.x := strtofloat(tsl[f+0]);
+                    tempvertex.y := strtofloat(tsl[f+1]);
+                    tempvertex.z := strtofloat(tsl[f+2]);
+                    self.Mesh[self.NumMeshes-1].Normals[(f div 3)] := tempvertex;
+                    f:=f+3;
+                  until f >= tsl.count;
+                  tsl.Free;
+                end;
+          if (key='a') and (parentkey='NormalsIndex') then
+                begin
+                  writeln('Add Normal Indices');
+                  value:=trim(copy(value,0,pos('}',value)-1)); //trim {
+                  tsl := TStringList.Create;
+                  tsl.Delimiter:=',';
+                  tsl.StrictDelimiter := true;
+                  tsl.DelimitedText := StringReplace(value,#13#10,'',[rfReplaceAll]);
+                  self.Mesh[self.FNumMeshes-1].NumNormalIndices:=self.Mesh[self.FNumMeshes-1].NumVertexIndices; //set equal to vertex indices
+                  f:=0;
+                  i:=0;
+                  repeat
+                    if fbxindicecount = 2 then
+                    begin
+                      self.Mesh[self.NumMeshes-1].Normal[i+0]:=strtoint(tsl[f+0]);
+                      self.Mesh[self.NumMeshes-1].Normal[i+1]:=strtoint(tsl[f+1]);
+                      self.Mesh[self.NumMeshes-1].Normal[i+2]:=strtoint(tsl[f+2]);
+                    end
+                    else
+                    begin
+                      self.Mesh[self.NumMeshes-1].Normal[i+0]:=strtoint(tsl[f+0]);
+                      self.Mesh[self.NumMeshes-1].Normal[i+1]:=strtoint(tsl[f+1]);
+                      self.Mesh[self.NumMeshes-1].Normal[i+2]:=strtoint(tsl[f+2]);
+                      self.Mesh[self.NumMeshes-1].Normal[i+3]:=strtoint(tsl[f+2]);
+                      self.Mesh[self.NumMeshes-1].Normal[i+4]:=strtoint(tsl[f+3]);
+                      self.Mesh[self.NumMeshes-1].Normal[i+5]:=strtoint(tsl[f+0]);
+                    end;
+                    if fbxindicecount = 3 then i:=i+6 else i:=i+3;
+                    f:=f+fbxindicecount+1;
+                  until f >= tsl.count;
+                  tsl.Free;
+                end;
+          if (key='a') and (parentkey='UV') then
+                begin
+                  writeln('Add UV mappings');
+                  value:=trim(copy(value,0,pos('}',value)-1)); //trim {
+                  tsl := TStringList.Create;
+                  tsl.Delimiter:=',';
+                  tsl.StrictDelimiter := true;
+                  tsl.DelimitedText := StringReplace(value,#13#10,'',[rfReplaceAll]);
+                  f:=0;
+                  repeat
+                    tempmap := self.Mesh[self.NumMeshes-1].Mapping[f div 2];
+                    tempmap.tu := strtofloat(tsl[f+0]);
+                    tempmap.tv := strtofloat(tsl[f+1]);
+                    self.Mesh[self.NumMeshes-1].Mapping[f div 2]:=tempmap;
+                    f:=f+2;
+                  until f >= tsl.count;
+                  tsl.Free;
+                end;
+          if (key='a') and (parentkey='UVIndex') then
+                begin
+                  writeln('Add UV mapping Indices');
+                  value:=trim(copy(value,0,pos('}',value)-1)); //trim {
+                  tsl := TStringList.Create;
+                  tsl.Delimiter:=',';
+                  tsl.StrictDelimiter := true;
+                  tsl.DelimitedText := StringReplace(value,#13#10,'',[rfReplaceAll]);
+                  self.Mesh[self.FNumMeshes-1].NumMappingIndices:=self.Mesh[self.FNumMeshes-1].NumVertexIndices; //set equal to vertex indices
+                  f:=0;
+                  i:=0;
+                  repeat
+                    if fbxindicecount = 2 then
+                    begin
+                      self.Mesh[self.NumMeshes-1].Map[i+0]:=strtoint(tsl[f+0]);
+                      self.Mesh[self.NumMeshes-1].Map[i+1]:=strtoint(tsl[f+1]);
+                      self.Mesh[self.NumMeshes-1].Map[i+2]:=strtoint(tsl[f+2]);
+                    end
+                    else
+                    begin
+                      self.Mesh[self.NumMeshes-1].Map[i+0]:=strtoint(tsl[f+0]);
+                      self.Mesh[self.NumMeshes-1].Map[i+1]:=strtoint(tsl[f+1]);
+                      self.Mesh[self.NumMeshes-1].Map[i+2]:=strtoint(tsl[f+2]);
+                      self.Mesh[self.NumMeshes-1].Map[i+3]:=strtoint(tsl[f+2]);
+                      self.Mesh[self.NumMeshes-1].Map[i+4]:=strtoint(tsl[f+3]);
+                      self.Mesh[self.NumMeshes-1].Map[i+5]:=strtoint(tsl[f+0]);
+                    end;
+                    if fbxindicecount = 3 then i:=i+6 else i:=i+3;
+                    f:=f+fbxindicecount+1;
+                  until f >= tsl.count;
+                  tsl.Free;
                 end;
         end;
       l:=l+1;
