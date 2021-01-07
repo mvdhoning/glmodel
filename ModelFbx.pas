@@ -41,6 +41,8 @@ type
     fbxnumberofvetexindices: integer;
     fbxindicecount: integer;
     fbxReferenceInformationType: TFbxReferenceInformationType;
+    fbxkeyvaluestore: TStringList;
+    fbxcurrentname: string;
     procedure AddNormalIndices(value: string);
     procedure AddNormals(value: string);
     procedure AddUVMapping(value: string);
@@ -281,9 +283,12 @@ var
   line: string;
   key,parentkey,parentparentkey: string;
   value: string;
-  n,l,i,j,b: integer;
+  n,l,i,j,b,k: integer;
   tsl: TStringList;
 begin
+
+  fbxkeyvaluestore:=TStringList.Create;
+
   sl := TStringList.Create;
   sl.LoadFromStream(stream);
 
@@ -373,6 +378,7 @@ begin
           tsl.CommaText := value;
           //store texture name soomewhaere
           writeln('Texturename:'+tsl[0]);
+          fbxcurrentname:=tsl[0];
           tsl.free;
         end;
 
@@ -383,6 +389,7 @@ begin
           tsl.CommaText := value;
           //store texture name soomewhaere
           writeln('Filename:'+tsl[0]);
+          fbxkeyvaluestore.Values[fbxcurrentname]:=tsl[0];
           tsl.free;
         end;
 
@@ -409,6 +416,32 @@ begin
               end;
             end;
           end;
+
+          //Map Texture to Material
+          fbxkeyvaluestore.Sort;
+          writeln(fbxkeyvaluestore.Sorted);
+          writeln('---------------------');
+          i:=fbxkeyvaluestore.IndexOfName(tsl[1]);
+          if i>=0 then
+          begin
+            writeln('Texture '+tsl[1]+' found');
+            writeln(fbxkeyvaluestore.IndexOfName(tsl[1]));
+            writeln(fbxkeyvaluestore[i]);
+            writeln(tsl[2]);
+            for j:=0 to self.NumMaterials-1 do
+            begin
+              if self.Mesh[j].Name=tsl[2] then
+              begin
+                writeln('Mesh '+self.Mesh[j].name+' found');
+                writeln('Has material: '+self.Material[self.Mesh[j].MatID[0]].Name);
+                if self.Material[self.Mesh[j].MatID[0]].TextureFilename='' then
+                  self.Material[self.Mesh[j].MatID[0]].TextureFilename:=fbxkeyvaluestore.values[tsl[1]]
+                else
+                  self.Material[self.Mesh[j].MatID[0]].BumpMapFilename:=fbxkeyvaluestore.values[tsl[1]]; //gets overwritten if more then 2 textures supplied in fbx file per mesh
+              end;
+            end;
+          end;
+
           tsl.free;
         end;
 
@@ -559,6 +592,7 @@ begin
   end;
 
   sl.Free;
+  fbxkeyvaluestore.Free;
 end;
 
 procedure TFbxModel.SaveToFile(AFileName: string);
