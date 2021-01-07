@@ -16,7 +16,7 @@ program ModelViewer;
 
 uses
   {$IFDEF WINDOWS}windows,{$ENDIF}
-  classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, ModelMS3D, gl3render, glShader, glMath;
+  classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, ModelMS3D, ModelFBX, gl3render, glShader, glMath;
 
 type
   clsCamera = record
@@ -110,7 +110,7 @@ begin
   camera.xangle := 0;//45.0; //10
   camera.yangle := 90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 5.0;   //500
+  camera.dist := 50.0;   //500
 
   show_bones := true;
 
@@ -126,8 +126,11 @@ begin
 
   scene1.AddModel();
   //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
-  scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+  //scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+  scene1.Models[0].LoadFromFile('..\..\Models\2cubes.fbx');
 
+  writeln(scene1.Models[0].Material[0].TextureFilename);
+  scene1.Models[0].Material[1].HasTexturemap:=false;
   //pass attrib info from shade on to vbo
   scene1.VBO.VertexAttribId:=gVertexLocation;
   scene1.VBO.ColorAttribId:=gColorLocation;

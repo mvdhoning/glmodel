@@ -438,6 +438,8 @@ begin
                   self.Material[self.Mesh[j].MatID[0]].TextureFilename:=fbxkeyvaluestore.values[tsl[1]]
                 else
                   self.Material[self.Mesh[j].MatID[0]].BumpMapFilename:=fbxkeyvaluestore.values[tsl[1]]; //gets overwritten if more then 2 textures supplied in fbx file per mesh
+
+                if self.FMaterial[self.Mesh[j].MatID[0]].Filename <> '' then self.Material[self.Mesh[j].MatID[0]].Hastexturemap := True;
               end;
             end;
           end;
