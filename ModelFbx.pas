@@ -281,7 +281,7 @@ var
   line: string;
   key,parentkey,parentparentkey: string;
   value: string;
-  n,l,i,j: integer;
+  n,l,i,j,b: integer;
   tsl: TStringList;
 begin
   sl := TStringList.Create;
@@ -317,46 +317,50 @@ begin
 
         if key='Material' then
         begin
+          b:=0;
+          if fbxversion=7300 then b:=1;
           tsl := TStringList.Create;
           tsl.CommaText := value;
           self.AddMaterial;
-          self.Material[self.NumMaterials-1].Name:=tsl[0];
-          writeln('Add Material: '+tsl[0]);
+          self.Material[self.NumMaterials-1].Name:=tsl[b];
+          writeln('Add Material: '+tsl[b]);
           tsl.free;
         end;
 
         if (( key='P') and (parentparentkey='Material')) or  (( key='Property') and (parentparentkey='Material')) then
         begin
+          b:=3;
+          if fbxversion=7300 then b:=4;
           tsl := TStringList.Create;
           tsl.CommaText := value;
           for i:=0 to tsl.count-1 do
           begin
               case tsl[0] of
               'Specular': begin
-                              self.Material[self.NumMaterials-1].SpecularRed:=StrToFloat(tsl[3]);
-                              self.Material[self.NumMaterials-1].SpecularGreen:=StrToFloat(tsl[4]);
-                              self.Material[self.NumMaterials-1].SpecularBlue:=StrToFloat(tsl[5]);
+                              self.Material[self.NumMaterials-1].SpecularRed:=StrToFloat(tsl[b+0]);
+                              self.Material[self.NumMaterials-1].SpecularGreen:=StrToFloat(tsl[b+1]);
+                              self.Material[self.NumMaterials-1].SpecularBlue:=StrToFloat(tsl[b+2]);
                             end;
               'Ambient': begin
-                              self.Material[self.NumMaterials-1].AmbientRed:=StrToFloat(tsl[3]);
-                              self.Material[self.NumMaterials-1].AmbientGreen:=StrToFloat(tsl[4]);
-                              self.Material[self.NumMaterials-1].AmbientBlue:=StrToFloat(tsl[5]);
+                              self.Material[self.NumMaterials-1].AmbientRed:=StrToFloat(tsl[b+0]);
+                              self.Material[self.NumMaterials-1].AmbientGreen:=StrToFloat(tsl[b+1]);
+                              self.Material[self.NumMaterials-1].AmbientBlue:=StrToFloat(tsl[b+2]);
                             end;
               'Diffuse': begin
-                              self.Material[self.NumMaterials-1].DiffuseRed:=StrToFloat(tsl[3]);
-                              self.Material[self.NumMaterials-1].DiffuseGreen:=StrToFloat(tsl[4]);
-                              self.Material[self.NumMaterials-1].DiffuseBlue:=StrToFloat(tsl[5]);
+                              self.Material[self.NumMaterials-1].DiffuseRed:=StrToFloat(tsl[b+0]);
+                              self.Material[self.NumMaterials-1].DiffuseGreen:=StrToFloat(tsl[b+1]);
+                              self.Material[self.NumMaterials-1].DiffuseBlue:=StrToFloat(tsl[b+2]);
                             end;
               'Emissive': begin
-                              self.Material[self.NumMaterials-1].EmissiveRed:=StrToFloat(tsl[3]);
-                              self.Material[self.NumMaterials-1].EmissiveGreen:=StrToFloat(tsl[4]);
-                              self.Material[self.NumMaterials-1].EmissiveBlue:=StrToFloat(tsl[5]);
+                              self.Material[self.NumMaterials-1].EmissiveRed:=StrToFloat(tsl[b+0]);
+                              self.Material[self.NumMaterials-1].EmissiveGreen:=StrToFloat(tsl[b+1]);
+                              self.Material[self.NumMaterials-1].EmissiveBlue:=StrToFloat(tsl[b+2]);
                             end;
               'Shininess': begin
-                              self.Material[self.NumMaterials-1].Shininess:=StrToFloat(tsl[3]);
+                              self.Material[self.NumMaterials-1].Shininess:=StrToFloat(tsl[b+0]);
                            end;
               'Opacity': begin
-                              self.Material[self.NumMaterials-1].Transparency:=StrToFloat(tsl[3]);
+                              self.Material[self.NumMaterials-1].Transparency:=StrToFloat(tsl[b+0]);
                            end;
               end;
           end;
