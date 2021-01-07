@@ -31,6 +31,8 @@ uses classes, Model;
 
 type
 
+  TFbxReferenceInformationType = (Direct, IndexToDirect);
+
   { TFbxModel }
 
   TFbxModel = class(TBaseModel)
@@ -38,6 +40,7 @@ type
     fbxversion: integer;
     fbxnumberofvetexindices: integer;
     fbxindicecount: integer;
+    fbxReferenceInformationType: TFbxReferenceInformationType;
     procedure AddNormalIndices(value: string);
     procedure AddNormals(value: string);
     procedure AddUVMapping(value: string);
@@ -65,12 +68,10 @@ begin
 
   writeln('Add Vertices');
   if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
-  //writeln('*'+StringReplace(StringReplace(value, #13#10, '', [rfReplaceAll]), ' ', '', [rfReplaceAll])+'*');
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
   tsl.StrictDelimiter := true;
   tsl.DelimitedText := StringReplace(StringReplace(value, #13#10, '', [rfReplaceAll]), ' ', '', [rfReplaceAll]);
-  //writeln(tsl.count);
   if fbxversion=6100 then self.Mesh[self.FNumMeshes-1].NumVertex := tsl.Count div 3; //set number of vertexes
   writeln('Number of Vertices: '+inttostr(self.Mesh[self.NumMeshes-1].NumVertex));
   f:=0;
@@ -98,10 +99,10 @@ begin
   tsl.StrictDelimiter := true;
   tsl.DelimitedText := StringReplace(value, #13#10, '', [rfReplaceAll]);
   if fbxversion=6100 then self.Mesh[self.FNumMeshes-1].NumNormals := tsl.Count div 3; //set number of normals
-  if fbxversion=6100 then self.Mesh[self.FNumMeshes-1].NumNormalIndices:= self.Mesh[self.FNumMeshes-1].NumVertexIndices; //set equal to vertex indices;
+  if FbxReferenceInformationType=Direct then self.Mesh[self.FNumMeshes-1].NumNormalIndices:= self.Mesh[self.FNumMeshes-1].NumVertexIndices; //set equal to vertex indices;
   f:=0;
   repeat
-    if fbxversion=6100 then self.Mesh[self.NumMeshes-1].Normal[f div 3]:=f div 3;
+    if FbxReferenceInformationType=Direct then self.Mesh[self.NumMeshes-1].Normal[f div 3]:=f div 3; //make indices as they are not supplied
     tempvertex := self.Mesh[self.NumMeshes-1].Normals[(f div 3)];
     tempvertex.x := strtofloat(tsl[f+0]);
     tempvertex.y := strtofloat(tsl[f+1]);
@@ -227,9 +228,6 @@ begin
     if (strtoint(tsl[i]) < 0) then break;
   end;
   fbxindicecount := i;
-
-  if fbxindicecount=3 then writeln('quads') else writeln('triangles');
-
   if fbxversion=6100 then fbxnumberofvetexindices := tsl.Count; //set number of vertex indices
   //also remember to adjes to total number of vertex indices
   if fbxindicecount=3 then fbxnumberofvetexindices:=(fbxnumberofvetexindices div 4)*6;
@@ -281,9 +279,9 @@ procedure TFbxModel.LoadFromStream(stream: Tstream);
 var
   sl: TStringList;
   line: string;
-  key,parentkey: string;
+  key,parentkey,parentparentkey: string;
   value: string;
-  n,l: integer;
+  n,l,i,j: integer;
   tsl: TStringList;
 begin
   sl := TStringList.Create;
@@ -291,6 +289,7 @@ begin
 
   l := 0;
   n := 0;
+  parentparentkey:='';
   parentkey:='';
   key:='';
   value:='';
@@ -314,7 +313,101 @@ begin
         if (key='PolygonVertexIndex') and (fbxversion=6100) then AddVertexIndices(value);
         if (key='Normals') and (fbxversion=6100) then AddNormals(value);
         if (key='UV') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMapping(value);
-        //if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMappingIndices(value);
+        if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMappingIndices(value);
+
+        if key='Material' then
+        begin
+          tsl := TStringList.Create;
+          tsl.CommaText := value;
+          self.AddMaterial;
+          self.Material[self.NumMaterials-1].Name:=tsl[0];
+          writeln('Add Material: '+tsl[0]);
+          tsl.free;
+        end;
+
+        if (( key='P') and (parentparentkey='Material')) or  (( key='Property') and (parentparentkey='Material')) then
+        begin
+          tsl := TStringList.Create;
+          tsl.CommaText := value;
+          for i:=0 to tsl.count-1 do
+          begin
+              case tsl[0] of
+              'Specular': begin
+                              self.Material[self.NumMaterials-1].SpecularRed:=StrToFloat(tsl[3]);
+                              self.Material[self.NumMaterials-1].SpecularGreen:=StrToFloat(tsl[4]);
+                              self.Material[self.NumMaterials-1].SpecularBlue:=StrToFloat(tsl[5]);
+                            end;
+              'Ambient': begin
+                              self.Material[self.NumMaterials-1].AmbientRed:=StrToFloat(tsl[3]);
+                              self.Material[self.NumMaterials-1].AmbientGreen:=StrToFloat(tsl[4]);
+                              self.Material[self.NumMaterials-1].AmbientBlue:=StrToFloat(tsl[5]);
+                            end;
+              'Diffuse': begin
+                              self.Material[self.NumMaterials-1].DiffuseRed:=StrToFloat(tsl[3]);
+                              self.Material[self.NumMaterials-1].DiffuseGreen:=StrToFloat(tsl[4]);
+                              self.Material[self.NumMaterials-1].DiffuseBlue:=StrToFloat(tsl[5]);
+                            end;
+              'Emissive': begin
+                              self.Material[self.NumMaterials-1].EmissiveRed:=StrToFloat(tsl[3]);
+                              self.Material[self.NumMaterials-1].EmissiveGreen:=StrToFloat(tsl[4]);
+                              self.Material[self.NumMaterials-1].EmissiveBlue:=StrToFloat(tsl[5]);
+                            end;
+              'Shininess': begin
+                              self.Material[self.NumMaterials-1].Shininess:=StrToFloat(tsl[3]);
+                           end;
+              'Opacity': begin
+                              self.Material[self.NumMaterials-1].Transparency:=StrToFloat(tsl[3]);
+                           end;
+              end;
+          end;
+          tsl.free;
+        end;
+
+        if key='Texture' then
+        begin
+          tsl := TStringList.Create;
+          tsl.CommaText := value;
+          //store texture name soomewhaere
+          writeln('Texturename:'+tsl[0]);
+          tsl.free;
+        end;
+
+        if ((key='FileName') and (parentparentkey='Texture')) then
+        begin
+          //TODO: should not use parentparentkey here?
+          tsl := TStringList.Create;
+          tsl.CommaText := value;
+          //store texture name soomewhaere
+          writeln('Filename:'+tsl[0]);
+          tsl.free;
+        end;
+
+        if key='Connect' then
+        begin
+
+          tsl := TStringList.Create;
+          tsl.CommaText := value;
+
+          //Map Material to the Correct Mesh
+          for i:=0 to self.NumMaterials-1 do
+          begin
+            if self.Material[i].Name=tsl[1] then
+            begin
+              //writeln('Found Material: '+self.Material[i].Name);
+              for j:=0 to self.NumMeshes-1 do
+              begin
+                if self.Mesh[j].Name=tsl[2] then
+                begin
+                  //writeln('Found Mesh'+self.Mesh[j].Name);
+                  self.Mesh[j].MatName[0]:=self.Material[i].Name;
+                  self.Mesh[j].MatId[0]:=i;
+                end;
+              end;
+            end;
+          end;
+          tsl.free;
+        end;
+
       end;
 
       if (pos(':',line)>0) then
@@ -323,11 +416,9 @@ begin
           key:=trim(copy(line,0,pos(':',line)-1));
           value:=trim(copy(line,pos(':',line)+1,length(line)-1));
           //writeln('key   ('+inttostr(n)+') : '+key);
-          //writeln(value);
           //do actions on key here
           if key = 'FBXVersion' then
             begin
-              writeln(value);
               fbxversion:= strtoint(value);
             end;
           if key = 'Model' then
@@ -336,10 +427,6 @@ begin
               value:=trim(copy(value,0,pos('{',value)-1)); //trim {
               tsl := TStringList.Create;
               tsl.CommaText := value;
-              //for i:=0 to tsl.count-1 do
-              //begin
-              //  writeln(tsl[i]);
-              //end;
               if tsl.count>1 then //TODO model as key is to generic!! also look at parent key if possible
               if tsl[1] = 'Mesh' then
                 begin
@@ -362,40 +449,24 @@ begin
               if tsl[2] = 'Mesh' then
               begin
                 self.AddMesh;
-                writeln(value);
                 self.Mesh[self.NumMeshes-1].Name:=tsl[1];//'FbxMesh'+inttostr(self.NumMeshes);
                 self.Mesh[self.NumMeshes-1].Visible:=true;
                 writeln('Add Mesh' + tsl[1] +' ('+ tsl[0]+')');
               end;
               tsl.free;
             end;
-          //writeln('FBXVERSION: '+inttostr(fbxversion));
 
-          (*
-          if ((key='Vertices') and (fbxversion=6100)) then
-          begin
-            writeln('vertices 6100');
-            writeln(value);
-          end;
-
-          if ((key='PolygonVertexIndex') and (fbxversion=6100)) then
-          begin
-            writeln('PolygonVertexIndex 6100');
-            writeln(value);
-          end;
-          *)
           if key='ReferenceInformationType' then
           begin
-            writeln(key + ': '+ value);
-            //todo: use this to determine if data is indexed or not (do not use fbxfileformat for this !!!)
-            //Direct: no indices supplied
-            //IndexToDerict: inidces are supplied
+            case value of
+            'Direct': FbxReferenceInformationType := Direct;
+            'IndexToDirect': FbxReferenceInformationType := IndexToDirect;
+            end;
           end;
           if (key='Vertices') and (fbxversion>=7300) then
             begin
               //set number of vetrices in mesh
               self.Mesh[self.FNumMeshes-1].NumVertex:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3;
-              //self.Mesh[self.FNumMeshes-1].NumMappings:=self.Mesh[self.FNumMeshes-1].NumVertex;
               writeln('Number of Vertices: '+inttostr(self.Mesh[self.NumMeshes-1].NumVertex));
             end;
           if (key='PolygonVertexIndex') and (fbxversion>=7300) then
@@ -423,9 +494,11 @@ begin
               //Do nothing
             end;
 
+
           if (pos('{',value)>0) then
             begin
               n:=n+1;
+              parentparentkey:=parentkey;
               parentkey:=key;
               (*
               if (pos(',',value)>0) then
@@ -475,7 +548,7 @@ begin
             value:='';
           end;
           //does this belong here?
-          if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMappingIndices(value);
+          //if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMappingIndices(value);
         end;
       l:=l+1;
 
