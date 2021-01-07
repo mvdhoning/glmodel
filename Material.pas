@@ -40,6 +40,7 @@ type
 
   TBaseMaterial = class(TComponent)
   protected
+    FId: Integer;
     FAmbB: Single;
     FAmbG: Single;
     FAmbR: Single;
@@ -78,6 +79,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     procedure Assign(Source: TPersistent); override;
+    property Id: Integer read FId write FId;
     property AmbientBlue: Single read FAmbB write FAmbB;
     property AmbientGreen: Single read FAmbG write FAmbG;
     property AmbientRed: Single read FAmbR write FAmbR;

@@ -41,7 +41,8 @@ type
     fbxnumberofvetexindices: integer;
     fbxindicecount: integer;
     fbxReferenceInformationType: TFbxReferenceInformationType;
-    fbxkeyvaluestore: TStringList;
+    fbxkeyvaluestoreT: TStringList;
+    fbxkeyvaluestoreM: TStringList;
     fbxcurrentname: string;
     procedure AddNormalIndices(value: string);
     procedure AddNormals(value: string);
@@ -67,15 +68,12 @@ var
   tempvertex: T3dPoint;
   f: integer;
 begin
-
-  writeln('Add Vertices');
   if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
   tsl.StrictDelimiter := true;
   tsl.DelimitedText := StringReplace(StringReplace(value, #13#10, '', [rfReplaceAll]), ' ', '', [rfReplaceAll]);
   if fbxversion=6100 then self.Mesh[self.FNumMeshes-1].NumVertex := tsl.Count div 3; //set number of vertexes
-  writeln('Number of Vertices: '+inttostr(self.Mesh[self.NumMeshes-1].NumVertex));
   f:=0;
   repeat
     tempvertex := self.Mesh[self.NumMeshes-1].Vertex[(f div 3)];
@@ -94,7 +92,6 @@ var
   tempvertex: T3dPoint;
   f: integer;
 begin
-  writeln('Add Normals');
   value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
@@ -121,7 +118,6 @@ var
   f: integer;
   tempmap: TMap;
 begin
-  writeln('Add UV mappings');
   if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
@@ -145,7 +141,6 @@ var
   f: integer;
   i: integer;
 begin
-  writeln('Add UV mapping Indices');
   value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
@@ -182,7 +177,6 @@ var
   tsl: TStringList;
   i, f: integer;
 begin
-  writeln('Add Normal Indices');
   if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
@@ -218,7 +212,6 @@ var
   tsl: TStringList;
   i, f: integer;
 begin
-  writeln('Add vertex indices');
   if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.CommaText := value;
@@ -234,9 +227,6 @@ begin
   //also remember to adjes to total number of vertex indices
   if fbxindicecount=3 then fbxnumberofvetexindices:=(fbxnumberofvetexindices div 4)*6;
   self.Mesh[self.FNumMeshes-1].NumVertexIndices:= fbxnumberofvetexindices;
-  writeln('Adjusted number of vertex indices: '+inttostr(fbxnumberofvetexindices));
-  writeln('Number of Vertex Indices: '+inttostr(fbxnumberofvetexindices));
-
   f:=0;
   i:=0;
   repeat
@@ -287,7 +277,8 @@ var
   tsl: TStringList;
 begin
 
-  fbxkeyvaluestore:=TStringList.Create;
+  fbxkeyvaluestoreT:=TStringList.Create;
+  fbxkeyvaluestoreM:=TStringList.Create;
 
   sl := TStringList.Create;
   sl.LoadFromStream(stream);
@@ -328,7 +319,7 @@ begin
           tsl.CommaText := value;
           self.AddMaterial;
           self.Material[self.NumMaterials-1].Name:=tsl[b];
-          writeln('Add Material: '+tsl[b]);
+          if fbxversion=7300 then self.Material[self.NumMaterials-1].Id:=strtoint(tsl[0]);
           tsl.free;
         end;
 
@@ -377,7 +368,6 @@ begin
           tsl := TStringList.Create;
           tsl.CommaText := value;
           //store texture name soomewhaere
-          writeln('Texturename:'+tsl[0]);
           fbxcurrentname:=tsl[0];
           tsl.free;
         end;
@@ -388,58 +378,110 @@ begin
           tsl := TStringList.Create;
           tsl.CommaText := value;
           //store texture name soomewhaere
-          writeln('Filename:'+tsl[0]);
-          fbxkeyvaluestore.Values[fbxcurrentname]:=tsl[0];
+          fbxkeyvaluestoreT.Values[fbxcurrentname]:=tsl[0];
           tsl.free;
         end;
 
-        if key='Connect' then
+        if (key='Connect') or ((key='C') and( fbxversion=7300)) then
         begin
-
           tsl := TStringList.Create;
           tsl.CommaText := value;
 
-          //Map Material to the Correct Mesh
-          for i:=0 to self.NumMaterials-1 do
+
+          if fbxversion=7300 then
           begin
-            if self.Material[i].Name=tsl[1] then
+            //map mesh(geometry) to model
+            for i:=0 to self.NumMeshes-1 do
             begin
-              //writeln('Found Material: '+self.Material[i].Name);
-              for j:=0 to self.NumMeshes-1 do
+              if self.Mesh[i].Id=strtoint(tsl[1]) then
               begin
-                if self.Mesh[j].Name=tsl[2] then
-                begin
-                  //writeln('Found Mesh'+self.Mesh[j].Name);
-                  self.Mesh[j].MatName[0]:=self.Material[i].Name;
-                  self.Mesh[j].MatId[0]:=i;
-                end;
+                j:=fbxkeyvaluestoreM.IndexOfName(tsl[2]);
+                  if j>=0 then
+                  begin
+                    fbxkeyvaluestoreM.values[tsl[2]]:=inttostr(self.Mesh[i].id);
+                  end;
               end;
             end;
           end;
 
-          //Map Texture to Material
-          fbxkeyvaluestore.Sort;
-          writeln(fbxkeyvaluestore.Sorted);
-          writeln('---------------------');
-          i:=fbxkeyvaluestore.IndexOfName(tsl[1]);
+          if fbxversion=6100 then
+          begin
+            //Map Material to the Correct Mesh
+            for i:=0 to self.NumMaterials-1 do
+            begin
+              if self.Material[i].Name=tsl[1] then
+              begin
+                for j:=0 to self.NumMeshes-1 do
+                begin
+                  if self.Mesh[j].Name=tsl[2] then
+                  begin
+                    self.Mesh[j].MatName[0]:=self.Material[i].Name;
+                    self.Mesh[j].MatId[0]:=i;
+                  end;
+                end;
+              end;
+            end;
+          end else
+          begin
+            //Map Material to the Correct Mesh
+            for i:=0 to self.NumMaterials-1 do
+            begin
+              if self.Material[i].Id=strtoint(tsl[1]) then
+              begin
+                  k:=fbxkeyvaluestoreM.IndexOfName(tsl[2]);
+                  if k>=0 then
+                  begin
+                    for j:=0 to self.NumMeshes-1 do
+                    begin
+                      if self.Mesh[j].Id=strtoint(fbxkeyvaluestoreM.values[tsl[2]]) then
+                      begin
+                        self.Mesh[j].MatName[0]:=self.Material[i].Name;
+                        self.Mesh[j].MatId[0]:=i;
+                      end;
+                    end;
+                  end;
+              end;
+            end;
+          end;
+
+          if fbxversion=6100 then
+          begin
+            //Map Texture to Material
+            i:=fbxkeyvaluestoreT.IndexOfName(tsl[1]);
           if i>=0 then
           begin
-            writeln('Texture '+tsl[1]+' found');
-            writeln(fbxkeyvaluestore.IndexOfName(tsl[1]));
-            writeln(fbxkeyvaluestore[i]);
-            writeln(tsl[2]);
-            for j:=0 to self.NumMaterials-1 do
+            for j:=0 to self.NumMeshes-1 do
             begin
               if self.Mesh[j].Name=tsl[2] then
               begin
-                writeln('Mesh '+self.Mesh[j].name+' found');
-                writeln('Has material: '+self.Material[self.Mesh[j].MatID[0]].Name);
                 if self.Material[self.Mesh[j].MatID[0]].TextureFilename='' then
-                  self.Material[self.Mesh[j].MatID[0]].TextureFilename:=fbxkeyvaluestore.values[tsl[1]]
+                  self.Material[self.Mesh[j].MatID[0]].TextureFilename:=fbxkeyvaluestoreT.values[tsl[1]]
                 else
-                  self.Material[self.Mesh[j].MatID[0]].BumpMapFilename:=fbxkeyvaluestore.values[tsl[1]]; //gets overwritten if more then 2 textures supplied in fbx file per mesh
+                  self.Material[self.Mesh[j].MatID[0]].BumpMapFilename:=fbxkeyvaluestoreT.values[tsl[1]]; //gets overwritten if more then 2 textures supplied in fbx file per mesh
 
                 if self.FMaterial[self.Mesh[j].MatID[0]].Filename <> '' then self.Material[self.Mesh[j].MatID[0]].Hastexturemap := True;
+              end;
+            end;
+          end;
+
+          end else
+          begin
+
+            //Map Texture to Material
+            i:=fbxkeyvaluestoreT.IndexOfName(tsl[1]);
+            if i>=0 then
+            begin
+              for j:=0 to self.NumMaterials-1 do
+              begin
+              if self.Material[j].Id=strtoint(tsl[2]) then
+                begin
+                  if self.Material[j].TextureFilename='' then
+                    self.Material[j].TextureFilename:=fbxkeyvaluestoreT.values[tsl[1]]
+                  else
+                    self.Material[j].BumpMapFilename:=fbxkeyvaluestoreT.values[tsl[1]]; //gets overwritten if more then 2 textures supplied in fbx file per mesh
+
+                  if self.FMaterial[j].Filename <> '' then self.Material[j].Hastexturemap := True;
+                end;
               end;
             end;
           end;
@@ -460,7 +502,8 @@ begin
             begin
               fbxversion:= strtoint(value);
             end;
-          if key = 'Model' then
+
+          if (key = 'Model') and (fbxversion=6100) then
             begin
               //add a mesh to the model
               value:=trim(copy(value,0,pos('{',value)-1)); //trim {
@@ -473,12 +516,18 @@ begin
                   //TODO: read meshname from tsl[0]
                   self.Mesh[self.NumMeshes-1].Name:=tsl[0];//'FbxMesh'+inttostr(self.NumMeshes);
                   self.Mesh[self.NumMeshes-1].Visible:=true;
-                  writeln('Add Mesh '+ tsl[0]);
                end;
               tsl.free;
 
             end;
-          if key = 'Geometry' then
+          if (key = 'Model') and (fbxversion=7300) then
+          begin
+            tsl := TStringList.Create;
+            tsl.CommaText := value;
+            fbxkeyvaluestoreM.Values[tsl[0]]:=tsl[1];
+            tsl.free;
+          end;
+          if (key = 'Geometry') and (fbxversion=7300) then
             begin
               //TODO: is the best place?
               //add a mesh to the model
@@ -489,8 +538,8 @@ begin
               begin
                 self.AddMesh;
                 self.Mesh[self.NumMeshes-1].Name:=tsl[1];//'FbxMesh'+inttostr(self.NumMeshes);
+                self.Mesh[self.NumMeshes-1].Id:=strtoint(tsl[0]);
                 self.Mesh[self.NumMeshes-1].Visible:=true;
-                writeln('Add Mesh' + tsl[1] +' ('+ tsl[0]+')');
               end;
               tsl.free;
             end;
@@ -506,18 +555,15 @@ begin
             begin
               //set number of vetrices in mesh
               self.Mesh[self.FNumMeshes-1].NumVertex:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3;
-              writeln('Number of Vertices: '+inttostr(self.Mesh[self.NumMeshes-1].NumVertex));
             end;
           if (key='PolygonVertexIndex') and (fbxversion>=7300) then
             begin
               //set number of vetrex indices in mesh
               fbxnumberofvetexindices:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1)));
-              writeln('Number of Vertex Indices: '+inttostr(fbxnumberofvetexindices));
             end;
           if (key='Normals') and (fbxversion>=7300) then
             begin
               self.Mesh[self.FNumMeshes-1].NumNormals:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3;
-              writeln('Number of Normals: '+inttostr(self.Mesh[self.NumMeshes-1].NumNormals));
             end;
           if (key='NormalsIndex') and (fbxversion>=7300) then
             begin
@@ -526,7 +572,6 @@ begin
           if (key='UV') and (fbxversion>=7300) then
             begin
               self.Mesh[self.FNumMeshes-1].NumMappings:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 2;
-              writeln('Number of UV Mappings: '+inttostr(self.Mesh[self.NumMeshes-1].NumMappings));
             end;
           if (key='UVIndex') and (fbxversion>=7300) then
             begin
@@ -594,7 +639,8 @@ begin
   end;
 
   sl.Free;
-  fbxkeyvaluestore.Free;
+  fbxkeyvaluestoreM.Free;
+  fbxkeyvaluestoreT.Free;
 end;
 
 procedure TFbxModel.SaveToFile(AFileName: string);
