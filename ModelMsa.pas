@@ -377,8 +377,9 @@ var
   saveloop: Integer;
   subsaveloop: Integer;
   tempstring: string;
-    msask: TMsaSkeleton;
-    mapstr: string;
+  msask: TMsaSkeleton;
+  mapstr: string;
+  tempmesh: TBaseMesh;
 begin
   //this saves meshes and materials to a milkshape ascii file
   ms:=TStringList.Create;
@@ -415,13 +416,35 @@ begin
     //save vertexes
     ms.Add(inttostr(fmesh[saveloop].numvertex));
 
-    //TODO: for saving models with a different number of uv mappings then vertices remap uv map first to match number of vertexes
-    for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
+
+    //for saving models with a different number of uv mappings then vertices remap uv map first to match number of vertexes
+    if fmesh[saveloop].numvertex > fmesh[saveloop].nummappings then
     begin
-      if self.FNumSkeletons > 0 then
-        ms.Add('0'+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' '+formatfloat('0',fmesh[saveloop].boneid[subsaveloop,0]))
-      else
-        ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
+      tempmesh:= TBaseMesh.Create(nil);
+      tempmesh.Assign(fmesh[saveloop]);
+      tempmesh.nummappings:=fmesh[saveloop].numvertex;
+      for subsaveloop:=0 to fmesh[saveloop].numvertexindices -1 do
+      begin
+          tempmesh.mapping[fmesh[saveloop].VertexIndices[subsaveloop]]:=fmesh[saveloop].mapping[fmesh[saveloop].Map[subsaveloop]];
+      end;
+      for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
+      begin
+        if self.FNumSkeletons > 0 then
+          ms.Add('0'+' '+formatfloat('0.000000',tempmesh.Vertex[subsaveloop].x)+' '+formatfloat('0.000000',tempmesh.Vertex[subsaveloop].y)+' '+formatfloat('0.000000',tempmesh.Vertex[subsaveloop].z)+' '+formatfloat('0.000000',tempmesh.Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - tempmesh.Mapping[subsaveloop].tv)+' '+formatfloat('0',tempmesh.boneid[subsaveloop,0]))
+        else
+          ms.Add('0 '+formatfloat('0.000000',tempmesh.Vertex[subsaveloop].x)+' '+formatfloat('0.000000',tempmesh.Vertex[subsaveloop].y)+' '+formatfloat('0.000000',tempmesh.Vertex[subsaveloop].z)+' '+formatfloat('0.000000',tempmesh.Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - tempmesh.Mapping[subsaveloop].tv)+' -1');
+      end;
+      tempmesh.Free;
+    end
+    else
+    begin
+    for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
+      begin
+        if self.FNumSkeletons > 0 then
+          ms.Add('0'+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' '+formatfloat('0',fmesh[saveloop].boneid[subsaveloop,0]))
+        else
+          ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
+      end;
     end;
 
     //save normals
