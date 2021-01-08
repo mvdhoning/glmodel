@@ -40,16 +40,6 @@ type
       procedure SaveToStream(stream: TStream); override;
   end;
 
-
-
-//DONE: Implement save and load for milkshape asci files
-//TODO: Fix saving line 9 is different float vs int?
-//NO differenct comes from move to pivot and scaling...
-//Extra diff software deinstalleren.
-//TODO: reloaded model is too bright?  Wrong is ambient? saveorload
-
-//TODO: implement bones again...
-
 implementation
 
 uses
@@ -73,7 +63,6 @@ begin
     fnumskeletons:=fnumskeletons+1;
     setlength(fskeleton, fnumskeletons);
     fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
-    //fskeleton[fnumskeletons-1].BoneClass := TBaseBone;
     msask := TMsaSkeleton.Create(self);
     msask.BoneClass := fskeleton[fnumskeletons-1].BoneClass;
     msask.LoadFromFile(AFileName);
@@ -426,12 +415,13 @@ begin
     //save vertexes
     ms.Add(inttostr(fmesh[saveloop].numvertex));
 
+    //TODO: for saving models with a different number of uv mappings then vertices remap uv map first to match number of vertexes
     for subsaveloop:=0 to fmesh[saveloop].numvertex -1 do
     begin
       if self.FNumSkeletons > 0 then
-        ms.Add('0'+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[fmesh[saveloop].Map[subsaveloop]].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[fmesh[saveloop].Map[subsaveloop]].tv)+' '+formatfloat('0',fmesh[saveloop].boneid[subsaveloop,0]))
+        ms.Add('0'+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' '+formatfloat('0',fmesh[saveloop].boneid[subsaveloop,0]))
       else
-        ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[fmesh[saveloop].Map[subsaveloop]].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[fmesh[saveloop].Map[subsaveloop]].tv)+' -1');
+        ms.Add('0 '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].x)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].y)+' '+formatfloat('0.000000',fmesh[saveloop].Vertex[subsaveloop].z)+' '+formatfloat('0.000000',fmesh[saveloop].Mapping[subsaveloop].tu)+' '+formatfloat('0.000000',1.0 - fmesh[saveloop].Mapping[subsaveloop].tv)+' -1');
     end;
 
     //save normals
@@ -454,14 +444,14 @@ begin
       ms.Add('0 '
         +IntToStr(fmesh[saveloop].Face[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+2])+' '
          +IntToStr(fmesh[saveloop].normal[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].normal[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].normal[subsaveloop*3+2])
-        +' 0' ); //no support for saving smoothing groups
+        +' 1' ); //no support for saving smoothing groups
       end
       else
       begin
         ms.Add('0 '
         +IntToStr(fmesh[saveloop].Face[subsaveloop*3])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+1])+' '+IntToStr(fmesh[saveloop].Face[subsaveloop*3+2])+' '
          +'0 0 0' //no normals?
-        +' 0' ); //no support for saving smoothing groups
+        +' 1' ); //no support for saving smoothing groups
       end;
 
     end;
@@ -475,10 +465,10 @@ begin
   for saveloop:=0 to FNumMaterials-1 do
   begin
     ms.Add('"'+FMaterial[saveloop].name+'"');
-    ms.Add(formatfloat('0.000000',FMaterial[saveloop].AmbientRed)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientBlue)+' 0.000000');
-    ms.Add(formatfloat('0.000000',FMaterial[saveloop].DiffuseRed)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseBlue)+' 0.000000');
-    ms.Add(formatfloat('0.000000',FMaterial[saveloop].SpecularRed)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularBlue)+' 0.000000');
-    ms.Add(formatfloat('0.000000',FMaterial[saveloop].EmissiveRed)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveBlue)+' 0.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].AmbientRed)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].AmbientBlue)+' 1.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].DiffuseRed)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].DiffuseBlue)+' 1.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].SpecularRed)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].SpecularBlue)+' 1.000000');
+    ms.Add(formatfloat('0.000000',FMaterial[saveloop].EmissiveRed)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveGreen)+' '+formatfloat('0.000000',FMaterial[saveloop].EmissiveBlue)+' 1.000000');
     ms.Add(formatfloat('0.000000',FMaterial[saveloop].Shininess));
     ms.Add(formatfloat('0.000000',FMaterial[saveloop].Transparency));
     ms.Add('"'+FMaterial[saveloop].filename+'"');
