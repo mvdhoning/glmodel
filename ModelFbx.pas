@@ -68,12 +68,12 @@ var
   tempvertex: T3dPoint;
   f: integer;
 begin
-  if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
+  if fbxversion>=7100 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
   tsl.StrictDelimiter := true;
   tsl.DelimitedText := StringReplace(StringReplace(value, #13#10, '', [rfReplaceAll]), ' ', '', [rfReplaceAll]);
-  if fbxversion=6100 then self.Mesh[self.FNumMeshes-1].NumVertex := tsl.Count div 3; //set number of vertexes
+  if fbxversion<7100 then self.Mesh[self.FNumMeshes-1].NumVertex := tsl.Count div 3; //set number of vertexes
   f:=0;
   repeat
     tempvertex := self.Mesh[self.NumMeshes-1].Vertex[(f div 3)];
@@ -97,7 +97,7 @@ begin
   tsl.Delimiter:=',';
   tsl.StrictDelimiter := true;
   tsl.DelimitedText := StringReplace(value, #13#10, '', [rfReplaceAll]);
-  if fbxversion=6100 then self.Mesh[self.FNumMeshes-1].NumNormals := tsl.Count div 3; //set number of normals
+  if fbxversion<7100 then self.Mesh[self.FNumMeshes-1].NumNormals := tsl.Count div 3; //set number of normals
   if FbxReferenceInformationType=Direct then self.Mesh[self.FNumMeshes-1].NumNormalIndices:= self.Mesh[self.FNumMeshes-1].NumVertexIndices; //set equal to vertex indices;
   f:=0;
   repeat
@@ -118,12 +118,12 @@ var
   f: integer;
   tempmap: TMap;
 begin
-  if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
+  if fbxversion>=7100 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
   tsl.StrictDelimiter := true;
   tsl.DelimitedText := StringReplace(StringReplace(value, #13#10, '', [rfReplaceAll]), ' ', '', [rfReplaceAll]);
-  if fbxversion=6100 then self.Mesh[self.FNumMeshes-1].NumMappings := tsl.Count div 2; //set number of uv mappings
+  if fbxversion<7100 then self.Mesh[self.FNumMeshes-1].NumMappings := tsl.Count div 2; //set number of uv mappings
   f:=0;
   repeat
     tempmap := self.Mesh[self.NumMeshes-1].Mapping[f div 2];
@@ -177,7 +177,7 @@ var
   tsl: TStringList;
   i, f: integer;
 begin
-  if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
+  if fbxversion>=7100 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
   tsl.StrictDelimiter := true;
@@ -212,7 +212,7 @@ var
   tsl: TStringList;
   i, f: integer;
 begin
-  if fbxversion>=7300 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
+  if fbxversion>=7100 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.CommaText := value;
   fbxindicecount := 0;
@@ -223,7 +223,7 @@ begin
     if (strtoint(tsl[i]) < 0) then break;
   end;
   fbxindicecount := i;
-  if fbxversion=6100 then fbxnumberofvetexindices := tsl.Count; //set number of vertex indices
+  if fbxversion<7100 then fbxnumberofvetexindices := tsl.Count; //set number of vertex indices
   //also remember to adjes to total number of vertex indices
   if fbxindicecount=3 then fbxnumberofvetexindices:=(fbxnumberofvetexindices div 4)*6;
   self.Mesh[self.FNumMeshes-1].NumVertexIndices:= fbxnumberofvetexindices;
@@ -305,28 +305,28 @@ begin
       //previous key value multiline support
       if (pos(':',line)>0) then
       begin
-        if (key='Vertices') and (fbxversion=6100) then AddVertices(value);
-        if (key='PolygonVertexIndex') and (fbxversion=6100) then AddVertexIndices(value);
-        if (key='Normals') and (fbxversion=6100) then AddNormals(value);
-        if (key='UV') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMapping(value);
-        if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMappingIndices(value);
+        if (key='Vertices') and (fbxversion<7100) then AddVertices(value);
+        if (key='PolygonVertexIndex') and (fbxversion<7100) then AddVertexIndices(value);
+        if (key='Normals') and (fbxversion<7100) then AddNormals(value);
+        if (key='UV') and (parentkey = 'LayerElementUV') and (fbxversion<7100) then AddUVMapping(value);
+        if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion<7100) then AddUVMappingIndices(value);
 
         if key='Material' then
         begin
           b:=0;
-          if fbxversion=7300 then b:=1;
+          if fbxversion>=7100 then b:=1;
           tsl := TStringList.Create;
           tsl.CommaText := value;
           self.AddMaterial;
           self.Material[self.NumMaterials-1].Name:=tsl[b];
-          if fbxversion=7300 then self.Material[self.NumMaterials-1].Id:=strtoint(tsl[0]);
+          if fbxversion>=7100 then self.Material[self.NumMaterials-1].Id:=strtoint(tsl[0]);
           tsl.free;
         end;
 
         if (( key='P') and (parentparentkey='Material')) or  (( key='Property') and (parentparentkey='Material')) then
         begin
           b:=3;
-          if fbxversion=7300 then b:=4;
+          if fbxversion>=7100 then b:=4;
           tsl := TStringList.Create;
           tsl.CommaText := value;
           for i:=0 to tsl.count-1 do
@@ -382,13 +382,13 @@ begin
           tsl.free;
         end;
 
-        if (key='Connect') or ((key='C') and( fbxversion=7300)) then
+        if (key='Connect') or ((key='C') and( fbxversion>=7100)) then
         begin
           tsl := TStringList.Create;
           tsl.CommaText := value;
 
 
-          if fbxversion=7300 then
+          if fbxversion>=7100 then
           begin
             //map mesh(geometry) to model
             for i:=0 to self.NumMeshes-1 do
@@ -404,7 +404,7 @@ begin
             end;
           end;
 
-          if fbxversion=6100 then
+          if fbxversion<7100 then
           begin
             //Map Material to the Correct Mesh
             for i:=0 to self.NumMaterials-1 do
@@ -444,7 +444,7 @@ begin
             end;
           end;
 
-          if fbxversion=6100 then
+          if fbxversion<7100 then
           begin
             //Map Texture to Material
             i:=fbxkeyvaluestoreT.IndexOfName(tsl[1]);
@@ -503,7 +503,7 @@ begin
               fbxversion:= strtoint(value);
             end;
 
-          if (key = 'Model') and (fbxversion=6100) then
+          if (key = 'Model') and (fbxversion<7100) then
             begin
               //add a mesh to the model
               value:=trim(copy(value,0,pos('{',value)-1)); //trim {
@@ -520,14 +520,14 @@ begin
               tsl.free;
 
             end;
-          if (key = 'Model') and (fbxversion=7300) then
+          if (key = 'Model') and (fbxversion>=7100) then
           begin
             tsl := TStringList.Create;
             tsl.CommaText := value;
             fbxkeyvaluestoreM.Values[tsl[0]]:=tsl[1];
             tsl.free;
           end;
-          if (key = 'Geometry') and (fbxversion=7300) then
+          if (key = 'Geometry') and (fbxversion>=7100) then
             begin
               //TODO: is the best place?
               //add a mesh to the model
@@ -551,29 +551,29 @@ begin
             'IndexToDirect': FbxReferenceInformationType := IndexToDirect;
             end;
           end;
-          if (key='Vertices') and (fbxversion>=7300) then
+          if (key='Vertices') and (fbxversion>=7100) then
             begin
               //set number of vetrices in mesh
               self.Mesh[self.FNumMeshes-1].NumVertex:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3;
             end;
-          if (key='PolygonVertexIndex') and (fbxversion>=7300) then
+          if (key='PolygonVertexIndex') and (fbxversion>=7100) then
             begin
               //set number of vetrex indices in mesh
               fbxnumberofvetexindices:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1)));
             end;
-          if (key='Normals') and (fbxversion>=7300) then
+          if (key='Normals') and (fbxversion>=7100) then
             begin
               self.Mesh[self.FNumMeshes-1].NumNormals:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3;
             end;
-          if (key='NormalsIndex') and (fbxversion>=7300) then
+          if (key='NormalsIndex') and (fbxversion>=7100) then
             begin
               //Do nothing
             end;
-          if (key='UV') and (fbxversion>=7300) then
+          if (key='UV') and (fbxversion>=7100) then
             begin
               self.Mesh[self.FNumMeshes-1].NumMappings:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 2;
             end;
-          if (key='UVIndex') and (fbxversion>=7300) then
+          if (key='UVIndex') and (fbxversion>=7100) then
             begin
               //Do nothing
             end;
@@ -631,8 +631,7 @@ begin
             key:=parentkey;
             value:='';
           end;
-          //does this belong here?
-          //if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion=6100) then AddUVMappingIndices(value);
+
         end;
       l:=l+1;
 
