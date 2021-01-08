@@ -152,6 +152,7 @@ begin
         Count := StrToInt(line);
         FBone[tcount].NumTranslateFrames := Count;
 
+        if Count>0 then
         for floop := 0 to Count - 1 do
         begin
           l := l + 1;
@@ -177,6 +178,7 @@ begin
         Count := StrToInt(line);
         FBone[tcount].NumRotateFrames := Count;
 
+        if Count>0 then
         for floop := 0 to Count - 1 do
         begin
           l := l + 1;
