@@ -73,6 +73,9 @@ var
   gNormalLocation: GLint;
   gModelViewLocation: GLint;
 
+  gUseBonesLocation: GLint;
+  gUseTexturesLocation: GLint;
+
   gBoneIndexLocation: GLint;
   gBoneWeightLocation: GLint;
   gProjectionLocation: GLint;
@@ -98,6 +101,9 @@ begin
   gTextureLocation := glslsimpleprog.GetUniformLocation('firstTexture');
   gBoneMatLocation := glslsimpleprog.GetUniformLocation('bonemat');
 
+  gUseBonesLocation := glslsimpleprog.GetUniformLocation('useBones');
+  gUseTexturesLocation := glslsimpleprog.GetUniformLocation('useTexture');
+
   gVertexLocation := glslsimpleprog.GetAttribLocation('vertex');
   gNormalLocation := glslsimpleprog.GetAttribLocation('normal');
   gColorLocation := glslsimpleprog.GetAttribLocation('color');
@@ -107,10 +113,10 @@ begin
   gTexCoordLocation := glslsimpleprog.GetAttribLocation('texCoord');
 
   //set camera position
-  camera.xangle := 0;//45.0; //10
-  camera.yangle := 90+45.0; //90
+  camera.xangle := 0.0; //10
+  camera.yangle := -180; //90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 50.0;   //500
+  camera.dist := 80.0;   //500
 
   show_bones := true;
 
@@ -127,10 +133,17 @@ begin
   scene1.AddModel();
   //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
   //scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
-  scene1.Models[0].LoadFromFile('..\..\Models\2cubes.fbx');
+  //scene1.Models[0].LoadFromFile('c:\projecten\assets\Scorpion\scorpidt.txt');
+  scene1.Models[0].LoadFromFile('..\..\Models\2cubes2006.fbx');
+  //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2013.fbx');
+  //scene1.Models[0].LoadFromFile('..\..\Models\export6.txt');
 
-  writeln(scene1.Models[0].Material[0].TextureFilename);
+
+  writeln('*'+scene1.Models[0].Material[0].TextureFilename+'*');
+  writeln('*'+scene1.Models[0].Material[1].TextureFilename+'*');
   scene1.Models[0].Material[1].HasTexturemap:=false;
+
+
   //pass attrib info from shade on to vbo
   scene1.VBO.VertexAttribId:=gVertexLocation;
   scene1.VBO.ColorAttribId:=gColorLocation;
@@ -140,12 +153,14 @@ begin
   scene1.VBO.BoneWeightAttribId:=gBoneWeightLocation;
 
   scene1.BoneMatLocation:=gBoneMatLocation;
+  scene1.UseBonesLocation:=gUseBonesLocation;
 
   scene1.Init; //Init vbo with mesh info
 
   //Load and set texture/material info
   scene1.UpdateTextures;
   glUniform1i(gTextureLocation, 0); //use the first texture
+  glUniform1f(gUseTexturesLocation,1); //use texture coords in shader
 
   // Set the polygon mode to fill
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -204,6 +219,8 @@ end;
 
 //update game logic pre render
 procedure Update();
+var
+  speed: single;
 begin
   QueryPerformanceCounter(ftick); //currentime
 
@@ -213,7 +230,10 @@ begin
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
   if scene1.Models[0].NumSkeletons>=1 then
-    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps);
+    begin
+      speed:=((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps;
+      scene1.Models[0].Skeleton[0].AdvanceAnimation(speed);
+    end;
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;

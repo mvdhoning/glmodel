@@ -43,6 +43,7 @@ type Tgl3Render = class(TBaseRender)
   protected
     fvbo: TglVbo;                       // a vertex buffer object
     fBoneMatLocation: GLint;
+    fUseBonesLocation: GLint;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
@@ -54,6 +55,7 @@ type Tgl3Render = class(TBaseRender)
     procedure Init; override;
     property VBO: TglVbo read fvbo write fvbo;
     property BoneMatLocation: GLint read fBoneMatLocation write fBoneMatLocation;
+    property UseBonesLocation: GLint read fUseBonesLocation write fUseBonesLocation;
 end;
 
 implementation
@@ -96,14 +98,15 @@ begin
   //TODO: also calculate offset and size for individual meshes
   //TODO: merge glvbo code to here and rename init here to upload
 
+  glUniform1f(fUseBonesLocation, 0);
   for i := 0 to FNumModels-1 do
   begin
 
-
     if fModels[i].NumSkeletons >= 1 then
     begin
+      glUniform1f(fUseBonesLocation, 1);
       fModels[i].Skeleton[0].InitBones; //initialize bone matrices
-      //fModels[i].InitSkin;              //bind mesh to bones
+      //fModels[i].InitSkin;            //bind mesh to bones
     end;
 
     fModels[i].Init;
