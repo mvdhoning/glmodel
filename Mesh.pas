@@ -258,6 +258,7 @@ begin
       self.Fnormalindices:= Fnormalindices;
       self.FMappingIndices := FMappingIndices;
       self.FNumVertexIndices:= FNumVertexIndices;
+      self.FNumMappingIndices:= FNumMappingIndices;
       self.FNumVertex:= FNumVertex;
       self.FNumNormals := FNumNormals;
       self.FNumMappings := FNumMappings;
