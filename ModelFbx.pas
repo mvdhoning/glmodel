@@ -25,9 +25,20 @@ unit ModelFbx;
  *
  *)
 
+//compatibility for FPC
+{$IFDEF FPC}
+  {$MODE Delphi}
+  {$H+}
+  {$M+}
+  {$codepage utf8}
+  {$IFNDEF WINDOWS}
+    {$LINKLIB c}
+  {$ENDIF}
+{$ENDIF}
+
 interface
 
-uses classes, Model;
+uses classes, Model, Generics.Collections, Generics.Helpers;
 
 type
 
@@ -43,7 +54,10 @@ type
     fbxReferenceInformationType: TFbxReferenceInformationType;
     fbxkeyvaluestoreT: TStringList;
     fbxkeyvaluestoreM: TStringList;
+    //fbxkeyvaluestoreI: TStringList;
+    fbxindexinfo: TDictionary<integer, boolean>;
     fbxcurrentname: string;
+    fbxmesh: boolean;
     procedure AddNormalIndices(value: string);
     procedure AddNormals(value: string);
     procedure AddUVMapping(value: string);
@@ -60,7 +74,7 @@ type
 implementation
 
 uses
-  SysUtils, glMath, Mesh;
+  SysUtils, StrUtils, glMath, Mesh;
 
 procedure TFbxModel.AddVertices(value: string);
 var
@@ -151,11 +165,13 @@ begin
   i:=0;
   repeat
 
-    if fbxindicecount = 2 then
+    if fbxindexinfo[f] then
       begin
         self.Mesh[self.NumMeshes-1].Map[i+0]:=strtoint(tsl[f+0]);
         self.Mesh[self.NumMeshes-1].Map[i+1]:=strtoint(tsl[f+1]);
         self.Mesh[self.NumMeshes-1].Map[i+2]:=strtoint(tsl[f+2]);
+        i:=i+3;
+        f:=f+3;
       end
       else
       begin
@@ -165,9 +181,11 @@ begin
         self.Mesh[self.NumMeshes-1].Map[i+3]:=strtoint(tsl[f+2]);
         self.Mesh[self.NumMeshes-1].Map[i+4]:=strtoint(tsl[f+3]);
         self.Mesh[self.NumMeshes-1].Map[i+5]:=strtoint(tsl[f+0]);
+        i:=i+6;
+        f:=f+4;
       end;
-    if fbxindicecount = 3 then i:=i+6 else i:=i+3;
-    f:=f+fbxindicecount+1;
+    //if fbxindicecount = 3 then i:=i+6 else i:=i+3;
+    //f:=f+fbxindicecount+1;
   until f >= tsl.count;
   tsl.Free;
 end;
@@ -215,6 +233,8 @@ begin
   if fbxversion>=7100 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.CommaText := value;
+
+  (*
   fbxindicecount := 0;
   for i:=0 to 3 do
   begin
@@ -223,13 +243,72 @@ begin
     if (strtoint(tsl[i]) < 0) then break;
   end;
   fbxindicecount := i;
+  *)
+
   if fbxversion<7100 then fbxnumberofvetexindices := tsl.Count; //set number of vertex indices
-  //also remember to adjes to total number of vertex indices
+  (*
+  //also remember to adjust the total number of vertex indices
   if fbxindicecount=3 then fbxnumberofvetexindices:=(fbxnumberofvetexindices div 4)*6;
   self.Mesh[self.FNumMeshes-1].NumVertexIndices:= fbxnumberofvetexindices;
+  *)
+
+  //calculate new number of indices needed
   f:=0;
   i:=0;
   repeat
+    //self.Mesh[self.NumMeshes-1].VertexIndices[i+0]:=strtoint(tsl[f+0]);
+    //self.Mesh[self.NumMeshes-1].VertexIndices[i+1]:=strtoint(tsl[f+1]);
+    if (strtoint(tsl[f+2]) < 0) then
+    begin //triangle
+      //to use the negative number make it positive and subtract 1 from it (xor -1)
+      //self.Mesh[self.NumMeshes-1].VertexIndices[i+2]:=strtoint(tsl[f+2]) xor -1;
+      fbxindexinfo.add(f,true);
+      //fbxindexinfo[f]:=true;
+      i:=i+3;
+      f:=f+3;
+    end
+    else
+    begin //quad
+      //self.Mesh[self.NumMeshes-1].VertexIndices[i+2]:= strtoint(tsl[f+2]);
+      //self.Mesh[self.NumMeshes-1].VertexIndices[i+3]:= strtoint(tsl[f+2]);
+      //to use the negative number make it positive and subtract 1 from it (xor -1)
+      //self.Mesh[self.NumMeshes-1].VertexIndices[i+4]:= strtoint(tsl[f+3]) xor -1;
+      //self.Mesh[self.NumMeshes-1].VertexIndices[i+5]:= strtoint(tsl[f+0]);
+      fbxindexinfo.add(f,false);
+      //fbxindexinfo[f]:=false;
+      i:=i+6;
+      f:=f+4;
+    end;
+  until f >= tsl.count;
+
+  writeln('Number of vertex indices: '+inttostr(fbxnumberofvetexindices));
+  fbxnumberofvetexindices := i;
+  self.Mesh[self.FNumMeshes-1].NumVertexIndices:= fbxnumberofvetexindices;
+  writeln('Adjusted number of vertex indices: '+inttostr(self.Mesh[self.FNumMeshes-1].NumVertexIndices));
+
+  f:=0;
+  i:=0;
+  repeat
+    self.Mesh[self.NumMeshes-1].VertexIndices[i+0]:=strtoint(tsl[f+0]);
+    self.Mesh[self.NumMeshes-1].VertexIndices[i+1]:=strtoint(tsl[f+1]);
+    if (strtoint(tsl[f+2]) < 0) then
+    begin //triangle
+      //to use the negative number make it positive and subtract 1 from it (xor -1)
+      self.Mesh[self.NumMeshes-1].VertexIndices[i+2]:=strtoint(tsl[f+2]) xor -1;
+      i:=i+3;
+      f:=f+3;
+    end
+    else
+    begin //quad
+      self.Mesh[self.NumMeshes-1].VertexIndices[i+2]:= strtoint(tsl[f+2]);
+      self.Mesh[self.NumMeshes-1].VertexIndices[i+3]:= strtoint(tsl[f+2]);
+      //to use the negative number make it positive and subtract 1 from it (xor -1)
+      self.Mesh[self.NumMeshes-1].VertexIndices[i+4]:= strtoint(tsl[f+3]) xor -1;
+      self.Mesh[self.NumMeshes-1].VertexIndices[i+5]:= strtoint(tsl[f+0]);
+      i:=i+6;
+      f:=f+4;
+    end;
+    (*
     if fbxindicecount = 2 then
       begin
         self.Mesh[self.NumMeshes-1].VertexIndices[i+0]:=strtoint(tsl[f+0]);
@@ -239,6 +318,11 @@ begin
       end
       else
       begin
+        writeln('NumVertexIndices: '+inttostr(self.Mesh[self.Nummeshes-1].NumVertexIndices));
+        writeln('CVI: '+inttostr(i+2));
+        writeln('COUNT: '+inttostr(tsl.Count));
+        writeln('F: '+inttostr(i+2));
+        writeln('value:'+tsl[f+2]);
         //if quads convert to triangles
         self.Mesh[self.NumMeshes-1].VertexIndices[i+0]:= strtoint(tsl[f+0]);
         self.Mesh[self.NumMeshes-1].VertexIndices[i+1]:= strtoint(tsl[f+1]);
@@ -248,9 +332,11 @@ begin
         self.Mesh[self.NumMeshes-1].VertexIndices[i+4]:= strtoint(tsl[f+3]) xor -1;
         self.Mesh[self.NumMeshes-1].VertexIndices[i+5]:= strtoint(tsl[f+0]);
       end;
-    if fbxindicecount = 3 then i:=i+6 else i:=i+3;
-    f:=f+fbxindicecount+1;
+    *)
+    //if fbxindicecount = 3 then i:=i+6 else i:=i+3;
+    //f:=f+fbxindicecount+1;
   until f >= tsl.count;
+  writeln(i);
   tsl.Free;
 end;
 
@@ -279,6 +365,7 @@ begin
 
   fbxkeyvaluestoreT:=TStringList.Create;
   fbxkeyvaluestoreM:=TStringList.Create;
+  fbxindexinfo:=TDictionary<integer, boolean>.Create;
 
   sl := TStringList.Create;
   sl.LoadFromStream(stream);
@@ -331,31 +418,31 @@ begin
           tsl.CommaText := value;
           for i:=0 to tsl.count-1 do
           begin
-              case tsl[0] of
-              'Specular': begin
+              case AnsiIndexStr(tsl[0], ['Specular', 'Ambient', 'Diffuse', 'Emissive', 'Shininess', 'Opacity']) of
+              0: begin
                               self.Material[self.NumMaterials-1].SpecularRed:=StrToFloat(tsl[b+0]);
                               self.Material[self.NumMaterials-1].SpecularGreen:=StrToFloat(tsl[b+1]);
                               self.Material[self.NumMaterials-1].SpecularBlue:=StrToFloat(tsl[b+2]);
                             end;
-              'Ambient': begin
+              1: begin
                               self.Material[self.NumMaterials-1].AmbientRed:=StrToFloat(tsl[b+0]);
                               self.Material[self.NumMaterials-1].AmbientGreen:=StrToFloat(tsl[b+1]);
                               self.Material[self.NumMaterials-1].AmbientBlue:=StrToFloat(tsl[b+2]);
                             end;
-              'Diffuse': begin
+              2: begin
                               self.Material[self.NumMaterials-1].DiffuseRed:=StrToFloat(tsl[b+0]);
                               self.Material[self.NumMaterials-1].DiffuseGreen:=StrToFloat(tsl[b+1]);
                               self.Material[self.NumMaterials-1].DiffuseBlue:=StrToFloat(tsl[b+2]);
                             end;
-              'Emissive': begin
+              3: begin
                               self.Material[self.NumMaterials-1].EmissiveRed:=StrToFloat(tsl[b+0]);
                               self.Material[self.NumMaterials-1].EmissiveGreen:=StrToFloat(tsl[b+1]);
                               self.Material[self.NumMaterials-1].EmissiveBlue:=StrToFloat(tsl[b+2]);
                             end;
-              'Shininess': begin
+              4: begin
                               self.Material[self.NumMaterials-1].Shininess:=StrToFloat(tsl[b+0]);
                            end;
-              'Opacity': begin
+              5: begin
                               self.Material[self.NumMaterials-1].Transparency:=StrToFloat(tsl[b+0]);
                            end;
               end;
@@ -516,6 +603,8 @@ begin
                   //TODO: read meshname from tsl[0]
                   self.Mesh[self.NumMeshes-1].Name:=tsl[0];//'FbxMesh'+inttostr(self.NumMeshes);
                   self.Mesh[self.NumMeshes-1].Visible:=true;
+                  fbxindexinfo.Clear;
+                  fbxmesh:=true;
                end;
               tsl.free;
 
@@ -538,42 +627,56 @@ begin
               begin
                 self.AddMesh;
                 self.Mesh[self.NumMeshes-1].Name:=tsl[1];//'FbxMesh'+inttostr(self.NumMeshes);
+                writeln(self.Mesh[self.NumMeshes-1].Name);
                 self.Mesh[self.NumMeshes-1].Id:=strtoint(tsl[0]);
                 self.Mesh[self.NumMeshes-1].Visible:=true;
+                fbxindexinfo.Clear;
+                fbxmesh:=true;
+                writeln('mesh');
+              end;
+              if tsl[2] = 'Shape' then
+              begin
+                //TODO: read blend shapes? For now try to ignore them?
+                fbxmesh:=false;
+                writeln('shape');
               end;
               tsl.free;
             end;
 
           if key='ReferenceInformationType' then
           begin
-            case value of
-            'Direct': FbxReferenceInformationType := Direct;
-            'IndexToDirect': FbxReferenceInformationType := IndexToDirect;
+            case AnsiIndexStr(value, ['Direct','IndexToDirect'] ) of
+            0: FbxReferenceInformationType := Direct;
+            1: FbxReferenceInformationType := IndexToDirect;
             end;
           end;
-          if (key='Vertices') and (fbxversion>=7100) then
+          if (key='Vertices') and ((fbxversion>=7100) and (fbxmesh)) then
             begin
               //set number of vetrices in mesh
+              writeln(value);
+              writeln(strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3);
               self.Mesh[self.FNumMeshes-1].NumVertex:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3;
+              writeln(self.Mesh[self.NumMeshes-1].Name);
+              writeln('number of vertex: '+inttostr(self.Mesh[self.FNumMeshes-1].NumVertex));
             end;
-          if (key='PolygonVertexIndex') and (fbxversion>=7100) then
+          if (key='PolygonVertexIndex') and ((fbxversion>=7100 ) and (fbxmesh)) then
             begin
               //set number of vetrex indices in mesh
               fbxnumberofvetexindices:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1)));
             end;
-          if (key='Normals') and (fbxversion>=7100) then
+          if (key='Normals') and ((fbxversion>=7100) and (fbxmesh)) then
             begin
               self.Mesh[self.FNumMeshes-1].NumNormals:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3;
             end;
-          if (key='NormalsIndex') and (fbxversion>=7100) then
+          if (key='NormalsIndex') and ((fbxversion>=7100) and (fbxmesh)) then
             begin
               //Do nothing
             end;
-          if (key='UV') and (fbxversion>=7100) then
+          if (key='UV') and ((fbxversion>=7100) and (fbxmesh)) then
             begin
               self.Mesh[self.FNumMeshes-1].NumMappings:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 2;
             end;
-          if (key='UVIndex') and (fbxversion>=7100) then
+          if (key='UVIndex') and ((fbxversion>=7100) and (fbxmesh)) then
             begin
               //Do nothing
             end;
@@ -613,18 +716,18 @@ begin
           n:=n-1;
 
           //do actions on value here
-          if (key='a') and (parentkey='Vertices') then AddVertices(value);
-          if (key='a') and (parentkey='PolygonVertexIndex') then AddVertexIndices(value);
-          if (key='a') and (parentkey='Normals') then AddNormals(value);
-          if (key='a') and (parentkey='NormalsIndex') then
+          if (key='a') and (parentkey='Vertices') then if fbxmesh then AddVertices(value);
+          if (key='a') and (parentkey='PolygonVertexIndex') then if fbxmesh then  AddVertexIndices(value);
+          if (key='a') and (parentkey='Normals') then if fbxmesh then AddNormals(value);
+          if (key='a') and (parentkey='NormalsIndex') then if fbxmesh then
           begin
             AddNormalIndices(value);
             //prevent parsing twice
             key:=parentkey;
             value:='';
           end;
-          if (key='a') and (parentkey='UV') then AddUVMapping(value);
-          if (key='a') and (parentkey='UVIndex') then
+          if (key='a') and (parentkey='UV') then if fbxmesh then AddUVMapping(value);
+          if (key='a') and (parentkey='UVIndex') then if fbxmesh then
           begin
             AddUVMappingIndices(value);
             //prevent parsing twice
@@ -640,6 +743,7 @@ begin
   sl.Free;
   fbxkeyvaluestoreM.Free;
   fbxkeyvaluestoreT.Free;
+  fbxindexinfo.Free;
 end;
 
 procedure TFbxModel.SaveToFile(AFileName: string);
