@@ -30,6 +30,7 @@ var
   Model: TBaseModel;
 
 begin
+
   Model := TBaseModel.Create(nil);
   writeln('Read OBJ model');
   Model.LoadFromFile('..\..\Models\testcube1.obj');
@@ -54,24 +55,36 @@ begin
   Model := TBaseModel.Create(nil);
   writeln('Read MSA model with skeleton and animation');
   Model.LoadFromFile('..\..\Models\msa-test2.txt');
+  Model.Skeleton[0].InitBones;
   writeln('Write MSA model with skeleton and animation');
   Model.SaveToFile('export4.txt');
-  Model.SaveToFile('export5.bvh');
+  Model.Free;
+
+  Model := TBaseModel.Create(nil);
+  writeln('Read MSA model with texture info');
+  Model.LoadFromFile('..\..\Models\hog2.txt');
+  Model.Skeleton[0].InitBones;
+  writeln('Write MSA model with texture info');
+  Model.SaveToFile('export5.txt');
   Model.Free;
 
   Model := TBaseModel.Create(nil);
   writeln('Read FBX model');
-  Model.LoadFromFile('..\..\Models\testcube1.fbx');
-  //writeln('Write MSA model');
-  //Model.SaveToFile('export6.txt');
+  //Model.LoadFromFile('..\..\Models\testcube1.fbx');
+  Model.LoadFromFile('..\..\Models\2cubes2006.fbx');
+  //Model.LoadFromFile('..\..\Models\2cubes2013.fbx');
+  writeln('Write MSA model');
+  Model.SaveToFile('export6.txt');
   Model.Free;
 
   Model := TBaseModel.Create(nil);
   writeln('Read MS3D model');
   Model.LoadFromFile('..\..\Models\ninja.ms3d');
+  Model.Skeleton[0].InitBones;
   writeln('Write MSA model');
   Model.SaveToFile('export7.txt');
   Model.Free;
+
 
 end.
 
