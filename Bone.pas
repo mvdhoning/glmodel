@@ -91,7 +91,7 @@ type
 
 implementation
 
-uses Skeleton;
+uses sysutils, Skeleton;
 
 procedure TBaseBone.Assign(Source: TPersistent);
 begin
@@ -186,9 +186,17 @@ begin
   end
   else
   begin
-    Position[0] := FTransLateFrame[i].Value.x;
-    Position[1] := FTransLateFrame[i].Value.y;
-    Position[2] := FTransLateFrame[i].Value.z;
+    if FNumTranslateFrames>0 then
+    begin
+      Position[0] := FTransLateFrame[i].Value.x;
+      Position[1] := FTransLateFrame[i].Value.y;
+      Position[2] := FTransLateFrame[i].Value.z;
+    end else
+    begin
+      Position[0] := 0;
+      Position[1] := 0;
+      Position[2] := 0;
+    end;
   end;
 
   // Rotation
@@ -218,9 +226,18 @@ begin
   end
   else
   begin
-    Rotation[0] := FRotateFrame[i].Value.x;
-    Rotation[1] := FRotateFrame[i].Value.y;
-    Rotation[2] := FRotateFrame[i].Value.z;
+    if FNumRotateFrames>0 then
+    begin
+      Rotation[0] := FRotateFrame[i].Value.x;
+      Rotation[1] := FRotateFrame[i].Value.y;
+      Rotation[2] := FRotateFrame[i].Value.z;
+    end
+    else
+    begin
+      Rotation[0] := 0;
+      Rotation[1] := 0;
+      Rotation[2] := 0;
+    end;
   end;
 
   // Now we know the position and rotation for this animation frame.
