@@ -204,11 +204,15 @@ begin
   f:=0;
   i:=0;
   repeat
-    if fbxindicecount = 2 then
+    //if fbxindicecount = 2 then
+
+    if fbxindexinfo[f] then
     begin
       self.Mesh[self.NumMeshes-1].Normal[i+0]:=strtoint(tsl[f+0]);
       self.Mesh[self.NumMeshes-1].Normal[i+1]:=strtoint(tsl[f+1]);
       self.Mesh[self.NumMeshes-1].Normal[i+2]:=strtoint(tsl[f+2]);
+      i:=i+3;
+      f:=f+3;
     end
     else
     begin
@@ -218,9 +222,11 @@ begin
       self.Mesh[self.NumMeshes-1].Normal[i+3]:=strtoint(tsl[f+2]);
       self.Mesh[self.NumMeshes-1].Normal[i+4]:=strtoint(tsl[f+3]);
       self.Mesh[self.NumMeshes-1].Normal[i+5]:=strtoint(tsl[f+0]);
+      i:=i+6;
+      f:=f+4;
     end;
-    if fbxindicecount = 3 then i:=i+6 else i:=i+3;
-    f:=f+fbxindicecount+1;
+    //if fbxindicecount = 3 then i:=i+6 else i:=i+3;
+    //f:=f+fbxindicecount+1;
     until f >= tsl.count;
     tsl.Free;
 end;
