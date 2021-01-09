@@ -31,40 +31,34 @@ uses classes, Model;
 
 type
   Tgl3Model = class(TBaseModel)
-    private
-      foffset: integer;
-      fsize: integer;
     public
       procedure Init; override;
       procedure Render; override;
       procedure RenderBoundBox; override;
       procedure RenderSkeleton; override;
       procedure UpdateTextures; override;
-      property Offset: integer read foffset write foffset;
-      property Size: integer read fsize write fsize;
   end;
 
 implementation
 
-uses dglOpenGl, Render, gl3Render;
+uses dglOpenGl;
 
 procedure Tgl3Model.Init;
 var
   m: Integer;
 begin
-    fId := Tgl3Render(Owner).VBO.AddMesh(GL_TRIANGLES);
-    for m := 0 to FNumMeshes - 1 do
-    begin
-      FMesh[FRenderOrder[m]].Init;
-    end;
-    fOffset:=Tgl3Render(Owner).VBO.getOffset(fId);
-    fSize:=Tgl3Render(Owner).VBO.getSize(fId);
-
+  for m := 0 to FNumMeshes - 1 do
+  begin
+    FMesh[FRenderOrder[m]].Init;
+  end;
 end;
 
 procedure Tgl3Model.Render;
+var
+  i: integer;
 begin
-    TBaseRender(owner).render(self);
+  for i:=0 to fnummeshes-1 do
+    fmesh[i].Render;
 end;
 
 procedure Tgl3Model.RenderBoundBox;

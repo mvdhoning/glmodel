@@ -50,6 +50,8 @@ type
      fBoneAttribId: GlInt;
      fBoneAttribWeight: GlInt;
      fBones: GlInt;
+     foffset: integer;
+     fsize: integer;
   public
     destructor Destroy; override;
     procedure Init; override;
@@ -61,11 +63,13 @@ type
     property BoneAttribId: GLInt read fBoneAttribId write fBoneAttribId;
     property BoneAttribWeight: GLInt read fBoneAttribWeight write fBoneAttribWeight;
     property Bones: GLInt read fBones write fBones;
+    property Offset: integer read foffset write foffset;
+    property Size: integer read fsize write fsize;
   end;
 
 implementation
 
-uses Material, model, Render, gl3Render, glvbo;
+uses Material, model, gl3Render, glvbo;
 
 destructor Tgl3Mesh.Destroy;
 begin
@@ -80,6 +84,8 @@ begin
 
 
   if (fdrawstyle = 0) then fDrawStyle:=GL_TRIANGLES;
+
+  fId:= Tgl3Render(Owner.Owner).VBO.AddMesh(GL_TRIANGLES);
 
   // fill the vbo buffer with vertices and colors and normals (and uv tex coords)
   for j:=0 to fnumvertexindices-1 do
@@ -123,12 +129,26 @@ begin
     test.BoneWeight.w:=fBoneWeights[FVertexIndices[j],3];
     Tgl3Render(TBaseModel(Owner).Owner).VBO.AddVertex(test);
   end;
+
+  fOffset:=Tgl3Render(Owner.Owner).VBO.getOffset(fId);
+  fSize:=Tgl3Render(Owner.Owner).VBO.getSize(fId);
+
   //TODO: implement further
 end;
 
 procedure Tgl3Mesh.Render;
+var
+  imatid: integer;
 begin
-  TBaseRender(TBaseModel(Owner).Owner).Render(TBaseModel(Owner).Id); //render with model id that mesh belongs to
+
+  imatid := FMatId[0];
+  if TBaseModel(owner).NumMaterials >0 then
+    if (TBaseModel(owner).material[imatid]<>nil) then
+      if (TBaseModel(owner).material[imatid] is TBaseMaterial) then
+        TBaseModel(owner).material[imatid].apply;
+
+  Tgl3Render(Owner.Owner).Render(fId);
+
 end;
 
 end.

@@ -90,8 +90,6 @@ procedure Tgl3Render.Init;
 var
   i: Integer;
 begin
-
-
   //uploads models and meshes to the gpu via vbo
 
   //TODO: calculate model offset and size here and not in glvbo (wrongly called addmesh there)
@@ -123,13 +121,16 @@ end;
 
 procedure Tgl3Render.Render(amodel: TBaseModel);
 begin
-  glDrawElements(TGL3Mesh(amodel.Mesh[0]).DrawStyle, TGL3Model(amodel).size, GL_UNSIGNED_SHORT, pointer(sizeof(word)*TGL3Model(amodel).offset));
+  //TODO: reimplement
 end;
 
 procedure Tgl3Render.Render;
+var
+  i: integer;
 begin
   fvbo.PreRender;
-  fvbo.render;
+  for i := 0 to FNumModels-1 do
+    fModels[i].Render;
   fvbo.PostRender;
 end;
 
