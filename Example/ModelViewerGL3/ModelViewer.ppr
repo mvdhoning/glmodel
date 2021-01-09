@@ -27,8 +27,8 @@ type
 var
   window: PSDL_Window;
   context: TSDL_GLContext;
-  screenWidth: integer = 640;
-  screenHeight: integer = 480;
+  screenWidth: integer = 1024;
+  screenHeight: integer = 769;
   running: boolean = true;
   scene1: Tgl3Render;
   show_bones : boolean;
@@ -42,6 +42,11 @@ var
   glslsimplefrag: TGLSLShader;        // a Fragment Shader
   glslsimpleprog: TGLSLProgram;       // a Shader Program
 
+  projection: glMatrix;
+  model: glMatrix;
+  view: glMatrix;
+  modelview: glMatrix;
+  gModelViewLocation: GLint;
 
 //initializes SDL
 function InitializeSDL: Boolean;
@@ -71,7 +76,7 @@ var
   gTextureLocation: GLint;
   gTexCoordLocation: GLint;
   gNormalLocation: GLint;
-  gModelViewLocation: GLint;
+
 
   gUseBonesLocation: GLint;
   gUseTexturesLocation: GLint;
@@ -79,10 +84,7 @@ var
   gBoneIndexLocation: GLint;
   gBoneWeightLocation: GLint;
   gProjectionLocation: GLint;
-  projection: glMatrix;
-  model: glMatrix;
-  view: glMatrix;
-  modelview: glMatrix;
+
 
 begin
 
@@ -113,10 +115,10 @@ begin
   gTexCoordLocation := glslsimpleprog.GetAttribLocation('texCoord');
 
   //set camera position
-  camera.xangle := 0.0; //10
-  camera.yangle := -180; //90+45.0; //90
+  camera.xangle := 0;//-90.0; //10
+  camera.yangle := 0;//-180; //90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 80.0;   //500
+  camera.dist := 110.0;   //500
 
   show_bones := true;
 
@@ -133,15 +135,33 @@ begin
   scene1.AddModel();
   //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
   //scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+
   //scene1.Models[0].LoadFromFile('c:\projecten\assets\Scorpion\scorpidt.txt');
-  scene1.Models[0].LoadFromFile('..\..\Models\2cubes2006.fbx');
+  //scene1.Models[0].LoadFromFile('c:\projecten\assets\Scorpion\scorpid2006.fbx');
+
+  //scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2006\TempAvatar.fbx');
+  //scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2006\testchar1.fbx');
+  scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2013\testgr2.fbx');
+
+
+  //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2006.fbx');
+  //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2009.fbx');
+  //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2010.fbx');
+  //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2011.fbx');
   //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2013.fbx');
+
   //scene1.Models[0].LoadFromFile('..\..\Models\export6.txt');
 
 
-  writeln('*'+scene1.Models[0].Material[0].TextureFilename+'*');
-  writeln('*'+scene1.Models[0].Material[1].TextureFilename+'*');
-  scene1.Models[0].Material[1].HasTexturemap:=false;
+  //writeln('*'+scene1.Models[0].Material[0].TextureFilename+'*');
+  //writeln('*'+scene1.Models[0].Material[1].TextureFilename+'*');
+  //scene1.Models[0].Material[0].HasTexturemap:=false;
+
+  for i:=0 to scene1.Models[0].NumMeshes-1 do
+  begin
+    writeln(inttostr(i)+' '+scene1.Models[0].Mesh[i].Name);
+  end;
+  scene1.Models[0].Mesh[7].Visible:=false;
 
 
   //pass attrib info from shade on to vbo
@@ -177,10 +197,12 @@ begin
 
   // Calculate the model matrix ...
   loadIdentity(model);
-  translateMatrix(model,0.0,-5.0,-camera.dist);
+  translateMatrix(model,0.0,-85.0,-camera.dist);
   rotateRzRyRxMatrixf(model, camera.xangle, 0, 0);
   rotateRzRyRxMatrixf(model, 0, camera.yangle, 0);
   rotateRzRyRxMatrixf(model, 0, 0, camera.zangle);
+
+
   // ... and the view matrix ...
   lookAt(view, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); //default opengl settings
   // ... to get the final model view matrix
@@ -235,17 +257,36 @@ begin
       scene1.Models[0].Skeleton[0].AdvanceAnimation(speed);
     end;
 
+  camera.yangle:=camera.yangle+0.01;
+  if camera.yangle=360 then camera.yangle:=0;
+
   QueryPerformanceCounter(fLastTick); //lasttime
 end;
 
 //Render
 procedure Render;
 begin
+
+  loadIdentity(model);
+  translateMatrix(model,0.0,-85.0,-camera.dist);
+  rotateRzRyRxMatrixf(model, camera.xangle, 0, 0);
+  rotateRzRyRxMatrixf(model, 0, camera.yangle, 0);
+  rotateRzRyRxMatrixf(model, 0, 0, camera.zangle);
+  multMatrix(modelView, view, model);
+  glUniformMatrix4fv(gModelViewLocation, 1, false, @modelView);
+
   //Start Drawing
   glViewPort(0,0,screenWidth,screenHeight);
   glClearDepth(1.0);
-  glClearColor(0.0,0.0,0.0,0.0); //hard bleu debug background
+  glClearColor(130/255,202/255,250/255,1.0); //hard bleu debug background
   glClear(GL_COLOR_BUFFER_BIT or GL_STENCIL_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+
+  (*
+  scene1.VBO.PreRender;
+  scene1.Models[0].Mesh[1].Render;
+  scene1.Models[0].Mesh[3].Render;
+  scene1.VBO.PostRender;
+  *)
 
   scene1.Render;
 

@@ -66,18 +66,19 @@ begin
 
     //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT);
     //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT);
+
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); { only first two can be used }
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); { all of the above can be used }
 
   end;
 
-  (*
+
   //Two Sided Materials
   if FTwoSided then
     glDisable(GL_CULL_FACE)
   else
     glEnable(GL_CULL_FACE);
-  *)
+
 
 end;
 

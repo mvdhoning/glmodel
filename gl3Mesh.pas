@@ -140,15 +140,16 @@ procedure Tgl3Mesh.Render;
 var
   imatid: integer;
 begin
+  if fvisible then
+  begin
+    imatid := FMatId[0];
+    if TBaseModel(owner).NumMaterials >0 then
+      if (TBaseModel(owner).material[imatid]<>nil) then
+        if (TBaseModel(owner).material[imatid] is TBaseMaterial) then
+          TBaseModel(owner).material[imatid].apply;
 
-  imatid := FMatId[0];
-  if TBaseModel(owner).NumMaterials >0 then
-    if (TBaseModel(owner).material[imatid]<>nil) then
-      if (TBaseModel(owner).material[imatid] is TBaseMaterial) then
-        TBaseModel(owner).material[imatid].apply;
-
-  Tgl3Render(Owner.Owner).Render(fId);
-
+    Tgl3Render(Owner.Owner).Render(fId);
+  end;
 end;
 
 end.
