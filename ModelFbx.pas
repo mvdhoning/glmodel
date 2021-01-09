@@ -104,7 +104,7 @@ procedure TFbxModel.AddNormals(value: string);
 var
   tsl: TStringList;
   tempvertex: T3dPoint;
-  f: integer;
+  f,i: integer;
 begin
   value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
@@ -113,16 +113,47 @@ begin
   tsl.DelimitedText := StringReplace(value, #13#10, '', [rfReplaceAll]);
   if fbxversion<7100 then self.Mesh[self.FNumMeshes-1].NumNormals := tsl.Count div 3; //set number of normals
   if FbxReferenceInformationType=Direct then self.Mesh[self.FNumMeshes-1].NumNormalIndices:= self.Mesh[self.FNumMeshes-1].NumVertexIndices; //set equal to vertex indices;
+
+  //add normal entries
   f:=0;
+  i:=0;
   repeat
-    if FbxReferenceInformationType=Direct then self.Mesh[self.NumMeshes-1].Normal[f div 3]:=f div 3; //make indices as they are not supplied
     tempvertex := self.Mesh[self.NumMeshes-1].Normals[(f div 3)];
     tempvertex.x := strtofloat(tsl[f+0]);
     tempvertex.y := strtofloat(tsl[f+1]);
     tempvertex.z := strtofloat(tsl[f+2]);
     self.Mesh[self.NumMeshes-1].Normals[(f div 3)] := tempvertex;
     f:=f+3;
+    i:=i+1;
   until f >= tsl.count;
+
+  //add direct normals (also add remapped indices)
+  if FbxReferenceInformationType=Direct then
+  begin
+    f:=0;
+    i:=0;
+    repeat
+      if fbxindexinfo[f] then
+      begin
+        self.Mesh[self.NumMeshes-1].Normal[i+0]:=f+0;
+        self.Mesh[self.NumMeshes-1].Normal[i+1]:=f+1;
+        self.Mesh[self.NumMeshes-1].Normal[i+2]:=f+2;
+        i:=i+3;
+        f:=f+3;
+      end
+      else
+      begin
+        self.Mesh[self.NumMeshes-1].Normal[i+0]:=f+0;
+        self.Mesh[self.NumMeshes-1].Normal[i+1]:=f+1;
+        self.Mesh[self.NumMeshes-1].Normal[i+2]:=f+2;
+        self.Mesh[self.NumMeshes-1].Normal[i+3]:=f+2;
+        self.Mesh[self.NumMeshes-1].Normal[i+4]:=f+3;
+        self.Mesh[self.NumMeshes-1].Normal[i+5]:=f+0;
+        i:=i+6;
+        f:=f+4;
+      end;
+    until i >= self.Mesh[self.FNumMeshes-1].NumNormalIndices-1;
+  end;
   tsl.Free;
 end;
 
