@@ -61,14 +61,13 @@ begin
 
   if (FHastexturemap = True) AND (ftexture<>nil) then
   begin
-    //glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, ftexture.ID);
 
     //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT);
     //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); { only first two can be used }
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); { all of the above can be used }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); { only first two can be used }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); { all of the above can be used }
 
   end;
 
@@ -102,12 +101,10 @@ begin
   //now finish up the texture and load it to openl (videocard)
   if fHasTextureMap = true then
   begin
-      FTexture.FlipVert; //why does it need to be flipped...
-      FTexture.SetWrap(GL_REPEAT, GL_REPEAT, GL_REPEAT); //always repeat textures...? Renamed
-      FTexture.MipMap:=mmMipmap; //is this kind of in available in 3ds file? Renamed
-      FTexture.GenTexture(false);
-      hastexture:=FTexture.Target;
-      FTexId := hastexture;
+    FTexture.FlipVert; //why does it need to be flipped...
+    FTexture.GenTexture(false);
+    hastexture:=FTexture.Target;
+    FTexId := hastexture;
   end;
 
 end;
