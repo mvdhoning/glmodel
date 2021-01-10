@@ -396,7 +396,7 @@ var
   line: string;
   key,parentkey,parentparentkey: string;
   value: string;
-  n,l,i,j,b,k: integer;
+  n,l,i,j,b,k,loop: integer;
   tsl: TStringList;
 begin
 
@@ -539,8 +539,11 @@ begin
                 begin
                   if self.Mesh[j].Name=tsl[2] then
                   begin
-                    self.Mesh[j].MatName[0]:=self.Material[i].Name;
-                    self.Mesh[j].MatId[0]:=i;
+                    for loop := 0 to (self.Mesh[j].NumVertexIndices div 3) - 1 do
+                    begin //set matid per indice
+                      //self.Mesh[j].MatName[loop]:=self.Material[i].Name;
+                      self.Mesh[j].MatId[loop]:=i;
+                    end;
                   end;
                 end;
               end;
@@ -559,8 +562,11 @@ begin
                     begin
                       if self.Mesh[j].Id=strtoint(fbxkeyvaluestoreM.values[tsl[2]]) then
                       begin
-                        self.Mesh[j].MatName[0]:=self.Material[i].Name;
-                        self.Mesh[j].MatId[0]:=i;
+                        for loop := 0 to (self.Mesh[j].NumVertexIndices div 3) - 1 do
+                        begin //set matid per indice
+                          //self.Mesh[j].MatName[loop]:=self.Material[i].Name;
+                          self.Mesh[j].MatId[loop]:=i;
+                        end;
                       end;
                     end;
                   end;

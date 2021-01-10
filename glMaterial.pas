@@ -210,7 +210,7 @@ begin
     //haal pad uit scene weg, moet anders nl dmv pad uit scene doorgeven aan materiaal
     if TBaseModel(self.owner).TexturePath <> '' then
       if fileexists(TBaseModel(self.owner).TexturePath + ExtractFileName(fileName)) then
-        FTexture.LoadFromFile(TBaseModel(self.owner).TexturePath + FFileName)
+        FTexture.LoadFromFile(TBaseModel(self.owner).TexturePath + ExtractFileName(FFileName))
     else
       if fileexists(fileName) then
         FTexture.LoadFromFile(FFileName);
