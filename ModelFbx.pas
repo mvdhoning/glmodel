@@ -54,10 +54,12 @@ type
     fbxReferenceInformationType: TFbxReferenceInformationType;
     fbxkeyvaluestoreT: TStringList;
     fbxkeyvaluestoreM: TStringList;
-    //fbxkeyvaluestoreI: TStringList;
+    fbxkeyvaluestoreB: TStringList;
+    fbxkeyvaluestoreD: TStringList;
     fbxindexinfo: TDictionary<integer, boolean>;
     fbxcurrentname: string;
     fbxmesh: boolean;
+    fbxbone: boolean;
     procedure AddNormalIndices(value: string);
     procedure AddNormals(value: string);
     procedure AddUVMapping(value: string);
@@ -74,7 +76,7 @@ type
 implementation
 
 uses
-  SysUtils, StrUtils, glMath, Mesh;
+  SysUtils, StrUtils, glMath, Mesh, math;
 
 procedure TFbxModel.AddVertices(value: string);
 var
@@ -95,6 +97,7 @@ begin
     tempvertex.y := strtofloat(tsl[f+1]);
     tempvertex.z := strtofloat(tsl[f+2]);
     self.Mesh[self.NumMeshes-1].Vertex[(f div 3)] := tempvertex;
+    self.Mesh[self.NumMeshes-1].BoneId[f div 3, 0] := -1;
     f:=f+3;
   until f >= tsl.count;
   tsl.Free;
@@ -106,11 +109,11 @@ var
   tempvertex: T3dPoint;
   f,i: integer;
 begin
-  value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
+  if (pos('}',value)>0) then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
   tsl.StrictDelimiter := true;
-  tsl.DelimitedText := StringReplace(value, #13#10, '', [rfReplaceAll]);
+  tsl.DelimitedText := trim(StringReplace(value, #13#10, '', [rfReplaceAll]));
   if fbxversion<7100 then self.Mesh[self.FNumMeshes-1].NumNormals := tsl.Count div 3; //set number of normals
   if FbxReferenceInformationType=Direct then self.Mesh[self.FNumMeshes-1].NumNormalIndices:= self.Mesh[self.FNumMeshes-1].NumVertexIndices; //set equal to vertex indices;
 
@@ -182,7 +185,7 @@ end;
 
 procedure TFbxModel.AddUVMappingIndices(value: string);
 var
-  tsl: TStringList;
+  tsl,tsl2: TStringList;
   f: integer;
   i: integer;
 begin
@@ -226,11 +229,13 @@ var
   tsl: TStringList;
   i, f: integer;
 begin
-  if fbxversion>=7100 then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
+  if (pos('}',value)>0) then value:=trim(copy(value, 0, pos('}', value)-1)); //trim {
+
   tsl := TStringList.Create;
   tsl.Delimiter:=',';
   tsl.StrictDelimiter := true;
-  tsl.DelimitedText := StringReplace(value, #13#10, '', [rfReplaceAll]);
+  tsl.DelimitedText := StringReplace(StringReplace(value, #13#10, '', [rfReplaceAll]), ' ', '', [rfReplaceAll]);
+
   self.Mesh[self.FNumMeshes-1].NumNormalIndices:=self.Mesh[self.FNumMeshes-1].NumVertexIndices; //set equal to vertex indices
   f:=0;
   i:=0;
@@ -318,16 +323,16 @@ begin
     end;
   until f >= tsl.count;
 
-  writeln('Number of vertex indices: '+inttostr(fbxnumberofvetexindices));
   fbxnumberofvetexindices := i;
   self.Mesh[self.FNumMeshes-1].NumVertexIndices:= fbxnumberofvetexindices;
-  writeln('Adjusted number of vertex indices: '+inttostr(self.Mesh[self.FNumMeshes-1].NumVertexIndices));
 
   f:=0;
   i:=0;
   repeat
     self.Mesh[self.NumMeshes-1].VertexIndices[i+0]:=strtoint(tsl[f+0]);
     self.Mesh[self.NumMeshes-1].VertexIndices[i+1]:=strtoint(tsl[f+1]);
+
+    //TODO: support polygons of any size and triangulate them ;-) not only triangles or quads
     if (strtoint(tsl[f+2]) < 0) then
     begin //triangle
       //to use the negative number make it positive and subtract 1 from it (xor -1)
@@ -373,7 +378,6 @@ begin
     //if fbxindicecount = 3 then i:=i+6 else i:=i+3;
     //f:=f+fbxindicecount+1;
   until f >= tsl.count;
-  writeln(i);
   tsl.Free;
 end;
 
@@ -397,45 +401,57 @@ var
   key,parentkey,parentparentkey: string;
   value: string;
   n,l,i,j,b,k,loop: integer;
-  tsl: TStringList;
+  tsl,tsl2: TStringList;
+    tempvertex: T3DPoint;
+      tempm: array [0..15] of single;
+      fbxcurrentdeformer,tempms: string;
 begin
 
   fbxkeyvaluestoreT:=TStringList.Create;
   fbxkeyvaluestoreM:=TStringList.Create;
+  fbxkeyvaluestoreB:=TStringList.Create;
+  fbxkeyvaluestoreD:=TStringList.Create;
   fbxindexinfo:=TDictionary<integer, boolean>.Create;
+
+  self.AddSkeleton; //TODO: make adding skeleton optionsl
 
   sl := TStringList.Create;
   sl.LoadFromStream(stream);
 
   l := 0;
   n := 0;
+  fbxcurrentdeformer:='';
   parentparentkey:='';
   parentkey:='';
   key:='';
   value:='';
+  fbxmesh:=false;
+  fbxbone:=false;
   while l < sl.Count - 1 do
   begin
     line := sl.Strings[l];
+    line := sl.Strings[l];
 
-    (*
-    if (pos(';', line) = 1) then
+    //previous key value multiline support
+    if (pos(':',line)>0) then
     begin
-      writeln('Found Comment: '+line);
-    end;
-    *)
-
-      line := sl.Strings[l];
-
-      //previous key value multiline support
-      if (pos(':',line)>0) then
+      if key='ReferenceInformationType' then
       begin
-        if (key='Vertices') and (fbxversion<7100) then AddVertices(value);
-        if (key='PolygonVertexIndex') and (fbxversion<7100) then AddVertexIndices(value);
-        if (key='Normals') and (fbxversion<7100) then AddNormals(value);
-        if (key='UV') and (parentkey = 'LayerElementUV') and (fbxversion<7100) then AddUVMapping(value);
-        if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion<7100) then AddUVMappingIndices(value);
+        value:=StringReplace(value, '"', '', [rfReplaceAll]);
+        case AnsiIndexStr(value, ['Direct','IndexToDirect'] ) of
+          0: FbxReferenceInformationType := Direct;
+          1: FbxReferenceInformationType := IndexToDirect;
+        end;
+      end;
 
-        if key='Material' then
+      if (key='Vertices') and (fbxversion<7100) then AddVertices(value);
+      if (key='PolygonVertexIndex') and (fbxversion<7100) then AddVertexIndices(value);
+      if (key='Normals') and (fbxversion<7100) then AddNormals(value);
+      if (key='NormalsIndex') and (fbxversion<7100) then AddNormalIndices(value);
+      if (key='UV') and (parentkey = 'LayerElementUV') and (fbxversion<7100) then AddUVMapping(value);
+      if (key='UVIndex') and (parentkey = 'LayerElementUV') and (fbxversion<7100) then AddUVMappingIndices(value);
+
+      if key='Material' then
         begin
           b:=0;
           if fbxversion>=7100 then b:=1;
@@ -447,7 +463,52 @@ begin
           tsl.free;
         end;
 
-        if (( key='P') and (parentparentkey='Material')) or  (( key='Property') and (parentparentkey='Material')) then
+      if key = 'Deformer' then
+        begin
+          tsl := TStringList.Create;
+          tsl.CommaText := value;
+          if tsl[1]='Cluster' then
+            begin
+                fbxcurrentdeformer:=tsl[0];
+            end;
+          tsl.free;
+        end;
+
+      if (key = 'Transform') and (parentparentkey = 'Deformer') then
+        begin
+          fbxkeyvaluestoreD.Values[fbxcurrentdeformer]:=value;
+        end;
+
+      if (fbxbone and ( key='P') and (parentparentkey='Model')) or (fbxbone and ( key='Property') {and (parentparentkey='Model')}) then
+        begin
+          tsl := TStringList.Create;
+          tsl.CommaText := value;
+          if fbxversion>=7100 then b:=4 else b:=3;
+
+          if tsl[0]='Lcl Rotation' then
+          begin
+            tempvertex := self.Skeleton[0].Bone[self.Skeleton[0].numBones-1].Rotate;
+            tempvertex.x := degtorad(StrToFloat(tsl.strings[b+0]));
+            tempvertex.y := degtorad(StrToFloat(tsl.strings[b+1]));
+            tempvertex.z := degtorad(StrToFloat(tsl.strings[b+2]));
+            self.Skeleton[0].Bone[self.Skeleton[0].numBones-1].Rotate := tempvertex;
+          end;
+
+          if tsl[0]='Lcl Translation' then
+          begin
+            tempvertex := self.Skeleton[0].Bone[self.Skeleton[0].numBones-1].Translate;
+            tempvertex.x := StrToFloat(tsl.strings[b+0]);
+            tempvertex.y := StrToFloat(tsl.strings[b+1]);
+            tempvertex.z := StrToFloat(tsl.strings[b+2]);
+            self.Skeleton[0].Bone[self.Skeleton[0].numBones-1].Translate := tempvertex;
+          end;
+
+          b:=0;
+
+          tsl.Free;
+        end;
+
+      if (( key='P') and (parentparentkey='Material')) or  (( key='Property') and (parentparentkey='Material')) then
         begin
           b:=3;
           if fbxversion>=7100 then b:=4;
@@ -487,7 +548,7 @@ begin
           tsl.free;
         end;
 
-        if key='Texture' then
+      if key='Texture' then
         begin
           tsl := TStringList.Create;
           tsl.CommaText := value;
@@ -496,7 +557,7 @@ begin
           tsl.free;
         end;
 
-        if ((key='FileName') and (parentparentkey='Texture')) then
+      if ((key='FileName') and (parentparentkey='Texture')) then
         begin
           //TODO: should not use parentparentkey here?
           tsl := TStringList.Create;
@@ -506,11 +567,67 @@ begin
           tsl.free;
         end;
 
-        if (key='Connect') or ((key='C') and( fbxversion>=7100)) then
+      if (key='Connect') or ((key='C') and( fbxversion>=7100)) then
         begin
           tsl := TStringList.Create;
           tsl.CommaText := value;
 
+
+          if fbxversion<7100 then
+          begin
+            i:=fbxkeyvaluestoreB.IndexOfName(tsl[1]);
+            if i>=0 then
+            begin
+              for j:=0 to self.Skeleton[0].NumBones-1 do
+              begin
+              if self.Skeleton[0].Bone[j].Name=tsl[1] then
+                begin
+                  //find deformer
+                  k:=fbxkeyvaluestoreD.IndexOfName(tsl[2]);
+                  if k>0 then
+                  begin
+                    tsl2:=TStringList.Create;
+                    tsl2.CommaText:=fbxkeyvaluestoreD.Values[tsl[2]];
+                    for loop:=0 to 15 do
+                      tempm[loop]:=strtofloat(tsl2[loop]);
+                    //self.Skeleton[0].Bone[j].Matrix.setMatrixValues(tempm);
+                    tsl2.free;
+                  end;
+
+                  //find parent bone
+                  for k:=0 to self.Skeleton[0].NumBones-1 do
+                  begin
+                    if self.Skeleton[0].Bone[k].Name=tsl[2] then
+                    begin
+                      self.Skeleton[0].Bone[j].ParentName:=self.Skeleton[0].Bone[k].Name;
+                    end;
+                  end;
+                end;
+              end;
+            end;
+          end;
+
+
+          if fbxversion>=7100 then
+          begin
+            i:=fbxkeyvaluestoreB.IndexOfName(tsl[1]);
+            if i>=0 then
+            begin
+              for j:=0 to self.Skeleton[0].NumBones-1 do
+              begin
+              if self.Skeleton[0].Bone[j].Id=strtoint(tsl[1]) then
+                begin
+                  for k:=0 to self.Skeleton[0].NumBones-1 do
+                  begin
+                    if self.Skeleton[0].Bone[k].Id=strtoint(tsl[2]) then
+                    begin
+                      self.Skeleton[0].Bone[j].ParentName:=self.Skeleton[0].Bone[k].Name;
+                    end;
+                  end;
+                end;
+              end;
+            end;
+          end;
 
           if fbxversion>=7100 then
           begin
@@ -626,7 +743,6 @@ begin
           //parentkey:= key;
           key:=trim(copy(line,0,pos(':',line)-1));
           value:=trim(copy(line,pos(':',line)+1,length(line)-1));
-          //writeln('key   ('+inttostr(n)+') : '+key);
           //do actions on key here
           if key = 'FBXVersion' then
             begin
@@ -640,6 +756,7 @@ begin
               tsl := TStringList.Create;
               tsl.CommaText := value;
               if tsl.count>1 then //TODO model as key is to generic!! also look at parent key if possible
+              begin
               if tsl[1] = 'Mesh' then
                 begin
                   self.AddMesh;
@@ -648,7 +765,25 @@ begin
                   self.Mesh[self.NumMeshes-1].Visible:=true;
                   fbxindexinfo.Clear;
                   fbxmesh:=true;
-               end;
+                  fbxbone:=false;
+                end;
+
+              if (tsl[1] = 'LimbNode') or (tsl[1] = 'Root') {or (tsl[1] = 'Null')} then
+              begin
+                //Bone found
+                fbxkeyvaluestoreB.Values[tsl[0]]:=inttostr(1);
+                self.Skeleton[0].AddBone;
+                self.Skeleton[0].Bone[self.Skeleton[0].NumBones-1].Name:=tsl[0];
+                fbxmesh:=false;
+                fbxbone:=true;
+              end else
+                fbxbone:=false;
+
+              end else
+              begin
+                //annim node found for <7100 fbx format?
+              end;
+
               tsl.free;
 
             end;
@@ -656,7 +791,23 @@ begin
           begin
             tsl := TStringList.Create;
             tsl.CommaText := value;
-            fbxkeyvaluestoreM.Values[tsl[0]]:=tsl[1];
+
+            if tsl[2] = 'Mesh' then
+            begin
+              fbxkeyvaluestoreM.Values[tsl[0]]:=tsl[1];
+            end;
+
+            if (tsl[2] = 'LimbNode') or (tsl[2] = 'Root') then
+            begin
+              //Bone found
+              fbxkeyvaluestoreB.Values[tsl[0]]:=tsl[1];
+              self.Skeleton[0].AddBone;
+              self.Skeleton[0].Bone[self.Skeleton[0].NumBones-1].Id:=strtoint(tsl[0]);
+              self.Skeleton[0].Bone[self.Skeleton[0].NumBones-1].Name:=tsl[1];
+              fbxmesh:=false;
+              fbxbone:=true;
+            end else
+              fbxbone:=false;
             tsl.free;
           end;
           if (key = 'Geometry') and (fbxversion>=7100) then
@@ -669,38 +820,24 @@ begin
               if tsl[2] = 'Mesh' then
               begin
                 self.AddMesh;
-                self.Mesh[self.NumMeshes-1].Name:=tsl[1];//'FbxMesh'+inttostr(self.NumMeshes);
-                writeln(self.Mesh[self.NumMeshes-1].Name);
+                self.Mesh[self.NumMeshes-1].Name:=tsl[1];
                 self.Mesh[self.NumMeshes-1].Id:=strtoint(tsl[0]);
                 self.Mesh[self.NumMeshes-1].Visible:=true;
                 fbxindexinfo.Clear;
                 fbxmesh:=true;
-                writeln('mesh');
+                fbxbone:=false;
               end;
               if tsl[2] = 'Shape' then
               begin
                 //TODO: read blend shapes? For now try to ignore them?
                 fbxmesh:=false;
-                writeln('shape');
               end;
               tsl.free;
             end;
-
-          if key='ReferenceInformationType' then
-          begin
-            case AnsiIndexStr(value, ['Direct','IndexToDirect'] ) of
-            0: FbxReferenceInformationType := Direct;
-            1: FbxReferenceInformationType := IndexToDirect;
-            end;
-          end;
           if (key='Vertices') and ((fbxversion>=7100) and (fbxmesh)) then
             begin
               //set number of vetrices in mesh
-              writeln(value);
-              writeln(strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3);
               self.Mesh[self.FNumMeshes-1].NumVertex:=strtoint(trim(copy(value,pos('*',value)+1,pos('{',value)-pos('*',value)-1))) div 3;
-              writeln(self.Mesh[self.NumMeshes-1].Name);
-              writeln('number of vertex: '+inttostr(self.Mesh[self.FNumMeshes-1].NumVertex));
             end;
           if (key='PolygonVertexIndex') and ((fbxversion>=7100 ) and (fbxmesh)) then
             begin
@@ -786,7 +923,12 @@ begin
   sl.Free;
   fbxkeyvaluestoreM.Free;
   fbxkeyvaluestoreT.Free;
+  fbxkeyvaluestoreB.Free;
+  fbxkeyvaluestoreD.Free;
   fbxindexinfo.Free;
+
+  //Skeleton Sanity Check
+  if self.Skeleton[0].NumBones = 0 then self.FNumSkeletons:=0
 end;
 
 procedure TFbxModel.SaveToFile(AFileName: string);

@@ -39,6 +39,7 @@ type
 
   TBaseBone = class(TComponent)
   protected
+    Fid: integer;
     FBvhChanneltype: Integer;
     FMatrix: ClsMatrix;
     FInverseMatrix: ClsMatrix;
@@ -69,11 +70,13 @@ type
     //procedure AdvanceAnimation(time: single);
     procedure Init;
     procedure Render; virtual; abstract;
+    property Id: integer read fId write fId;
     property Name: string read FName write FName;
     property ParentName: string read FParentName write FParentName;
     property Parent: TBaseBone read FParent write FParent;
     property Rotate: T3DPoint read FRotate write FRotate;
     property Translate: T3DPoint read FTranslate write FTranslate;
+
     property CurrentFrame: single read FCurrentFrame write FCurrentFrame;
     property Matrix: ClsMatrix read FMatrix write FMatrix;
     property InverseMatrix: ClsMatrix read FInverseMatrix write FInverseMatrix;
@@ -84,10 +87,6 @@ type
     property RotateFrame[Index: integer]: TKeyFrame read GetRotateFrame write SetRotateFrame;
 
   end;
-
-//  TBone = class(TBaseBone)
-//  end;
-
 
 implementation
 
@@ -133,16 +132,12 @@ begin
     FMatrix:=nil;
   end;
 
-   if FInverseMatrix <> nil then
+  if FInverseMatrix <> nil then
   begin
     FInverseMatrix.Free();
     FInverseMatrix:=nil;
   end;
-//  if FParent <> nil then
-//  begin
-//    FParent.Free();
-//    FParent:=nil;
-//  end; //dont free parents ...
+
   SetLength(FTranslateFrame, 0);
   SetLength(FRotateFrame, 0);
   inherited Destroy;
@@ -297,16 +292,14 @@ begin
   if FParentName > '' then
     FParent := TBaseSkeleton(owner).GetBoneByName(FParentName);
 
-
   //calculate the matrix for the bone
   m_rel := clsMatrix.Create;
   m_rel.loadIdentity;
-  // Create a transformation matrix from the position and rotation
+
   tempv[0] := FRotate.x;
   tempv[1] := FRotate.y;
   tempv[2] := FRotate.z;
   m_rel.setRotationRadians(tempv);
-
 
   tempv[0] := FTranslate.x;
   tempv[1] := FTranslate.y;
