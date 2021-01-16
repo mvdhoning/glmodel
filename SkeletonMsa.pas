@@ -150,7 +150,7 @@ begin
         l := l + 1;
         line := sl.Strings[l];
         Count := StrToInt(line);
-        FBone[tcount].NumTranslateFrames := Count;
+        FBone[tcount].Animation[0].NumTranslateFrames := Count;
 
         if Count>0 then
         for floop := 0 to Count - 1 do
@@ -160,14 +160,14 @@ begin
           tsl := TStringList.Create;
           tsl.CommaText := line;
 
-          tempkeyframe := FBone[tcount].TranslateFrame[floop];
+          tempkeyframe := FBone[tcount].Animation[0].TranslateFrame[floop];
 
           tempkeyframe.time := Round(StrToFloat(tsl.strings[0]));
           tempkeyframe.Value.x := StrToFloat(tsl.strings[1]);
           tempkeyframe.Value.y := StrToFloat(tsl.strings[2]);
           tempkeyframe.Value.z := StrToFloat(tsl.strings[3]);
 
-          FBone[tcount].TranslateFrame[floop] := tempkeyframe;
+          FBone[tcount].Animation[0].TranslateFrame[floop] := tempkeyframe;
 
           tsl.Free;
         end;
@@ -176,7 +176,7 @@ begin
         l := l + 1;
         line := sl.Strings[l];
         Count := StrToInt(line);
-        FBone[tcount].NumRotateFrames := Count;
+        FBone[tcount].Animation[0].NumRotateFrames := Count;
 
         if Count>0 then
         for floop := 0 to Count - 1 do
@@ -186,14 +186,14 @@ begin
           tsl := TStringList.Create;
           tsl.CommaText := line;
 
-          tempkeyframe := FBone[tcount].RotateFrame[floop];
+          tempkeyframe := FBone[tcount].Animation[0].RotateFrame[floop];
 
           tempkeyframe.time := Round(StrToFloat(tsl.strings[0]));
           tempkeyframe.Value.x := StrToFloat(tsl.strings[1]);
           tempkeyframe.Value.y := StrToFloat(tsl.strings[2]);
           tempkeyframe.Value.z := StrToFloat(tsl.strings[3]);
 
-          FBone[tcount].RotateFrame[floop] := tempkeyframe;
+          FBone[tcount].Animation[0].RotateFrame[floop] := tempkeyframe;
 
           tsl.Free;
         end;
@@ -238,12 +238,15 @@ begin
     *)
 
     //save with animations
-    ms.add(inttostr(fbone[bcount].NumTranslateFrames));
-    for i:=0 to fbone[bcount].NumTranslateFrames -1 do
-      ms.add(formatfloat('0.000000',fBone[bcount].TranslateFrame[i].time)+' '+formatfloat('0.000000',fBone[bcount].TranslateFrame[i].Value.x)+' '+formatfloat('0.000000',fBone[bcount].TranslateFrame[i].Value.y)+' '+formatfloat('0.000000',fBone[bcount].TranslateFrame[i].Value.z));
-    ms.add(inttostr(fbone[bcount].NumRotateFrames));
-    for i:=0 to fbone[bcount].NumTranslateFrames -1 do
-      ms.add(formatfloat('0.000000',fBone[bcount].RotateFrame[i].time)+' '+formatfloat('0.000000',fBone[bcount].RotateFrame[i].Value.x)+' '+formatfloat('0.000000',fBone[bcount].RotateFrame[i].Value.y)+' '+formatfloat('0.000000',fBone[bcount].RotateFrame[i].Value.z));
+
+    ms.add(inttostr(fbone[bcount].Animation[0].NumTranslateFrames));
+    for i:=0 to fbone[bcount].Animation[0].NumTranslateFrames -1 do
+      ms.add(formatfloat('0.000000',fBone[bcount].Animation[0].TranslateFrame[i].time)+' '+formatfloat('0.000000',fBone[bcount].Animation[0].TranslateFrame[i].Value.x)+' '+formatfloat('0.000000',fBone[bcount].Animation[0].TranslateFrame[i].Value.y)+' '+formatfloat('0.000000',fBone[bcount].Animation[0].TranslateFrame[i].Value.z));
+
+    ms.add(inttostr(fbone[bcount].Animation[0].NumRotateFrames));
+    for i:=0 to fbone[bcount].Animation[0].NumTranslateFrames -1 do
+      ms.add(formatfloat('0.000000',fBone[bcount].Animation[0].RotateFrame[i].time)+' '+formatfloat('0.000000',fBone[bcount].Animation[0].RotateFrame[i].Value.x)+' '+formatfloat('0.000000',fBone[bcount].Animation[0].RotateFrame[i].Value.y)+' '+formatfloat('0.000000',fBone[bcount].Animation[0].RotateFrame[i].Value.z));
+
   end;
 
 

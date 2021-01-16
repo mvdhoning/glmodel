@@ -321,8 +321,8 @@ begin
         fskeleton[0].Bone[c].Rotate := ms3dJoint.Rotation;
         fskeleton[0].Bone[c].Translate := ms3dJoint.Translation;
         fskeleton[0].Bone[c].ParentName:= ms3dJoint.ParentName;
-        fskeleton[0].Bone[c].NumRotateFrames := ms3dJoint.nRotKeyframes;
-        fskeleton[0].Bone[c].NumTranslateFrames := ms3dJoint.nTransKeyframes;
+        fskeleton[0].Bone[c].Animation[0].NumRotateFrames := ms3dJoint.nRotKeyframes;
+        fskeleton[0].Bone[c].Animation[0].NumTranslateFrames := ms3dJoint.nTransKeyframes;
 
         //skip animation info
         //stream.Position := stream.Position + SizeOf ( ms3dKeyframe ) * ( ms3dJoint.nRotKeyframes + ms3dJoint.nTransKeyframes );
@@ -331,23 +331,23 @@ begin
         for c2 := 0 to ms3dJoint.nRotKeyframes - 1 do
         begin
           stream.Read(ms3dKeyframe,sizeof(ms3dKeyframe));
-          tempkeyframe := fskeleton[0].Bone[c].RotateFrame[c2];
+          tempkeyframe := fskeleton[0].Bone[c].Animation[0].RotateFrame[c2];
           tempkeyframe.time := ms3dKeyframe.Time*fskeleton[0].AnimFps;
           tempkeyframe.Value.x := ms3dKeyframe.Parameter.x;
           tempkeyframe.Value.y := ms3dKeyframe.Parameter.y;
           tempkeyframe.Value.z := ms3dKeyframe.Parameter.z;
-          fskeleton[0].Bone[c].RotateFrame[c2] := tempkeyframe;
+          fskeleton[0].Bone[c].Animation[0].RotateFrame[c2] := tempkeyframe;
         end;
 
         for c2 := 0 to ms3dJoint.nTransKeyframes - 1 do
         begin
           stream.Read(ms3dKeyframe,sizeof(ms3dKeyframe));
-          tempkeyframe := fskeleton[0].Bone[c].TranslateFrame[c2];
+          tempkeyframe := fskeleton[0].Bone[c].Animation[0].TranslateFrame[c2];
           tempkeyframe.time := ms3dKeyframe.Time*fskeleton[0].AnimFps;
           tempkeyframe.Value.x := ms3dKeyframe.Parameter.x;
           tempkeyframe.Value.y := ms3dKeyframe.Parameter.y;
           tempkeyframe.Value.z := ms3dKeyframe.Parameter.z;
-          fskeleton[0].Bone[c].TranslateFrame[c2] := tempkeyframe;
+          fskeleton[0].Bone[c].Animation[0].TranslateFrame[c2] := tempkeyframe;
         end;
 
       end;

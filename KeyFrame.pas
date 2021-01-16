@@ -36,7 +36,7 @@ type
   TKeyFrame = packed record
     time: single;
     Value: T3dPoint;
-    bvh_value: T3dPoint;
+    //bvh_value: T3dPoint;
   end;
 
 implementation

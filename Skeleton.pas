@@ -171,7 +171,7 @@ begin
   if FNumBones > 0 then
     for m := 0 to FNumBones - 1 do
     begin
-      FBone[m].CurrentFrame := FCurrentFrame;
+      FBone[m].Animation[0].CurrentFrame := FCurrentFrame;
       FBone[m].AdvanceAnimation;
     end;
 end;
