@@ -400,7 +400,7 @@ var
   line: string;
   key,parentkey,parentparentkey: string;
   value: string;
-  n,l,i,j,b,k,loop: integer;
+  n,l,i,j,b,k,loop,loop2: integer;
   tsl,tsl2: TStringList;
     tempvertex: T3DPoint;
       tempm: array [0..15] of single;
@@ -465,18 +465,54 @@ begin
 
       if key = 'Deformer' then
         begin
+          b:=0;
+          if fbxversion>=7100 then b:=1;
           tsl := TStringList.Create;
           tsl.CommaText := value;
-          if tsl[1]='Cluster' then
+
+          if tsl[b+1]='Skin' then
             begin
-                fbxcurrentdeformer:=tsl[0];
+              Writeln('Found Skin '+ tsl[0]);
+              fbxkeyvaluestoreD.Values['skin'+tsl[0]]:='-1';
             end;
+
+          if tsl[b+1]='Cluster' then
+            begin
+              Writeln('Found Deformer Cluster '+ tsl[0]);
+              fbxkeyvaluestoreD.Values['cluster'+tsl[0]]:='-1';
+              fbxcurrentdeformer:=tsl[0];
+            end else
+              fbxcurrentdeformer:='';
           tsl.free;
         end;
 
-      if (key = 'Transform') and (parentparentkey = 'Deformer') then
+      //if (key = 'Transform') and (parentparentkey = 'Deformer') then
+      //  begin
+      //    fbxkeyvaluestoreD.Values[fbxcurrentdeformer]:=value;
+      //  end;
+
+      if (key = 'Indexes') and (fbxcurrentdeformer<>'') then
         begin
-          fbxkeyvaluestoreD.Values[fbxcurrentdeformer]:=value;
+          writeln('Bone indexes for '+fbxcurrentdeformer);
+          fbxkeyvaluestoreD.Values['indexes'+fbxcurrentdeformer]:=value;
+        end;
+
+      if (key = 'a') and (parentkey='Indexes') and (fbxcurrentdeformer<>'') then
+        begin
+          writeln('Bone indexes for '+fbxcurrentdeformer);
+          fbxkeyvaluestoreD.Values['indexes'+fbxcurrentdeformer]:=value;
+        end;
+
+      if (key = 'Weights') and (fbxcurrentdeformer<>'') then
+        begin
+          writeln('Bone weights for '+fbxcurrentdeformer);
+          fbxkeyvaluestoreD.Values['weights'+fbxcurrentdeformer]:=value;
+        end;
+
+      if (key = 'a') and  (parentkey = 'Weights') and (fbxcurrentdeformer<>'') then
+        begin
+          writeln('Bone weights for '+fbxcurrentdeformer);
+          fbxkeyvaluestoreD.Values['weights'+fbxcurrentdeformer]:=value;
         end;
 
       if (fbxbone and ( key='P') and (parentparentkey='Model')) or (fbxbone and ( key='Property') {and (parentparentkey='Model')}) then
@@ -574,6 +610,34 @@ begin
 
 
           if fbxversion<7100 then
+            begin
+            end
+          else
+            begin
+
+              //map subdeformer to deformer
+              k:=fbxkeyvaluestoreD.IndexOfName('cluster'+tsl[1]);
+              i:=fbxkeyvaluestoreD.IndexOfName('skin'+tsl[2]);
+              if (i>0) and (k>0) then
+                begin
+                  Writeln('Map subdeformer '+tsl[1]+' to deformer '+tsl[2]);
+                  fbxkeyvaluestoreD.Values['cluster'+tsl[1]]:=fbxkeyvaluestoreD.Values['skin'+tsl[2]]; //write mesh id
+                end;
+
+              //map deformer to mesh
+              k:=fbxkeyvaluestoreD.IndexOfName('skin'+tsl[1]);
+              for i:=0 to self.NumMeshes-1 do
+              begin
+                if self.Mesh[i].Id=strtoint(tsl[2]) then
+                  begin
+                    writeln('Found mesh: '+self.Mesh[i].Name+' for deformer '+tsl[1]);
+                    fbxkeyvaluestoreD.Values['skin'+tsl[1]]:=inttostr(self.Mesh[i].Id);
+                  end;
+              end;
+            end;
+
+
+          if fbxversion<7100 then
           begin
             i:=fbxkeyvaluestoreB.IndexOfName(tsl[1]);
             if i>=0 then
@@ -617,13 +681,43 @@ begin
               begin
               if self.Skeleton[0].Bone[j].Id=strtoint(tsl[1]) then
                 begin
+                  writeln('Bone name: '+self.Skeleton[0].Bone[j].Name);
+                  //find deformer indexes
+                  k:=fbxkeyvaluestoreD.IndexOfName('indexes'+tsl[2]);
+                  if k>0 then
+                  begin
+                    writeln('Indexes Deformer '+tsl[2]);
+                    tsl2:=TStringList.Create;
+                    trim(copy(fbxkeyvaluestoreD.Values['indexes'+tsl[2]],0,pos('}',fbxkeyvaluestoreD.Values['indexes'+tsl[2]])-1));
+                    tsl2.CommaText:=trim(copy(fbxkeyvaluestoreD.Values['indexes'+tsl[2]],0,pos('}',fbxkeyvaluestoreD.Values['indexes'+tsl[2]])-1));
+                    writeln('MeshId: '+fbxkeyvaluestoreD.Values['cluster'+tsl[2]]);
+                    if strtoint(fbxkeyvaluestoreD.Values['cluster'+tsl[2]])>0 then
+                    begin
+                      for loop:=0 to self.NumMeshes-1 do
+                      begin
+                        if self.Mesh[loop].id=strtoint(fbxkeyvaluestoreD.Values['cluster'+tsl[2]]) then
+                        begin
+                          writeln('Apply to mesh: '+self.Mesh[loop].name);
+                          for loop2:=0 to tsl2.count-1 do
+                          begin
+                            self.Mesh[loop].BoneId[strtoint(tsl2[loop2]),0]:=j;
+                          end;
+                        end
+                      end;
+                    end;
+                    tsl2.free;
+                  end;
+
+                  //Find parent bone
                   for k:=0 to self.Skeleton[0].NumBones-1 do
                   begin
                     if self.Skeleton[0].Bone[k].Id=strtoint(tsl[2]) then
                     begin
+                      writeln('Found parent bone');
                       self.Skeleton[0].Bone[j].ParentName:=self.Skeleton[0].Bone[k].Name;
                     end;
                   end;
+
                 end;
               end;
             end;
