@@ -16,7 +16,7 @@ program bwfromcode;
 
 uses
   {$IFDEF WINDOWS}windows,{$ENDIF}
-  classes, sysutils, dglOpenGL, SDL2, Model, gl3render, gl3mesh, glShader, glMath, keyframe;
+  classes, sysutils, dglOpenGL, SDL2, Model, gl3render, gl3mesh, glShader, glMath, math, keyframe;
 
 type
   clsCamera = record
@@ -72,7 +72,8 @@ var
   gTexCoordLocation: GLint;
   gNormalLocation: GLint;
   gModelViewLocation: GLint;
-
+  gUseBonesLocation: GLint;
+  gUseTexturesLocation: GLint;
   gBoneIndexLocation: GLint;
   gBoneWeightLocation: GLint;
   gProjectionLocation: GLint;
@@ -98,6 +99,9 @@ begin
   gModelViewLocation := glslsimpleprog.GetUniformLocation('modelViewMatrix');
   gTextureLocation := glslsimpleprog.GetUniformLocation('firstTexture');
   gBoneMatLocation := glslsimpleprog.GetUniformLocation('bonemat');
+
+  gUseBonesLocation := glslsimpleprog.GetUniformLocation('useBones');
+  gUseTexturesLocation := glslsimpleprog.GetUniformLocation('useTexture');
 
   gVertexLocation := glslsimpleprog.GetAttribLocation('vertex');
   gNormalLocation := glslsimpleprog.GetAttribLocation('normal');
@@ -361,7 +365,7 @@ begin
           tempkeyframe:=bone[i].Animation[0].TranslateFrame[1];
           tempkeyframe.time:=180;
           tempkeyframe.Value.x:=0;
-          tempkeyframe.Value.y:=0;
+          tempkeyframe.Value.y:=4;
           tempkeyframe.Value.z:=0;
           if i = 1 then tempkeyframe.Value.y:=4;
           //if i = 2 then tempkeyframe.Value.y:=6;
@@ -381,7 +385,6 @@ begin
 
   end;
 
-
   //pass attrib info from shade on to vbo
   scene1.VBO.VertexAttribId:=gVertexLocation;
   scene1.VBO.ColorAttribId:=gColorLocation;
@@ -391,12 +394,14 @@ begin
   scene1.VBO.BoneWeightAttribId:=gBoneWeightLocation;
 
   scene1.BoneMatLocation:=gBoneMatLocation;
+  scene1.UseBonesLocation:=gUseBonesLocation;
 
   scene1.Init; //Init vbo with mesh info
 
   //Load and set texture/material info
   scene1.UpdateTextures;
   glUniform1i(gTextureLocation, 0); //use the first texture
+  glUniform1f(gUseTexturesLocation, 0); //use texture coords in shader
 
   // Set the polygon mode to fill
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -480,13 +485,13 @@ begin
 
   scene1.Render;
 
-
+  (*
   if(show_bones) AND (scene1.Models[0].NumSkeletons>=1) then
   begin
     glClear( GL_DEPTH_BUFFER_BIT);  // clear z buffer
     scene1.Models[0].RenderSkeleton;  // render bones
   end;
-
+  *)
 
   // Done
   glFlush(); //for opengl to do its thing
