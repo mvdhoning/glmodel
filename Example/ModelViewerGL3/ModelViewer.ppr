@@ -42,10 +42,10 @@ var
   glslsimplefrag: TGLSLShader;        // a Fragment Shader
   glslsimpleprog: TGLSLProgram;       // a Shader Program
 
-  projection: glMatrix;
-  model: glMatrix;
-  view: glMatrix;
-  modelview: glMatrix;
+  projection: TglMatrix;
+  model: TglMatrix;
+  view: TglMatrix;
+  modelview: TglMatrix;
   gModelViewLocation: GLint;
 
 //initializes SDL
@@ -118,7 +118,7 @@ begin
   camera.xangle := 0;//-90.0; //10
   camera.yangle := 0;//-180; //90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 110.0;   //500
+  camera.dist := 150.0;   //500
 
   show_bones := true;
 
@@ -141,6 +141,7 @@ begin
 
   //scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2006\TempAvatar.fbx');
   //scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2006\testchar1.fbx');
+
   scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2013\testgr2.fbx');
 
 
@@ -161,7 +162,7 @@ begin
   begin
     writeln(inttostr(i)+' '+scene1.Models[0].Mesh[i].Name);
   end;
-  scene1.Models[0].Mesh[7].Visible:=false;
+  //scene1.Models[0].Mesh[7].Visible:=false;
 
 
   //pass attrib info from shade on to vbo
@@ -251,9 +252,11 @@ begin
   //elapsed time = currentime - lasttime
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
+
+
   if scene1.Models[0].NumSkeletons>=1 then
     begin
-      speed:=((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps;
+      speed:=((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].Animation[0].AnimFps;
       scene1.Models[0].Skeleton[0].AdvanceAnimation(speed);
     end;
 

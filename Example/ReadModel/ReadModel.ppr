@@ -85,6 +85,14 @@ begin
   Model.SaveToFile('export7.txt');
   Model.Free;
 
+  Model := TBaseModel.Create(nil);
+  writeln('Read MS3D model');
+  //Model.LoadFromFile('D:\Reallusion\export\FBX 2006\testgr2014.fbx');
+  Model.LoadFromFile('D:\Reallusion\export\FBX 2013\testgr2.fbx');
+  Model.Skeleton[0].InitBones;
+  writeln('Write MSA model');
+  Model.SaveToFile('export8.txt');
+  Model.Free;
 
 end.
 

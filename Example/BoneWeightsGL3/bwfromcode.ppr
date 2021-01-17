@@ -76,10 +76,10 @@ var
   gBoneIndexLocation: GLint;
   gBoneWeightLocation: GLint;
   gProjectionLocation: GLint;
-  projection: glMatrix;
-  model: glMatrix;
-  view: glMatrix;
-  modelview: glMatrix;
+  projection: TglMatrix;
+  model: TglMatrix;
+  view: TglMatrix;
+  modelview: TglMatrix;
   tempkeyframe: TKeyFrame;
 
 begin
@@ -315,9 +315,12 @@ begin
     AddSkeleton();
     with skeleton[0] do
     begin
-      AnimFps:=24;
-      NumFrames:=360;
-      CurrentFrame:=1;
+      with Animation[0] do
+      begin
+        AnimFps:=24;
+        NumFrames:=360;
+        CurrentFrame:=1;
+      end;
       AddBone();
       bone[0].name:='0';
       bone[0].parentname:='';
@@ -338,24 +341,24 @@ begin
 
       for i:=0 to 2 do //for all bones add keyframes
         begin
-          bone[i].NumTranslateFrames:=3;
-          bone[i].NumRotateFrames:=1;
+          bone[i].Animation[0].NumTranslateFrames:=3;
+          bone[i].Animation[0].NumRotateFrames:=1;
 
-          tempkeyframe:=bone[i].RotateFrame[0];
+          tempkeyframe:=bone[i].Animation[0].RotateFrame[0];
           tempkeyframe.time:=1;
           tempkeyframe.Value.x:=0;
           tempkeyframe.Value.y:=0;
           tempkeyframe.Value.z:=0;
-          bone[i].RotateFrame[0]:=tempkeyframe;
+          bone[i].Animation[0].RotateFrame[0]:=tempkeyframe;
 
-          tempkeyframe:=bone[i].TranslateFrame[0];
+          tempkeyframe:=bone[i].Animation[0].TranslateFrame[0];
           tempkeyframe.time:=1;
           tempkeyframe.Value.x:=0;
           tempkeyframe.Value.y:=0;
           tempkeyframe.Value.z:=0;
-          bone[i].TransLateFrame[0]:=tempkeyframe;
+          bone[i].Animation[0].TransLateFrame[0]:=tempkeyframe;
 
-          tempkeyframe:=bone[i].TranslateFrame[1];
+          tempkeyframe:=bone[i].Animation[0].TranslateFrame[1];
           tempkeyframe.time:=180;
           tempkeyframe.Value.x:=0;
           tempkeyframe.Value.y:=0;
@@ -363,14 +366,14 @@ begin
           if i = 1 then tempkeyframe.Value.y:=4;
           //if i = 2 then tempkeyframe.Value.y:=6;
           //if i = 2 then tempkeyframe.Value.x:=-2;
-          bone[i].TransLateFrame[1]:=tempkeyframe;
+          bone[i].Animation[0].TransLateFrame[1]:=tempkeyframe;
 
-          tempkeyframe:=bone[i].TranslateFrame[2];
+          tempkeyframe:=bone[i].Animation[0].TranslateFrame[2];
           tempkeyframe.time:=359;
           tempkeyframe.Value.x:=0;
           tempkeyframe.Value.y:=0;
           tempkeyframe.Value.z:=0;
-          bone[i].TransLateFrame[2]:=tempkeyframe;
+          bone[i].Animation[0].TransLateFrame[2]:=tempkeyframe;
 
         end;
 
@@ -461,7 +464,7 @@ begin
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
   if scene1.Models[0].NumSkeletons>=1 then
-    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps);
+    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].Animation[0].AnimFps);
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;

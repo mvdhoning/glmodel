@@ -701,6 +701,7 @@ begin
                           for loop2:=0 to tsl2.count-1 do
                           begin
                             self.Mesh[loop].BoneId[strtoint(tsl2[loop2]),0]:=j;
+                            self.Mesh[loop].BoneWeight[strtoint(tsl2[loop2]),0]:=1.0;
                           end;
                         end
                       end;

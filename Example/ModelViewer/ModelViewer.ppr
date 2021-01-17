@@ -16,7 +16,8 @@ program ModelViewer;
 
 uses
   {$IFDEF WINDOWS}windows,{$ENDIF}
-  classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, ModelMS3D, glrender;
+  classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, ModelMS3D, ModelFBX,
+  glrender, Animation, keyframe,math;
 
 type
   clsCamera = record
@@ -65,11 +66,12 @@ end;
 procedure Init();
 var
   i: integer;
+  tempkeyframe: TKeyFrame;
 begin
-  camera.xangle := 45.0; //10
-  camera.yangle := 90+45.0; //90
+  camera.xangle := 0;//45;//45.0; //10
+  camera.yangle := 0;//-90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 500;//15.0;   //500
+  camera.dist := 15.0; //250  //500
 
   angle_speed := 0.5;
   dist_speed := 0.5;
@@ -90,10 +92,27 @@ begin
 
   scene1 := TglRender.Create(nil);
   scene1.AddModel();
+
+  //scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2006\testgr2014.fbx'); //TODO: this model has less normals then normal indices suggest
+
+//  scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2013\testgr2.fbx');
+
+  //scene1.Models[0].LoadFromFile('C:\projecten\assets\cat\cat2006.fbx'); //TODO: this model has has polygon with more then 4 sides
+
+  //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2013.fbx');
+  //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2006.fbx');
+
+  //scene1.Models[0].LoadFromFile('C:\Projecten\assets\Scorpion\scorpid2006.fbx');
+  //scene1.Models[0].LoadFromFile('C:\Projecten\assets\Scorpion\scorpid2013.fbx');
+  //scene1.Models[0].LoadFromFile('C:\Projecten\assets\Scorpion\scorpid.ms3d');
+
   //scene1.Models[0].LoadFromFile('..\..\Models\msa-test1.txt'); //24fps?
-  scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
-  //scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+  //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
+  scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
   //scene1.Models[0].InitSkin; //bind mesh to bones
+
+//  scene1.Models[0].Material[0].HasTexturemap:=false;
+
   scene1.Init;
   scene1.UpdateTextures;
 
@@ -114,6 +133,55 @@ begin
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
   glFrustum (-1.0, 1.0, -1.0, 1.0, 1.0, 1500.0);
+
+  //scene1.Models[0].SaveToFile('test.txt');
+
+  writeln('Meshes');
+  for i:=0 to scene1.Models[0].NumMeshes-1 do
+    writeln(inttostr(i)+' '+scene1.Models[0].Mesh[i].name);
+  writeln();
+
+  writeln('Materials');
+  for i:=0 to scene1.Models[0].NumMaterials-1 do
+    writeln(inttostr(i)+' '+scene1.Models[0].Material[i].name);
+  writeln();
+
+  writeln('Skeleton');
+  for i:=0 to scene1.Models[0].Skeleton[0].NumBones-1 do
+    writeln(inttostr(i)+' '+scene1.Models[0].Skeleton[0].Bone[i].Name);
+  writeln();
+
+  (*
+  scene1.Models[0].Skeleton[0].AnimFps:=24;
+  scene1.Models[0].Skeleton[0].NumFrames:=10;
+  scene1.Models[0].Skeleton[0].CurrentFrame:=1;
+  *)
+
+  (*
+  scene1.Models[0].Skeleton[0].Bone[41].Animation[0].NumTranslateFrames:=1;
+  tempkeyframe:=scene1.Models[0].Skeleton[0].Bone[41].Animation[0].TranslateFrame[0];
+  tempkeyframe.time:=1;
+  tempkeyframe.Value.x:=0.000793457205872983;//scene1.Models[0].Skeleton[0].Bone[41].Translate.x;
+  tempkeyframe.Value.y:=-31.030517578125;//scene1.Models[0].Skeleton[0].Bone[41].Translate.y;
+  tempkeyframe.Value.z:=0.00248551438562572;//scene1.Models[0].Skeleton[0].Bone[41].Translate.z;
+  scene1.Models[0].Skeleton[0].Bone[41].Animation[0].TransLateFrame[0]:=tempkeyframe;
+  *)
+  (*
+  scene1.Models[0].Skeleton[0].Bone[39].Animation[0].NumRotateFrames:=2;
+  tempkeyframe:=scene1.Models[0].Skeleton[0].Bone[39].Animation[0].RotateFrame[0];
+  tempkeyframe.time:=1;
+  tempkeyframe.Value.x:=0.0;
+  tempkeyframe.Value.y:=0.0;
+  tempkeyframe.Value.z:=0.0;
+  scene1.Models[0].Skeleton[0].Bone[39].Animation[0].RotateFrame[0]:=tempkeyframe;
+
+  tempkeyframe:=scene1.Models[0].Skeleton[0].Bone[39].Animation[0].RotateFrame[1];
+  tempkeyframe.time:=10;
+  tempkeyframe.Value.x:=degtorad(15.0828790664673);
+  tempkeyframe.Value.y:=degtorad(-0.594445645809174);
+  tempkeyframe.Value.z:=degtorad(5.96773719787598);
+  scene1.Models[0].Skeleton[0].Bone[39].Animation[0].RotateFrame[1]:=tempkeyframe;
+  *)
 
   QueryPerformanceCounter(fLastTick); //lasttime
   QueryPerformanceFrequency(PerformanceFrequency) //frequency
@@ -155,7 +223,7 @@ begin
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
   if scene1.Models[0].NumSkeletons>=1 then
-    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].AnimFps);
+    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].Animation[0].AnimFps);
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;
@@ -183,21 +251,22 @@ begin
   glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
   // Set camera position
-  glTranslatef ( 0.0, 0.0, -camera.dist);
+  glTranslatef ( 0.0, {-95.}0, -camera.dist);
   glRotatef (camera.xangle, 1.0, 0.0, 0.0);
   glRotatef (camera.yangle, 0.0, 1.0, 0.0);
   glRotatef (camera.zangle, 0.0, 0.0, 1.0);
 
+  glEnable(GL_TEXTURE_2D);
   glColor3f(255,255,255);
   scene1.Render;
 
   glDisable(GL_LIGHTING);
+  glDisable(GL_TEXTURE_2D);
   if(show_bones) AND (scene1.Models[0].NumSkeletons>=1) then
   begin
     glClear( GL_DEPTH_BUFFER_BIT);  // clear z buffer
     scene1.Models[0].RenderSkeleton;  // render bones
   end;
-
 
   // Done
   glFlush(); //for opengl to do its thing

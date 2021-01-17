@@ -142,7 +142,7 @@ var
 begin
   if fvisible then
   begin
-    imatid := FMatId[0];
+    imatid := MatId[0];
     if TBaseModel(owner).NumMaterials >0 then
       if (TBaseModel(owner).material[imatid]<>nil) then
         if (TBaseModel(owner).material[imatid] is TBaseMaterial) then

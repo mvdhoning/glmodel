@@ -3,7 +3,7 @@
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
 
-uniform mat4 bonemat[50];
+uniform mat4 bonemat[100];
 
 uniform float useBones;
 

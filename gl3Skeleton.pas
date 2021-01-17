@@ -49,12 +49,13 @@ end;
 procedure Tgl3Skeleton.AdvanceAnimation(time: single);
 var
   i: integer;
-  bonematrix: glMatrix;
-  ibonematrix: glMatrix;
-  tempm: glMatrix;
-  bonemat: packed array[0..49] of glMatrix;
+  bonematrix: TglMatrix;
+  ibonematrix: TglMatrix;
+  tempm: TglMatrix;
+  bonemat: packed array[0..99] of TglMatrix;
 begin
   inherited;
+
   for i:=0 to fNumBones-1 do
   begin
     fBone[i].Matrix.getMatrix(bonematrix);
@@ -62,7 +63,7 @@ begin
     multMatrix(tempm,bonematrix,ibonematrix);
     bonemat[i]:=tempm;
   end;
-  glUniformMatrix4fv(Tgl3Render(TBaseModel(Owner).Owner).BoneMatLocation, 50, false, @bonemat[0]);
+  glUniformMatrix4fv(Tgl3Render(TBaseModel(Owner).Owner).BoneMatLocation, 100, false, @bonemat[0]);
 
 end;
 
