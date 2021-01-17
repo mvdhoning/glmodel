@@ -346,6 +346,21 @@ begin
       if bcount >= 1 then floadskeleton:=true;
     end;
 
+    //set fps to 24 (milkhspe default?)
+    fAnimation[0].AnimFps := 24;
+
+    //read in frames data...
+    if (pos('Frames: ', line) = 1) then
+    begin
+      fAnimation[0].NumFrames := StrToInt(StringReplace(Line, 'Frames: ', '', [rfReplaceAll]));
+    end;
+
+    //read in frames data...
+    if (pos('Frame: ', line) = 1) then
+    begin
+      fAnimation[0].CurrentFrame := StrToInt(StringReplace(Line, 'Frame: ', '', [rfReplaceAll]));
+    end;
+
     l := l + 1;
   end;
   sl.Free;
@@ -378,7 +393,6 @@ var
   subsaveloop: Integer;
   tempstring: string;
   msask: TMsaSkeleton;
-  mapstr: string;
   tempmesh: TBaseMesh;
 begin
   //this saves meshes and materials to a milkshape ascii file
@@ -388,7 +402,7 @@ begin
   ms.Add('');
   if (self.NumSkeletons>=1) then
   begin
-    ms.Add('Frames: '+inttostr(fskeleton[0].Animation[0].NumFrames));
+    ms.Add('Frames: '+inttostr(fAnimation[0].NumFrames));
     ms.Add('Frame: 1');
   end
   else

@@ -30,7 +30,7 @@ unit Model;
 interface
 
 uses classes, Material, Skeleton, Mesh
-, glmatrix, glmath;
+, glmatrix, glmath, animation;
 
 //TODO: new math and matrix unit needed that are independend of opengl
 //TODO: inject mesh material and skeleton classes (and vbo like class?)
@@ -50,6 +50,9 @@ type
     FMaterialClass: TBaseMaterialClass;
     FSkeletonClass: TBaseSkeletonClass;
 
+    fAnimation: array of TBaseAnimationController;
+    fCurrentAnimation: Integer;
+
     FCurrentSkeleton: Integer;
     FDisplayList: Integer;
     FLoadSkeleton: Boolean;
@@ -65,17 +68,17 @@ type
     FNumSkeletons: Integer;
     FRenderOrder: array of integer;
     FSkeleton: array of TBaseSkeleton;
-    FSubVersion: Integer;
     FTexturePath: string;
     FPath: string;
     FType: Integer;
-    FVersion: Integer;
     function GetMaterial(Index: integer): TBaseMaterial;
     function GetMaterialIdByName(s: string): Integer;
     function GetMesh(Index: integer): TBaseMesh;
     function GetRenderOrder(Index: integer): Integer;
     function GetSkeleton(Index: integer): TBaseSkeleton;
     procedure CalculateScale;
+    function GetAnimation(Index: integer): TBaseAnimationController;
+    procedure SetAnimation(Index: integer; Value: TBaseAnimationController);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -94,6 +97,7 @@ type
     function GetMaterialByName(s: string): TBaseMaterial;
     function GetMeshByName(s: string): TBaseMesh;
     procedure InitSkin;
+    procedure AdvanceAnimation(time: single); overload; virtual;
     procedure LoadFromFile(AFilename: string); overload; virtual;
     procedure LoadFromStream(Stream: TStream); overload; virtual;
     procedure LoadFromStream(AType: TBaseModelClass; Stream: TStream); overload;
@@ -106,8 +110,7 @@ type
     property MaterialClass: TbaseMaterialClass read FMaterialClass write FMaterialClass;
     property SkeletonClass: TbaseSkeletonClass read FSkeletonClass write FSkeletonClass;
 
-    property CurrentSkeleton: Integer read FCurrentSkeleton write
-            FCurrentSkeleton;
+    property CurrentSkeleton: Integer read FCurrentSkeleton write FCurrentSkeleton;
     property FileType: Integer read FType write FType;
     property MasterScale: Single read FMasterScale write FMasterScale;
     property Material[Index: integer]: TBaseMaterial read GetMaterial;
@@ -121,10 +124,9 @@ type
     property NumSkeletons: Integer read FNumSkeletons;
     property RenderOrder[Index: integer]: Integer read GetRenderOrder;
     property Skeleton[Index: integer]: TBaseSkeleton read GetSkeleton;
-    property SubVersion: Integer read FSubVersion;
     property TexturePath: string read FTexturePath write FTexturePath;
     property Path: string read FPath write FPath;
-    property Version: Integer read FVersion;
+    property Animation[Index: integer]: TBaseAnimationController read GetAnimation write SetAnimation;
   end;
 
   procedure RegisterModelFormat(const AExtension, ADescription: string;
@@ -152,6 +154,11 @@ begin
   FMeshClass := TBaseMesh;
   FMaterialClass := TBaseMaterial;
   FSkeletonClass := TBaseSkeleton;
+
+  setlength(fAnimation,1);
+  fAnimation[0]:=TBaseAnimationController.Create(self);
+  fAnimation[0].Name:='Default';
+
 end;
 
 destructor TBaseModel.Destroy;
@@ -162,6 +169,7 @@ begin
   SetLength(FMesh, 0);
   SetLength(FMaterial, 0);
   SetLength(FSkeleton, 0);
+  setlength(fAnimation,0);
 end;
 
 procedure TBaseModel.CalculateScale;
@@ -351,10 +359,16 @@ begin
           self.FSkeleton[i].Assign(FSkeleton[i]);
         end;
 
-      self.FSubVersion := FSubVersion;
       self.FTexturePath := FTexturePath;
       self.FType := FType;
-      self.FVersion := FVersion;
+
+      setlength(self.fAnimation,length(FAnimation));
+      for I := 0 to length(FAnimation)-1 do
+        begin
+          self.FAnimation[i] := TBaseAnimationController.Create(self);
+          self.FAnimation[i].Assign(FAnimation[i]);
+        end;
+
     end;
   end
   else
@@ -383,9 +397,7 @@ begin
   if FNumSkeletons >= 1 then
   begin
 
-  //FSkeleton[FCurrentSkeleton].InitBones;
-
-  //TODO: how to to apply skin without affecting original mesh
+  //do not call init skin if you want to save the mesh later on !!!
   for m := 0 to FNumMeshes - 1 do
   begin
     if FMesh[m].NumVertexIndices > 0 then
@@ -420,6 +432,13 @@ begin
   end;
 end;
 
+procedure TBaseModel.AdvanceAnimation(time: single);
+begin
+  //increase the currentframe
+  self.Animation[0].AdvanceAnimation(time);
+  self.Skeleton[0].AdvanceAnimation(self.Animation[0].CurrentFrame);
+end;
+
 procedure TBaseModel.LoadFromFile(AFilename: string);
 var
   Ext: string;
@@ -432,7 +451,6 @@ begin
   Calculatesize;        //calculate min and max size
   CalculateRenderOrder; //set transparency order...
 end;
-
 
 procedure TBaseModel.LoadFromFile(AType: TBaseModelClass; AFileName: string);
 var
@@ -508,6 +526,16 @@ begin
   begin
     FMesh[m].CalculateNormals;
   end;
+end;
+
+procedure TBaseModel.SetAnimation(Index: Integer; Value: TBaseAnimationController);
+begin
+  fAnimation[Index] := Value;
+end;
+
+function TBaseModel.GetAnimation(Index: Integer): TBaseAnimationController;
+begin
+  result := fAnimation[Index];
 end;
 
 { TModel }

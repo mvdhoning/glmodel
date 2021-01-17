@@ -131,11 +131,6 @@ end;
 
 procedure TBaseBone.AdvanceAnimation;
 var
-  i: Integer;
-  deltaTime: Single;
-  fraction: Single;
-  //Position: array [0..2] of single;
-  //Rotation: array [0..2] of single;
   m_rel, m_frame: clsMatrix;
   tempm: array [0..15] of single;
   tvec: array [0..2] of single;
@@ -144,7 +139,6 @@ begin
   self.Animation[0].AdvanceAnimation;
 
   // Now we know the position and rotation for this animation frame.
-
 
   // Let's calculate the transformation matrix (_matrix) for this bone...
   m_rel := clsMatrix.Create;

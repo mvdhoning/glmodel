@@ -256,8 +256,8 @@ begin
 
   if scene1.Models[0].NumSkeletons>=1 then
     begin
-      speed:=((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].Animation[0].AnimFps;
-      scene1.Models[0].Skeleton[0].AdvanceAnimation(speed);
+      speed:=((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Animation[0].AnimFps;
+      scene1.Models[0].AdvanceAnimation(speed);
     end;
 
   camera.yangle:=camera.yangle+0.01;

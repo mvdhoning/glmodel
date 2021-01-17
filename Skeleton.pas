@@ -29,7 +29,7 @@ unit Skeleton;
 
 interface
 
-uses classes, Bone, Animation;
+uses classes, Bone;
 
 type
 
@@ -40,13 +40,10 @@ type
   TBaseSkeleton = class(TComponent)
   protected
     FBoneClass : TBaseBoneClass;
-    fAnimation: array of TBaseAnimationController;
     FBone: array of TBaseBone;
     FName: string;
     FNumBones: Integer;
     function GetBone(Index: integer): TBaseBone;
-    function GetAnimation(Index: integer): TBaseAnimationController;
-    procedure SetAnimation(Index: integer; Value: TBaseAnimationController);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -63,7 +60,6 @@ type
     property Bone[Index: integer]: TBaseBone read GetBone;
     property Name: string read FName write FName;
     property NumBones: Integer read FNumBones;
-    property Animation[Index: integer]: TBaseAnimationController read GetAnimation write SetAnimation;
   end;
 
 implementation
@@ -87,12 +83,6 @@ begin
           self.FBone[i].Assign(FBone[i]);
         end;
       self.FName := FName;
-      setlength(self.fAnimation,length(FAnimation));
-      for I := 0 to length(FAnimation)-1 do
-        begin
-          self.FAnimation[i] := TBaseAnimationController.Create(self);
-          self.FAnimation[i].Assign(FAnimation[i]);
-        end;
     end;
   end
   else
@@ -103,9 +93,6 @@ constructor TBaseSkeleton.Create(AOwner: TComponent);
 begin
   inherited;
   FBoneClass := TBaseBone; //Make sure a bone class is set
-  setlength(fAnimation,1);
-  fAnimation[0]:=TBaseAnimationController.Create(self);
-  fAnimation[0].Name:='Default';
 end;
 
 destructor TBaseSkeleton.Destroy;
@@ -113,7 +100,6 @@ begin
   inherited Destroy; //this will automaticaly free the meshes, materials, bones...
   //however do free the dynamic arrays used
   SetLength(FBone, 0);
-  setlength(fAnimation,0);
 end;
 
 procedure TBaseSkeleton.AddBone;
@@ -157,26 +143,13 @@ procedure TBaseSkeleton.AdvanceAnimation(time: single);
 var
   m: Integer;
 begin
-  //increase the currentframe
-  fAnimation[0].AdvanceAnimation(time);
-
   //set the bones to their new positions
   if FNumBones > 0 then
     for m := 0 to FNumBones - 1 do
     begin
-      FBone[m].Animation[0].CurrentFrame := fAnimation[0].CurrentFrame;
+      FBone[m].Animation[0].CurrentFrame := time;
       FBone[m].AdvanceAnimation;
     end;
-end;
-
-procedure TBaseSkeleton.SetAnimation(Index: Integer; Value: TBaseAnimationController);
-begin
-  fAnimation[Index] := Value;
-end;
-
-function TBaseSkeleton.GetAnimation(Index: Integer): TBaseAnimationController;
-begin
-  result := fAnimation[Index];
 end;
 
 end.

@@ -223,7 +223,7 @@ begin
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
   if scene1.Models[0].NumSkeletons>=1 then
-    scene1.Models[0].Skeleton[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Skeleton[0].Animation[0].AnimFps);
+    scene1.Models[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Animation[0].AnimFps);
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;

@@ -308,9 +308,9 @@ begin
       fnumskeletons:=1;
       setlength(fskeleton, fnumskeletons);
       fskeleton[0]:=FSkeletonClass.Create(self);
-      fskeleton[0].Animation[0].NumFrames:=TotalFrames;
-      fskeleton[0].Animation[0].AnimFps:=AnimFPS;
-      fskeleton[0].Animation[0].CurrentFrame:=1;
+      fAnimation[0].NumFrames:=TotalFrames;
+      fAnimation[0].AnimFps:=AnimFPS;
+      fAnimation[0].CurrentFrame:=1;
 
       for c := 0 to numJoints - 1 do
       begin
@@ -332,7 +332,7 @@ begin
         begin
           stream.Read(ms3dKeyframe,sizeof(ms3dKeyframe));
           tempkeyframe := fskeleton[0].Bone[c].Animation[0].RotateFrame[c2];
-          tempkeyframe.time := ms3dKeyframe.Time*fskeleton[0].Animation[0].AnimFps;
+          tempkeyframe.time := ms3dKeyframe.Time*fAnimation[0].AnimFps;
           tempkeyframe.Value.x := ms3dKeyframe.Parameter.x;
           tempkeyframe.Value.y := ms3dKeyframe.Parameter.y;
           tempkeyframe.Value.z := ms3dKeyframe.Parameter.z;
@@ -343,7 +343,7 @@ begin
         begin
           stream.Read(ms3dKeyframe,sizeof(ms3dKeyframe));
           tempkeyframe := fskeleton[0].Bone[c].Animation[0].TranslateFrame[c2];
-          tempkeyframe.time := ms3dKeyframe.Time*fskeleton[0].Animation[0].AnimFps;
+          tempkeyframe.time := ms3dKeyframe.Time*fAnimation[0].AnimFps;
           tempkeyframe.Value.x := ms3dKeyframe.Parameter.x;
           tempkeyframe.Value.y := ms3dKeyframe.Parameter.y;
           tempkeyframe.Value.z := ms3dKeyframe.Parameter.z;
