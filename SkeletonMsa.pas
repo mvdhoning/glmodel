@@ -82,18 +82,18 @@ begin
     line := sl.Strings[l];
 
     //set fps to 24 (milkhspe default?)
-    fAnimFps := 24;
+    fAnimation[0].AnimFps := 24;
 
     //read in frames data...
     if (pos('Frames: ', line) = 1) then
     begin
-      FNumFrames := StrToInt(StringReplace(Line, 'Frames: ', '', [rfReplaceAll]));
+      fAnimation[0].NumFrames := StrToInt(StringReplace(Line, 'Frames: ', '', [rfReplaceAll]));
     end;
 
     //read in frames data...
     if (pos('Frame: ', line) = 1) then
     begin
-      FCurrentFrame := StrToInt(StringReplace(Line, 'Frame: ', '', [rfReplaceAll]));
+      fAnimation[0].CurrentFrame := StrToInt(StringReplace(Line, 'Frame: ', '', [rfReplaceAll]));
     end;
 
     //read in bone data...

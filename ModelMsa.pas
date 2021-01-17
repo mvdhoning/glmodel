@@ -388,7 +388,7 @@ begin
   ms.Add('');
   if (self.NumSkeletons>=1) then
   begin
-    ms.Add('Frames: '+inttostr(fskeleton[0].NumFrames));
+    ms.Add('Frames: '+inttostr(fskeleton[0].Animation[0].NumFrames));
     ms.Add('Frame: 1');
   end
   else

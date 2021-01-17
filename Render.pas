@@ -74,7 +74,7 @@ begin
     //advance animation
     if FModels[i].NumSkeletons >= 1 then
     begin
-      FModels[i].Skeleton[0].AdvanceAnimation();
+      FModels[i].Skeleton[0].AdvanceAnimation(1);
       FModels[i].calculatesize; //TODO: does not help as mesh is altered during rendering...
     end;
   end;

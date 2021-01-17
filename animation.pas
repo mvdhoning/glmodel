@@ -33,6 +33,19 @@ uses
   Classes, SysUtils, glmath, keyframe;
 
 type
+TBaseAnimationController = class(TComponent)
+protected
+  FCurrentFrame: single;
+  FNumFrames: Integer;
+  FAnimFps: Single;
+public
+  procedure Assign(Source: TPersistent); override;
+  procedure AdvanceAnimation(time: single);
+  property CurrentFrame: single read FCurrentFrame write FCurrentFrame;
+  property NumFrames: Integer read FNumFrames write FNumFrames;
+  property AnimFps: Single read FAnimFps write FAnimFps;
+end;
+
 TBaseAnimation = class(TComponent)
 protected
   fId: integer;
@@ -66,6 +79,30 @@ public
 end;
 
 implementation
+
+procedure TBaseAnimationController.Assign(Source: TPersistent);
+begin
+  if Source is TBaseAnimationController then
+  begin
+    with TBaseAnimationController(Source) do
+    begin
+      self.FCurrentFrame := FCurrentFrame;
+      self.FAnimFps:= FAnimFps;
+      self.FNumFrames :=FNumFrames;
+    end;
+  end
+  else
+    inherited;
+end;
+
+procedure TBaseAnimationController.AdvanceAnimation(time: single);
+var
+  m: Integer;
+begin
+  //increase the currentframe
+  FCurrentFrame := FCurrentFrame + time;
+  if FCurrentFrame > FNumFrames then FCurrentFrame := 1; //reset when needed
+end;
 
 destructor TBaseAnimation.Destroy;
 begin
