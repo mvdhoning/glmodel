@@ -43,12 +43,11 @@ type
 implementation
 
 uses
-  SysUtils, glMath, Skeleton, SkeletonMsa, Mesh, Material, Bone;
+  SysUtils, glMath, Skeleton, Mesh, Material, Bone, keyframe;
 
 procedure TMsaModel.LoadFromFile(AFileName: string);
 var
   stream: TFilestream;
-  msask: TMsaSkeleton;
 begin
   FPath := ExtractFilePath(AFilename);
   if FTexturePath = '' then FTexturePath:=FPath;
@@ -57,18 +56,6 @@ begin
   LoadFromStream(stream);
   stream.Free;
 
-  //also load skeleton if needed (this means that when loading from stream only
-  if floadskeleton then
-  begin
-    fnumskeletons:=fnumskeletons+1;
-    setlength(fskeleton, fnumskeletons);
-    fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
-    msask := TMsaSkeleton.Create(self);
-    msask.BoneClass := fskeleton[fnumskeletons-1].BoneClass;
-    msask.LoadFromFile(AFileName);
-    fskeleton[fnumskeletons-1].Assign(msask);
-    msask.Free;
-  end;
 end;
 
 procedure TMsaModel.LoadFromStream(stream: Tstream);
@@ -86,6 +73,7 @@ var
   m: LongWord;
   tempvertex: T3dPoint;
   tempmap: TMap;
+  tempkeyframe: TKeyFrame;
 begin
   floadskeleton:=false;
   sl := TStringList.Create;
@@ -342,8 +330,107 @@ begin
     if (pos('Bones: ', line) = 1) then
     begin
       bcount := StrToInt(StringReplace(Line, 'Bones: ', '', [rfReplaceAll]));
-      //if there are bones
-      if bcount >= 1 then floadskeleton:=true;
+
+      if bcount>0 then
+      begin
+        fnumskeletons:=fnumskeletons+1;
+        setlength(fskeleton, fnumskeletons);
+        fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
+
+        //if fskeleton[fnumskeletons-1].NumBones > 0 then
+        for tcount := 0 to bcount - 1 do
+        begin
+          fskeleton[fnumskeletons-1].AddBone;
+
+          //read bone name
+          l := l + 1;
+          line := sl.Strings[l];
+          strtemp := line;
+          fskeleton[fnumskeletons-1].Bone[tcount].Name := StringReplace(strtemp, '"', '', [rfReplaceAll]);
+
+          //read parent bone name
+          l := l + 1;
+          line := sl.Strings[l];
+          strtemp := line;
+          fskeleton[fnumskeletons-1].Bone[tcount].ParentName := StringReplace(strtemp, '"', '', [rfReplaceAll]);
+
+          //read bone translate and rotate...
+          l := l + 1;
+          line := sl.Strings[l];
+          tsl := TStringList.Create;
+          tsl.CommaText := line;
+
+          tempvertex := fskeleton[fnumskeletons-1].Bone[tcount].Translate;
+
+          tempvertex.x := StrToFloat(tsl.strings[1]);
+          tempvertex.y := StrToFloat(tsl.strings[2]);
+          tempvertex.z := StrToFloat(tsl.strings[3]);
+
+          fskeleton[fnumskeletons-1].Bone[tcount].Translate := tempvertex;
+
+          tempvertex := fskeleton[fnumskeletons-1].Bone[tcount].Rotate;
+
+          tempvertex.x := StrToFloat(tsl.strings[4]);
+          tempvertex.y := StrToFloat(tsl.strings[5]);
+          tempvertex.z := StrToFloat(tsl.strings[6]);
+
+          fskeleton[fnumskeletons-1].Bone[tcount].Rotate := tempvertex;
+
+          tsl.Free;
+
+          //read translate frames for bone
+          l := l + 1;
+          line := sl.Strings[l];
+          Count := StrToInt(line);
+          fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].NumTranslateFrames := Count;
+
+          if Count>0 then
+          for floop := 0 to Count - 1 do
+          begin
+            l := l + 1;
+            line := sl.Strings[l];
+            tsl := TStringList.Create;
+            tsl.CommaText := line;
+
+            tempkeyframe := fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].TranslateFrame[floop];
+
+            tempkeyframe.time := Round(StrToFloat(tsl.strings[0]));
+            tempkeyframe.Value.x := StrToFloat(tsl.strings[1]);
+            tempkeyframe.Value.y := StrToFloat(tsl.strings[2]);
+            tempkeyframe.Value.z := StrToFloat(tsl.strings[3]);
+
+            fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].TranslateFrame[floop] := tempkeyframe;
+
+            tsl.Free;
+          end;
+
+          //read rotate frames for bone
+          l := l + 1;
+          line := sl.Strings[l];
+          Count := StrToInt(line);
+          fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].NumRotateFrames := Count;
+
+          if Count>0 then
+          for floop := 0 to Count - 1 do
+          begin
+            l := l + 1;
+            line := sl.Strings[l];
+            tsl := TStringList.Create;
+            tsl.CommaText := line;
+
+            tempkeyframe := fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].RotateFrame[floop];
+
+            tempkeyframe.time := Round(StrToFloat(tsl.strings[0]));
+            tempkeyframe.Value.x := StrToFloat(tsl.strings[1]);
+            tempkeyframe.Value.y := StrToFloat(tsl.strings[2]);
+            tempkeyframe.Value.z := StrToFloat(tsl.strings[3]);
+
+            fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].RotateFrame[floop] := tempkeyframe;
+
+            tsl.Free;
+          end;
+        end;
+      end;
     end;
 
     //set fps to 24 (milkhspe default?)
@@ -392,8 +479,8 @@ var
   saveloop: Integer;
   subsaveloop: Integer;
   tempstring: string;
-  msask: TMsaSkeleton;
   tempmesh: TBaseMesh;
+  bcount,i: integer;
 begin
   //this saves meshes and materials to a milkshape ascii file
   ms:=TStringList.Create;
@@ -518,6 +605,43 @@ begin
   begin
     //write the number of bones in the first (and only) skeleton
     ms.Add('Bones: '+inttostr(self.Skeleton[0].NumBones));
+
+    for bcount:=0 to self.Skeleton[0].NumBones-1 do
+  begin
+    //write bone name
+    ms.add('"'+self.Skeleton[0].Bone[bcount].Name+'"');
+
+    //write bone parent name
+    if self.Skeleton[0].Bone[bcount].Parent<>nil then
+      ms.add('"'+self.Skeleton[0].Bone[bcount].Parent.Name+'"')
+    else
+      ms.add('""');
+    //ms.add('""'+fBone[bcount].ParentName+'""');
+
+    //flags and position and rotation
+    ms.add('0 '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Translate.x)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Translate.y)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Translate.z)+' '
+           +formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Rotate.x)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Rotate.y)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Rotate.z)
+          );
+    (*
+    //save without animations
+    ms.add('1');
+    ms.add('1.000000 0.000000 0.000000 0.000000'); //time x y z
+    ms.add('1');
+    ms.add('1.000000 0.000000 0.000000 0.000000'); //time x y z
+    *)
+
+    //save with animations
+
+    ms.add(inttostr(self.Skeleton[0].bone[bcount].Animation[0].NumTranslateFrames));
+    for i:=0 to self.Skeleton[0].bone[bcount].Animation[0].NumTranslateFrames -1 do
+      ms.add(formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].TranslateFrame[i].time)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].TranslateFrame[i].Value.x)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].TranslateFrame[i].Value.y)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].TranslateFrame[i].Value.z));
+
+    ms.add(inttostr(self.Skeleton[0].bone[bcount].Animation[0].NumRotateFrames));
+    for i:=0 to self.Skeleton[0].bone[bcount].Animation[0].NumTranslateFrames -1 do
+      ms.add(formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].RotateFrame[i].time)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].RotateFrame[i].Value.x)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].RotateFrame[i].Value.y)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].RotateFrame[i].Value.z));
+
+  end;
+
   end
   else
   begin
@@ -526,16 +650,6 @@ begin
 
   ms.SaveToStream(stream);
   ms.Free;
-
-  //write the first skeleton (only one skeleton supported)
-  if (self.NumSkeletons>=1) then
-  begin
-    msask := TMsaSkeleton.Create(self);
-    msask.BoneClass := fskeleton[0].BoneClass;
-    msask.Assign(fskeleton[0]);
-    msask.SaveToStream(stream);
-    msask.Free;
-  end;
 
 end;
 

@@ -35,6 +35,7 @@ type
 
 T3dsModel = Class(TBaseModel)
   private
+    fversion: integer;
     procedure MoveToPivot;
   public
     procedure LoadFromFile(AFileName: string); override;

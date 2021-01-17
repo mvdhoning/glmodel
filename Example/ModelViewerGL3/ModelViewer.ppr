@@ -133,7 +133,7 @@ begin
   scene1 := Tgl3Render.Create(nil);
 
   scene1.AddModel();
-  //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
+  scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
   //scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
 
   //scene1.Models[0].LoadFromFile('c:\projecten\assets\Scorpion\scorpidt.txt');
@@ -142,7 +142,7 @@ begin
   //scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2006\TempAvatar.fbx');
   //scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2006\testchar1.fbx');
 
-  scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2013\testgr2.fbx');
+//  scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2013\testgr2.fbx');
 
 
   //scene1.Models[0].LoadFromFile('..\..\Models\2cubes2006.fbx');
