@@ -51,6 +51,7 @@ type
     FSkeletonClass: TBaseSkeletonClass;
 
     fAnimation: array of TBaseAnimationController;
+
     fCurrentAnimation: Integer;
 
     FCurrentSkeleton: Integer;
@@ -154,11 +155,6 @@ begin
   FMeshClass := TBaseMesh;
   FMaterialClass := TBaseMaterial;
   FSkeletonClass := TBaseSkeleton;
-
-  setlength(fAnimation,1);
-  fAnimation[0]:=TBaseAnimationController.Create(self);
-  fAnimation[0].Name:='Default';
-
 end;
 
 destructor TBaseModel.Destroy;
@@ -169,7 +165,7 @@ begin
   SetLength(FMesh, 0);
   SetLength(FMaterial, 0);
   SetLength(FSkeleton, 0);
-  setlength(fAnimation,0);
+  Setlength(fAnimation,0);
 end;
 
 procedure TBaseModel.CalculateScale;
@@ -234,10 +230,7 @@ end;
 
 function TBaseModel.GetMaterial(Index: integer): TBaseMaterial;
 begin
-  //if fmaterial <> nil then
-    Result := FMaterial[index]
-  //else
-  //  Result := FMaterialClass.Create(nil);
+  Result := FMaterial[index];
 end;
 
 function TBaseModel.GetMaterialByName(s: string): TBaseMaterial;
@@ -433,10 +426,20 @@ begin
 end;
 
 procedure TBaseModel.AdvanceAnimation(time: single);
+var
+  i: integer;
 begin
   //increase the currentframe
-  self.Animation[0].AdvanceAnimation(time);
-  self.Skeleton[0].AdvanceAnimation(self.Animation[0].CurrentFrame);
+  self.Animation[0].AdvanceAnimation(time); //first advance the animation
+
+  //pass new calculated positions and rotations on to the bone
+  for i:=0 to self.Animation[0].NumElements-1 do
+  begin
+    self.Skeleton[0].Bone[self.Animation[0].Element[i].BoneId].Position:=self.Animation[0].Element[i].Position;
+    self.Skeleton[0].Bone[self.Animation[0].Element[i].BoneId].Rotation:=self.Animation[0].Element[i].Rotation;
+  end;
+
+  self.Skeleton[0].UpdateBones; //update bones to the new frame data
 end;
 
 procedure TBaseModel.LoadFromFile(AFilename: string);

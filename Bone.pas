@@ -29,36 +29,32 @@ unit Bone;
 
 interface
 
-uses classes, KeyFrame, glmatrix, glmath, animation;
+uses classes, glmatrix, glmath;
 
 type
- //bone data
+
   TBaseBone = class;
 
   TBaseBoneClass = class of TBaseBone;
-
-  //TODO: move animation keyframes to seperate class
 
   TBaseBone = class(TComponent)
   protected
     Fid: integer;
     FRotate: T3DPoint;
     FTranslate: T3DPoint;
-    //FBvhChanneltype: Integer;
+    FPosition: T3dCoord;
+    FRotation: T3dCoord;
     FMatrix: ClsMatrix;
     FInverseMatrix: ClsMatrix;
     FName: string;
     FParent: TBaseBone;
     FParentName: string;
-    fAnimation: array of TBaseAnimation;
-    function GetAnimation(Index: integer): TBaseAnimation;
-    procedure SetAnimation(Index: integer; Value: TBaseAnimation);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     procedure Init;
-    procedure AdvanceAnimation;
+    procedure Update;
     procedure Render; virtual; abstract;
     property Id: integer read fId write fId;
     property Name: string read FName write FName;
@@ -66,9 +62,10 @@ type
     property Parent: TBaseBone read FParent write FParent;
     property Rotate: T3DPoint read FRotate write FRotate;
     property Translate: T3DPoint read FTranslate write FTranslate;
+    property Rotation: T3DCoord read FRotation write FRotation;
+    property Position: T3DCoord read FPosition write FPosition;
     property Matrix: ClsMatrix read FMatrix write FMatrix;
     property InverseMatrix: ClsMatrix read FInverseMatrix write FInverseMatrix;
-    property Animation[Index: integer]: TBaseAnimation read GetAnimation write SetAnimation;
   end;
 
 implementation
@@ -76,8 +73,6 @@ implementation
 uses sysutils, Skeleton;
 
 procedure TBaseBone.Assign(Source: TPersistent);
-var
-  i: integer;
 begin
   if Source is TBaseBone then
   begin
@@ -88,12 +83,6 @@ begin
       self.FParentName := FParentName;
       self.FRotate := FRotate;
       self.FTranslate := FTranslate;
-      setlength(self.fAnimation,length(FAnimation));
-      for I := 0 to length(FAnimation)-1 do
-        begin
-          self.FAnimation[i] := TBaseAnimation.Create(self);
-          self.FAnimation[i].Assign(FAnimation[i]);
-        end;
     end;
   end
   else
@@ -105,9 +94,6 @@ begin
   inherited Create(AOWner);
   FMatrix := clsMatrix.Create;
   FInverseMatrix := clsMatrix.Create;
-  setlength(fAnimation,1);
-  fAnimation[0]:=TBaseAnimation.Create(self);
-  fAnimation[0].Name:='Default';
 end;
 
 destructor TBaseBone.Destroy;
@@ -125,18 +111,15 @@ begin
     FInverseMatrix:=nil;
   end;
 
-  setlength(fAnimation,0);
   inherited Destroy;
 end;
 
-procedure TBaseBone.AdvanceAnimation;
+procedure TBaseBone.Update;
 var
   m_rel, m_frame: clsMatrix;
   tempm: array [0..15] of single;
   tvec: array [0..2] of single;
 begin
-
-  self.Animation[0].AdvanceAnimation;
 
   // Now we know the position and rotation for this animation frame.
 
@@ -160,9 +143,9 @@ begin
 
   // Create a transformation matrix from the position and rotation
   // m_frame: additional transformation for this frame of the animation
-  m_frame.setRotationRadians(self.Animation[0].Rotation);
+  m_frame.setRotationRadians(fRotation);
 
-  m_frame.setTranslation(self.Animation[0].Position);
+  m_frame.setTranslation(fPosition);
 
   // Add the animation state to the rest position
   m_rel.postMultiply(m_frame);
@@ -190,7 +173,7 @@ var
   tempm: array [0..15] of single;
   tempv: array [0..2] of single;
 begin
-  //TODO: Rewrite to fill from skeleton
+
   //init parent bone direct access
   FParent := nil;
   if FParentName > '' then
@@ -231,16 +214,6 @@ begin
 
   m_rel.Free;
 
-end;
-
-procedure TBaseBone.SetAnimation(Index: Integer; Value: TBaseAnimation);
-begin
-  fAnimation[Index] := Value;
-end;
-
-function TBaseBone.GetAnimation(Index: Integer): TBaseAnimation;
-begin
-  result := fAnimation[Index];
 end;
 
 end.

@@ -43,7 +43,7 @@ type
 implementation
 
 uses
-  SysUtils, glMath, Skeleton, Mesh, Material, Bone, keyframe;
+  SysUtils, glMath, Skeleton, Mesh, Material, Bone, animation, keyframe;
 
 procedure TMsaModel.LoadFromFile(AFileName: string);
 var
@@ -78,6 +78,15 @@ begin
   floadskeleton:=false;
   sl := TStringList.Create;
   sl.LoadFromStream(stream);
+
+  //Add Animation to Model
+  setlength(fAnimation,1);
+  fAnimation[0]:=TBaseAnimationController.Create(self);
+  fAnimation[0].Name:='Default';
+
+  //set fps to 24 (milkhspe default?)
+  fAnimation[0].AnimFps := 24;
+
   l := 0;
   while l < sl.Count - 1 do
   begin
@@ -333,11 +342,11 @@ begin
 
       if bcount>0 then
       begin
+        //Add Skeleton to Model
         fnumskeletons:=fnumskeletons+1;
         setlength(fskeleton, fnumskeletons);
         fskeleton[fnumskeletons-1]:=FSkeletonClass.Create(self);
 
-        //if fskeleton[fnumskeletons-1].NumBones > 0 then
         for tcount := 0 to bcount - 1 do
         begin
           fskeleton[fnumskeletons-1].AddBone;
@@ -378,11 +387,15 @@ begin
 
           tsl.Free;
 
+          //Add Bone to Animation set
+          self.Animation[0].AddElement();
+          self.Animation[0].Element[tcount].boneId:=tcount; //set bone id
+
           //read translate frames for bone
           l := l + 1;
           line := sl.Strings[l];
           Count := StrToInt(line);
-          fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].NumTranslateFrames := Count;
+          self.Animation[0].Element[tcount].NumTranslateFrames:= Count;
 
           if Count>0 then
           for floop := 0 to Count - 1 do
@@ -392,14 +405,12 @@ begin
             tsl := TStringList.Create;
             tsl.CommaText := line;
 
-            tempkeyframe := fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].TranslateFrame[floop];
-
+            tempkeyframe := self.Animation[0].Element[tcount].TranslateFrame[floop];
             tempkeyframe.time := Round(StrToFloat(tsl.strings[0]));
             tempkeyframe.Value.x := StrToFloat(tsl.strings[1]);
             tempkeyframe.Value.y := StrToFloat(tsl.strings[2]);
             tempkeyframe.Value.z := StrToFloat(tsl.strings[3]);
-
-            fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].TranslateFrame[floop] := tempkeyframe;
+            self.Animation[0].Element[tcount].TranslateFrame[floop] := tempkeyframe;
 
             tsl.Free;
           end;
@@ -408,7 +419,7 @@ begin
           l := l + 1;
           line := sl.Strings[l];
           Count := StrToInt(line);
-          fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].NumRotateFrames := Count;
+          self.Animation[0].Element[tcount].NumRotateFrames := Count;
 
           if Count>0 then
           for floop := 0 to Count - 1 do
@@ -418,23 +429,18 @@ begin
             tsl := TStringList.Create;
             tsl.CommaText := line;
 
-            tempkeyframe := fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].RotateFrame[floop];
-
+            tempkeyframe := self.Animation[0].Element[tcount].RotateFrame[floop];
             tempkeyframe.time := Round(StrToFloat(tsl.strings[0]));
             tempkeyframe.Value.x := StrToFloat(tsl.strings[1]);
             tempkeyframe.Value.y := StrToFloat(tsl.strings[2]);
             tempkeyframe.Value.z := StrToFloat(tsl.strings[3]);
-
-            fskeleton[fnumskeletons-1].Bone[tcount].Animation[0].RotateFrame[floop] := tempkeyframe;
+            self.Animation[0].Element[tcount].RotateFrame[floop] := tempkeyframe;
 
             tsl.Free;
           end;
         end;
       end;
     end;
-
-    //set fps to 24 (milkhspe default?)
-    fAnimation[0].AnimFps := 24;
 
     //read in frames data...
     if (pos('Frames: ', line) = 1) then
@@ -632,13 +638,13 @@ begin
 
     //save with animations
 
-    ms.add(inttostr(self.Skeleton[0].bone[bcount].Animation[0].NumTranslateFrames));
-    for i:=0 to self.Skeleton[0].bone[bcount].Animation[0].NumTranslateFrames -1 do
-      ms.add(formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].TranslateFrame[i].time)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].TranslateFrame[i].Value.x)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].TranslateFrame[i].Value.y)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].TranslateFrame[i].Value.z));
+    ms.add(inttostr(self.Animation[0].Element[bcount].NumTranslateFrames));
+    for i:=0 to self.Animation[0].Element[bcount].NumTranslateFrames -1 do
+      ms.add(formatfloat('0.000000',self.Animation[0].Element[bcount].TranslateFrame[i].time)+' '+formatfloat('0.000000',self.Animation[0].Element[bcount].TranslateFrame[i].Value.x)+' '+formatfloat('0.000000',self.Animation[0].Element[bcount].TranslateFrame[i].Value.y)+' '+formatfloat('0.000000',self.Animation[0].Element[bcount].TranslateFrame[i].Value.z));
 
-    ms.add(inttostr(self.Skeleton[0].bone[bcount].Animation[0].NumRotateFrames));
-    for i:=0 to self.Skeleton[0].bone[bcount].Animation[0].NumTranslateFrames -1 do
-      ms.add(formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].RotateFrame[i].time)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].RotateFrame[i].Value.x)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].RotateFrame[i].Value.y)+' '+formatfloat('0.000000',self.Skeleton[0].Bone[bcount].Animation[0].RotateFrame[i].Value.z));
+    ms.add(inttostr(self.Animation[0].Element[bcount].NumRotateFrames));
+    for i:=0 to self.Animation[0].Element[bcount].NumTranslateFrames -1 do
+      ms.add(formatfloat('0.000000',self.Animation[0].Element[bcount].RotateFrame[i].time)+' '+formatfloat('0.000000',self.Animation[0].Element[bcount].RotateFrame[i].Value.x)+' '+formatfloat('0.000000',self.Animation[0].Element[bcount].RotateFrame[i].Value.y)+' '+formatfloat('0.000000',self.Animation[0].Element[bcount].RotateFrame[i].Value.z));
 
   end;
 

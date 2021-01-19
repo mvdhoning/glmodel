@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  SysUtils, glMath, Skeleton, Mesh, Material, Bone, KeyFrame;
+  SysUtils, glMath, Skeleton, Mesh, Material, Bone, Animation, KeyFrame;
 
 //The milkshape binry reader is inspired by the following example on the pascalgamedev forum:
 //https://www.pascalgamedevelopment.com/showthread.php?13405-Milkshape-MS3D-Animation&s=ecd0bb6d00faba1c4b2308fe06b25bc6
@@ -122,9 +122,6 @@ begin
   stream := TFilestream.Create(AFilename, $0000);
   LoadFromStream(stream);
   stream.Free;
-
-  // Skeleton will be loaded if available from ModelMs3d
-  // maybe later introduce a SkeletonMs3d class
 
 end;
 
@@ -305,9 +302,16 @@ begin
 
   if numJoints > 0 then
     begin
+      //Add Skeleton to Model
       fnumskeletons:=1;
       setlength(fskeleton, fnumskeletons);
       fskeleton[0]:=FSkeletonClass.Create(self);
+
+      //Add Animation to Model
+      setlength(fAnimation,1);
+      fAnimation[0]:=TBaseAnimationController.Create(self);
+      fAnimation[0].Name:='Default';
+
       fAnimation[0].NumFrames:=TotalFrames;
       fAnimation[0].AnimFps:=AnimFPS;
       fAnimation[0].CurrentFrame:=1;
@@ -321,8 +325,13 @@ begin
         fskeleton[0].Bone[c].Rotate := ms3dJoint.Rotation;
         fskeleton[0].Bone[c].Translate := ms3dJoint.Translation;
         fskeleton[0].Bone[c].ParentName:= ms3dJoint.ParentName;
-        fskeleton[0].Bone[c].Animation[0].NumRotateFrames := ms3dJoint.nRotKeyframes;
-        fskeleton[0].Bone[c].Animation[0].NumTranslateFrames := ms3dJoint.nTransKeyframes;
+
+        //Add bone to animation set
+        self.Animation[0].AddElement();
+        self.Animation[0].Element[c].boneId:=c; //set bone id
+
+        self.Animation[0].Element[c].NumRotateFrames := ms3dJoint.nRotKeyframes;
+        self.Animation[0].Element[c].NumTranslateFrames := ms3dJoint.nTransKeyframes;
 
         //skip animation info
         //stream.Position := stream.Position + SizeOf ( ms3dKeyframe ) * ( ms3dJoint.nRotKeyframes + ms3dJoint.nTransKeyframes );
@@ -331,23 +340,23 @@ begin
         for c2 := 0 to ms3dJoint.nRotKeyframes - 1 do
         begin
           stream.Read(ms3dKeyframe,sizeof(ms3dKeyframe));
-          tempkeyframe := fskeleton[0].Bone[c].Animation[0].RotateFrame[c2];
+          tempkeyframe := self.Animation[0].Element[c].RotateFrame[c2];
           tempkeyframe.time := ms3dKeyframe.Time*fAnimation[0].AnimFps;
           tempkeyframe.Value.x := ms3dKeyframe.Parameter.x;
           tempkeyframe.Value.y := ms3dKeyframe.Parameter.y;
           tempkeyframe.Value.z := ms3dKeyframe.Parameter.z;
-          fskeleton[0].Bone[c].Animation[0].RotateFrame[c2] := tempkeyframe;
+          self.Animation[0].Element[c].RotateFrame[c2] := tempkeyframe;
         end;
 
         for c2 := 0 to ms3dJoint.nTransKeyframes - 1 do
         begin
           stream.Read(ms3dKeyframe,sizeof(ms3dKeyframe));
-          tempkeyframe := fskeleton[0].Bone[c].Animation[0].TranslateFrame[c2];
+          tempkeyframe := self.Animation[0].Element[c].TranslateFrame[c2];
           tempkeyframe.time := ms3dKeyframe.Time*fAnimation[0].AnimFps;
           tempkeyframe.Value.x := ms3dKeyframe.Parameter.x;
           tempkeyframe.Value.y := ms3dKeyframe.Parameter.y;
           tempkeyframe.Value.z := ms3dKeyframe.Parameter.z;
-          fskeleton[0].Bone[c].Animation[0].TranslateFrame[c2] := tempkeyframe;
+          self.Animation[0].Element[c].TranslateFrame[c2] := tempkeyframe;
         end;
 
       end;

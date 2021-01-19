@@ -76,7 +76,7 @@ type
 implementation
 
 uses
-  SysUtils, StrUtils, glMath, Mesh, math;
+  SysUtils, StrUtils, glMath, Mesh, math, Animation;
 
 procedure TFbxModel.AddVertices(value: string);
 var
@@ -414,6 +414,11 @@ begin
   fbxindexinfo:=TDictionary<integer, boolean>.Create;
 
   self.AddSkeleton; //TODO: make adding skeleton optionsl
+
+  //Add Animation to Model //TODO: reconsider making adding animation optional
+  setlength(fAnimation,1);
+  fAnimation[0]:=TBaseAnimationController.Create(self);
+  fAnimation[0].Name:='Default';
 
   sl := TStringList.Create;
   sl.LoadFromStream(stream);

@@ -33,17 +33,29 @@ uses
   Classes, SysUtils, glmath, keyframe;
 
 type
+
+TBaseAnimation = class;
+
 TBaseAnimationController = class(TComponent)
 protected
   FCurrentFrame: single;
   FNumFrames: Integer;
   FAnimFps: Single;
+  fAnimation: array of TBaseAnimation;
+  fNumElements: integer;
+  function GetAnimation(Index: integer): TBaseAnimation;
+  procedure SetAnimation(Index: integer; Value: TBaseAnimation);
 public
+  constructor Create(AOwner: TComponent); override;
+  destructor Destroy; override;
   procedure Assign(Source: TPersistent); override;
+  procedure AddElement();
   procedure AdvanceAnimation(time: single);
   property CurrentFrame: single read FCurrentFrame write FCurrentFrame;
   property NumFrames: Integer read FNumFrames write FNumFrames;
   property AnimFps: Single read FAnimFps write FAnimFps;
+  property Element[Index: integer]: TBaseAnimation read GetAnimation write SetAnimation;
+  property NumElements: integer read fNumElements;
 end;
 
 TBaseAnimation = class(TComponent)
@@ -57,6 +69,7 @@ protected
   FNumTranslateFrames: Integer;
   FTranslateFrame: array of TKeyFrame;
   FCurrentFrame: single;
+  fBoneId: integer;
   function GetRotateFrame(Index: integer): TKeyFrame;
   procedure SetRotateFrame(Index: integer; Value: TKeyFrame);
   function GetTranslateFrame(Index: integer): TKeyFrame;
@@ -72,6 +85,7 @@ public
   property CurrentFrame: single read FCurrentFrame write FCurrentFrame;
   property Rotation: T3DCoord read FRotation;
   property Position: T3DCoord read FPosition;
+  property BoneId: integer read fboneid write fboneid;
   property NumRotateFrames: integer read FNumRotateFrames write SetNumRotateFrames;
   property NumTranslateFrames: integer read FNumTranslateFrames write SetNumTranslateFrames;
   property TranslateFrame[Index: integer]: TKeyFrame read GetTranslateFrame write SetTranslateFrame;
@@ -80,7 +94,21 @@ end;
 
 implementation
 
+constructor TBaseAnimationController.Create(AOwner: TComponent);
+begin
+  inherited;
+  fNumElements:=0;
+end;
+
+destructor TBaseAnimationController.Destroy;
+begin
+  inherited Destroy;
+  setlength(fAnimation,0);
+end;
+
 procedure TBaseAnimationController.Assign(Source: TPersistent);
+var
+  i: integer;
 begin
   if Source is TBaseAnimationController then
   begin
@@ -89,26 +117,49 @@ begin
       self.FCurrentFrame := FCurrentFrame;
       self.FAnimFps:= FAnimFps;
       self.FNumFrames :=FNumFrames;
+      self.fNumElements := fNumElements;
+      setlength(self.fAnimation,length(FAnimation));
+      for I := 0 to length(FAnimation)-1 do
+        begin
+          self.FAnimation[i] := TBaseAnimation.Create(self);
+          self.FAnimation[i].Assign(FAnimation[i]);
+        end;
     end;
+
   end
   else
     inherited;
 end;
 
+procedure TBaseAnimationController.AddElement();
+begin
+  fNumElements:=fNumElements+1;
+  setlength(fAnimation,length(fAnimation)+1);
+  fanimation[length(fanimation)-1]:= TBaseAnimation.Create(self);
+  fanimation[length(fanimation)-1].Name:='Default';
+end;
+
 procedure TBaseAnimationController.AdvanceAnimation(time: single);
 var
-  m: Integer;
+  i: Integer;
 begin
   //increase the currentframe
   FCurrentFrame := FCurrentFrame + time;
   if FCurrentFrame > FNumFrames then FCurrentFrame := 1; //reset when needed
+
+  for i:=0 to length(fanimation)-1 do
+    begin
+      Element[i].CurrentFrame := fCurrentFrame;
+      Element[i].AdvanceAnimation;
+    end;
 end;
 
 destructor TBaseAnimation.Destroy;
 begin
-  SetLength(FTranslateFrame, 0);
-  SetLength(FRotateFrame, 0);
   inherited Destroy;
+  SetLength(self.FTranslateFrame, 0);
+  SetLength(self.FRotateFrame, 0);
+
 end;
 
 procedure TBaseAnimation.Assign(Source: TPersistent);
@@ -117,11 +168,13 @@ begin
   begin
     with TBaseAnimation(Source) do
     begin
+      self.fname:=fname;
       self.FNumRotateFrames := FNumRotateFrames;
       self.FNumTranslateFrames := FNumTranslateFrames;
       self.FRotateFrame := FRotateFrame;
       self.FTranslateFrame :=  FTranslateFrame;
       self.FCurrentFrame := FCurrentFrame;
+      self.fBoneId:= fBoneId;
     end;
   end
   else
@@ -242,13 +295,23 @@ end;
 procedure TBaseAnimation.SetNumTranslateFrames(Value: Integer);
 begin
   FNumTranslateFrames := Value;
-  setlength(FTranslateFrame, Value);
+  setlength(self.FTranslateFrame, Value);
 end;
 
 procedure TBaseAnimation.SetNumRotateFrames(Value: Integer);
 begin
   FNumRotateFrames := Value;
-  setlength(FRotateFrame, Value);
+  setlength(self.FRotateFrame, Value);
+end;
+
+procedure TBaseAnimationController.SetAnimation(Index: Integer; Value: TBaseAnimation);
+begin
+  fAnimation[Index] := Value;
+end;
+
+function TBaseAnimationController.GetAnimation(Index: Integer): TBaseAnimation;
+begin
+  result := fAnimation[Index];
 end;
 
 end.

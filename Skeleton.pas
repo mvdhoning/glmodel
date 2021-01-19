@@ -51,7 +51,7 @@ type
     procedure AddBone;
     procedure Assign(Source: TPersistent); override;
     procedure InitBones;
-    procedure AdvanceAnimation(time: single); overload; virtual;
+    procedure UpdateBones();
     function GetBoneByName(s: string): TBaseBone;
     procedure LoadFromFile(Filename: string); virtual; abstract;
     procedure LoadFromStream(Stream: TStream); virtual; abstract;
@@ -139,7 +139,7 @@ begin
   end;
 end;
 
-procedure TBaseSkeleton.AdvanceAnimation(time: single);
+procedure TBaseSkeleton.UpdateBones();
 var
   m: Integer;
 begin
@@ -147,8 +147,7 @@ begin
   if FNumBones > 0 then
     for m := 0 to FNumBones - 1 do
     begin
-      FBone[m].Animation[0].CurrentFrame := time;
-      FBone[m].AdvanceAnimation;
+      FBone[m].Update;
     end;
 end;
 
