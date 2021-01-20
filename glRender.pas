@@ -48,8 +48,7 @@ begin
   begin
     if fModels[i].NumSkeletons >= 1 then
     begin
-      fModels[i].Skeleton[0].InitBones; //initialize bone matrices
-      fModels[i].InitSkin;              //bind mesh to bones
+      fModels[i].InitSkin; //bind mesh to bones only needed in classic opengl
     end;
   end;
 end;

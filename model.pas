@@ -83,7 +83,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure Init; virtual; abstract;
+    procedure Init; virtual;
     procedure Render; virtual; abstract;
     procedure RenderBoundBox; virtual; abstract;
     procedure RenderSkeleton; virtual; abstract;
@@ -378,6 +378,21 @@ begin
   Result := FSkeleton[index];
 end;
 
+procedure TBaseModel.Init;
+var
+    i: integer;
+begin
+  if self.NumSkeletons=1 then
+  begin
+    self.Skeleton[0].InitBones;
+    //link each animation to a bone
+    for i:=0 to self.animation[0].NumElements-1 do
+      begin
+        self.Animation[0].Element[i].Item:=self.Skeleton[0].Bone[self.Animation[0].Element[i].BoneId];
+      end;
+  end;
+end;
+
 procedure TBaseModel.InitSkin;
 var
   f, m: Integer;
@@ -433,11 +448,13 @@ begin
   self.Animation[0].AdvanceAnimation(time); //first advance the animation
 
   //pass new calculated positions and rotations on to the bone
+  (* //or set animation element to the bone in model.init call
   for i:=0 to self.Animation[0].NumElements-1 do
   begin
     self.Skeleton[0].Bone[self.Animation[0].Element[i].BoneId].Position:=self.Animation[0].Element[i].Position;
     self.Skeleton[0].Bone[self.Animation[0].Element[i].BoneId].Rotation:=self.Animation[0].Element[i].Rotation;
   end;
+  *)
 
   self.Skeleton[0].UpdateBones; //update bones to the new frame data
 end;
@@ -453,6 +470,7 @@ begin
   LoadFromFile(GraphicClass, AFilename);
   Calculatesize;        //calculate min and max size
   CalculateRenderOrder; //set transparency order...
+  Init;
 end;
 
 procedure TBaseModel.LoadFromFile(AType: TBaseModelClass; AFileName: string);

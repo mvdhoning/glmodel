@@ -29,7 +29,7 @@ unit Bone;
 
 interface
 
-uses classes, glmatrix, glmath;
+uses classes, glmatrix, glmath, Transform;
 
 type
 
@@ -37,13 +37,13 @@ type
 
   TBaseBoneClass = class of TBaseBone;
 
-  TBaseBone = class(TComponent)
+  TBaseBone = class(TTransformComponent)
   protected
     Fid: integer;
     FRotate: T3DPoint;
     FTranslate: T3DPoint;
-    FPosition: T3dCoord;
-    FRotation: T3dCoord;
+    //FPosition: T3dCoord;
+    //FRotation: T3dCoord;
     FMatrix: ClsMatrix;
     FInverseMatrix: ClsMatrix;
     FName: string;
@@ -62,8 +62,8 @@ type
     property Parent: TBaseBone read FParent write FParent;
     property Rotate: T3DPoint read FRotate write FRotate;
     property Translate: T3DPoint read FTranslate write FTranslate;
-    property Rotation: T3DCoord read FRotation write FRotation;
-    property Position: T3DCoord read FPosition write FPosition;
+//    property Rotation: T3DCoord read FRotation write FRotation;
+//    property Position: T3DCoord read FPosition write FPosition;
     property Matrix: ClsMatrix read FMatrix write FMatrix;
     property InverseMatrix: ClsMatrix read FInverseMatrix write FInverseMatrix;
   end;

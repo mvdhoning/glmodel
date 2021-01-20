@@ -29,7 +29,7 @@ unit Mesh;
 
 interface
 
-uses classes, glmath, Material;
+uses classes, glmath, Material, Transform;
 
 type
   //texturemapping coords
@@ -60,7 +60,7 @@ type
 
   TBaseMeshClass = class of TBaseMesh;
 
-  TBaseMesh = class(TComponent)
+  TBaseMesh = class(TTransformComponent)
   protected
     FMatrix: array of Single;
     FVisible: boolean;

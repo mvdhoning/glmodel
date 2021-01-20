@@ -30,7 +30,7 @@ unit Animation;
 interface
 
 uses
-  Classes, SysUtils, glmath, keyframe;
+  Classes, SysUtils, glmath, keyframe, Transform;
 
 type
 
@@ -70,6 +70,7 @@ protected
   FTranslateFrame: array of TKeyFrame;
   FCurrentFrame: single;
   fBoneId: integer;
+  fItem: TTransformComponent;
   function GetRotateFrame(Index: integer): TKeyFrame;
   procedure SetRotateFrame(Index: integer; Value: TKeyFrame);
   function GetTranslateFrame(Index: integer): TKeyFrame;
@@ -82,6 +83,7 @@ public
   procedure AdvanceAnimation;
   property Id: integer read fId write fId;
   property Name: string read FName write FName;
+  property Item: TTransformComponent read fItem write fItem;
   property CurrentFrame: single read FCurrentFrame write FCurrentFrame;
   property Rotation: T3DCoord read FRotation;
   property Position: T3DCoord read FPosition;
@@ -226,6 +228,7 @@ begin
       fPosition[2] := 0;
     end;
   end;
+  if self.Item<>nil then self.Item.Position:=fPosition;
 
   // Rotation
 
@@ -268,6 +271,7 @@ begin
     end;
   end;
 
+  if self.Item<>nil then self.Item.Rotation:=fRotation;
   // Now we know the position and rotation for this animation frame.
 
 end;

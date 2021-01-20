@@ -49,10 +49,11 @@ procedure TglModel.Init;
 var
   m: Integer;
 begin
-    for m := 0 to FNumMeshes - 1 do
-    begin
-      FMesh[FRenderOrder[m]].Init;
-    end;
+  inherited;
+  for m := 0 to FNumMeshes - 1 do
+  begin
+    FMesh[FRenderOrder[m]].Init;
+  end;
 end;
 
 procedure TglModel.Render;
