@@ -33,7 +33,7 @@ type
   Tgl3Skeleton = class(TBaseSkeleton)
   public
     constructor Create(AOwner: TComponent); override;
-    procedure AdvanceAnimation(time: single); overload; override;
+    procedure AdvanceAnimation(time: single); //overload; override;
   end;
 
 implementation

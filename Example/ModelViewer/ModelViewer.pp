@@ -6,18 +6,15 @@ program ModelViewer;
   {$H+}
   {$M+}
   {$codepage utf8}
-  {$IFNDEF WINDOWS}
-    {$LINKLIB c}
-  {$ENDIF}
 {$ENDIF}
 
 //for logs
 {$APPTYPE CONSOLE}
 
 uses
-  {$IFDEF WINDOWS}windows,{$ENDIF}
+  windows,
   classes, sysutils, dglOpenGL, SDL2, Model, ModelMSA, ModelMS3D, ModelFBX,
-  glrender, Animation, keyframe,math;
+  glrender, Animation, keyframe{,math};
 
 type
   clsCamera = record
@@ -329,6 +326,8 @@ begin
 
   window := nil;
   context := nil;
+
+  Writeln('Starting');
 
   try
     

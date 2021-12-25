@@ -31,9 +31,6 @@ unit ModelFbx;
   {$H+}
   {$M+}
   {$codepage utf8}
-  {$IFNDEF WINDOWS}
-    {$LINKLIB c}
-  {$ENDIF}
 {$ENDIF}
 
 interface
@@ -56,10 +53,12 @@ type
     fbxkeyvaluestoreM: TStringList;
     fbxkeyvaluestoreB: TStringList;
     fbxkeyvaluestoreD: TStringList;
+    fbxkeyvaluestoreA: TStringList;
     fbxindexinfo: TDictionary<integer, boolean>;
     fbxcurrentname: string;
     fbxmesh: boolean;
     fbxbone: boolean;
+    fbxtime: boolean;
     procedure AddNormalIndices(value: string);
     procedure AddNormals(value: string);
     procedure AddUVMapping(value: string);
@@ -76,7 +75,7 @@ type
 implementation
 
 uses
-  SysUtils, StrUtils, glMath, Mesh, math, Animation;
+  SysUtils, StrUtils, glMath, Mesh, math, Animation, keyframe;
 
 procedure TFbxModel.AddVertices(value: string);
 var
@@ -402,15 +401,20 @@ var
   value: string;
   n,l,i,j,b,k,loop,loop2: integer;
   tsl,tsl2: TStringList;
-    tempvertex: T3DPoint;
-      tempm: array [0..15] of single;
-      fbxcurrentdeformer,tempms: string;
+  tempvertex: T3DPoint;
+  //tempm: array [0..15] of single;
+  fbxcurrentdeformer{,tempms}: string;
+  fbxcurrentannimationcurvenode: string;
+  fbxcurrentannimationcurve: string;
+  tempkeyframe: TKeyFrame;
+  currentelement: integer;
 begin
 
   fbxkeyvaluestoreT:=TStringList.Create;
   fbxkeyvaluestoreM:=TStringList.Create;
   fbxkeyvaluestoreB:=TStringList.Create;
   fbxkeyvaluestoreD:=TStringList.Create;
+  fbxkeyvaluestoreA:=TStringList.Create;
   fbxindexinfo:=TDictionary<integer, boolean>.Create;
 
   self.AddSkeleton; //TODO: make adding skeleton optionsl
@@ -425,6 +429,7 @@ begin
 
   l := 0;
   n := 0;
+  currentelement:=0;
   fbxcurrentdeformer:='';
   parentparentkey:='';
   parentkey:='';
@@ -440,6 +445,80 @@ begin
     //previous key value multiline support
     if (pos(':',line)>0) then
     begin
+
+      if key='AnimationStack' then
+      begin
+        tsl := TStringList.Create;
+        tsl.CommaText := value;
+        setlength(fAnimation,length(fAnimation)+1);
+        fAnimation[length(fAnimation)-1]:=TBaseAnimationController.Create(self);
+        fAnimation[length(fAnimation)-1].Name:=tsl[1];
+        fbxKeyvaluestoreA.Values[tsl[0]+'STACK']:=tsl[1];
+        writeln('Added animation stack: '+fbxKeyvaluestoreA.Values[tsl[0]+'STACK']);
+        tsl.Free;
+      end;
+
+      if key='AnimationLayer' then
+      begin
+        tsl := TStringList.Create;
+        tsl.CommaText := value;
+        fbxKeyvaluestoreA.Values[tsl[0]+'LAYER']:=tsl[1];
+        writeln('Added animation layer: '+fbxKeyvaluestoreA.Values[tsl[0]+'LAYER']);
+        tsl.Free;
+      end;
+
+      if key='AnimationCurveNode' then
+      begin
+        tsl := TStringList.Create;
+        tsl.CommaText := value;
+        fbxcurrentannimationcurvenode:=tsl[0];
+        if tsl[1] = 'AnimCurveNode::T' then
+           fbxKeyvaluestoreA.Values[tsl[0]+'TNODE']:=tsl[1];
+        if tsl[1] = 'AnimCurveNode::R' then
+           fbxKeyvaluestoreA.Values[tsl[0]+'RNODE']:=tsl[1];
+        if tsl[1] = 'AnimCurveNode::DeformPercent' then
+          fbxcurrentannimationcurvenode:='';
+        if tsl[1] = 'AnimCurveNode::S' then
+          fbxcurrentannimationcurvenode:='';
+
+        //writeln('Added animation curve node: '+fbxKeyvaluestoreA.Values[tsl[0]+'NODE']);
+        tsl.Free;
+      end;
+
+      if (fbxcurrentannimationcurvenode<>'') and (key='P') then
+      begin
+        tsl := TStringList.Create;
+        tsl.CommaText := value;
+        fbxKeyvaluestoreA.Values[fbxcurrentannimationcurvenode+tsl[0]]:=tsl[4];
+        //writeln('Added animation curve node data: '+tsl[0]+' '+fbxKeyvaluestoreA.Values[fbxcurrentannimationcurvenode+tsl[0]]);
+        tsl.Free;
+      end;
+
+      if key='AnimationCurve' then
+      begin
+        tsl := TStringList.Create;
+        tsl.CommaText := value;
+        fbxKeyvaluestoreA.Values[tsl[0]+'CURVE']:=tsl[1];
+        fbxcurrentannimationcurve:=tsl[0];
+        writeln('Added animation curve: '+fbxKeyvaluestoreA.Values[tsl[0]+'CURVE']);
+        tsl.Free;
+      end;
+
+
+      if (fbxcurrentannimationcurve<>'') and (parentkey='KeyTime') and (key='a') then
+      begin
+        if fbxversion>=7100 then value:=trim(copy(value, 0, pos('}', value)-1));
+        fbxKeyvaluestoreA.Values[fbxcurrentannimationcurvenode+'TIME']:=value;
+        //writeln('Added animation curve data: TIME '+fbxKeyvaluestoreA.Values[fbxcurrentannimationcurvenode+'TIME']);
+      end;
+
+      if (fbxcurrentannimationcurve<>'') and (parentkey='KeyValueFloat') and (key='a') then
+      begin
+        if fbxversion>=7100 then value:=trim(copy(value, 0, pos('}', value)-1));
+        fbxKeyvaluestoreA.Values[fbxcurrentannimationcurvenode+'FLOAT']:=value;
+        //writeln('Added animation curve data: FLOAT '+fbxKeyvaluestoreA.Values[fbxcurrentannimationcurvenode+'TIME']);
+      end;
+
       if key='ReferenceInformationType' then
       begin
         value:=StringReplace(value, '"', '', [rfReplaceAll]);
@@ -625,7 +704,7 @@ begin
               i:=fbxkeyvaluestoreD.IndexOfName('skin'+tsl[2]);
               if (i>0) and (k>0) then
                 begin
-                  Writeln('Map subdeformer '+tsl[1]+' to deformer '+tsl[2]);
+                  //Writeln('Map subdeformer '+tsl[1]+' to deformer '+tsl[2]);
                   fbxkeyvaluestoreD.Values['cluster'+tsl[1]]:=fbxkeyvaluestoreD.Values['skin'+tsl[2]]; //write mesh id
                 end;
 
@@ -635,7 +714,7 @@ begin
               begin
                 if self.Mesh[i].Id=strtoint(tsl[2]) then
                   begin
-                    writeln('Found mesh: '+self.Mesh[i].Name+' for deformer '+tsl[1]);
+                    //writeln('Found mesh: '+self.Mesh[i].Name+' for deformer '+tsl[1]);
                     fbxkeyvaluestoreD.Values['skin'+tsl[1]]:=inttostr(self.Mesh[i].Id);
                   end;
               end;
@@ -657,8 +736,8 @@ begin
                   begin
                     tsl2:=TStringList.Create;
                     tsl2.CommaText:=fbxkeyvaluestoreD.Values[tsl[2]];
-                    for loop:=0 to 15 do
-                      tempm[loop]:=strtofloat(tsl2[loop]);
+                    //for loop:=0 to 15 do
+                    //  tempm[loop]:=strtofloat(tsl2[loop]);
                     //self.Skeleton[0].Bone[j].Matrix.setMatrixValues(tempm);
                     tsl2.free;
                   end;
@@ -686,23 +765,23 @@ begin
               begin
               if self.Skeleton[0].Bone[j].Id=strtoint(tsl[1]) then
                 begin
-                  writeln('Bone name: '+self.Skeleton[0].Bone[j].Name);
+                  //writeln('Bone name: '+self.Skeleton[0].Bone[j].Name);
                   //find deformer indexes
                   k:=fbxkeyvaluestoreD.IndexOfName('indexes'+tsl[2]);
                   if k>0 then
                   begin
-                    writeln('Indexes Deformer '+tsl[2]);
+                    //writeln('Indexes Deformer '+tsl[2]);
                     tsl2:=TStringList.Create;
                     trim(copy(fbxkeyvaluestoreD.Values['indexes'+tsl[2]],0,pos('}',fbxkeyvaluestoreD.Values['indexes'+tsl[2]])-1));
                     tsl2.CommaText:=trim(copy(fbxkeyvaluestoreD.Values['indexes'+tsl[2]],0,pos('}',fbxkeyvaluestoreD.Values['indexes'+tsl[2]])-1));
-                    writeln('MeshId: '+fbxkeyvaluestoreD.Values['cluster'+tsl[2]]);
+                    //writeln('MeshId: '+fbxkeyvaluestoreD.Values['cluster'+tsl[2]]);
                     if strtoint(fbxkeyvaluestoreD.Values['cluster'+tsl[2]])>0 then
                     begin
                       for loop:=0 to self.NumMeshes-1 do
                       begin
                         if self.Mesh[loop].id=strtoint(fbxkeyvaluestoreD.Values['cluster'+tsl[2]]) then
                         begin
-                          writeln('Apply to mesh: '+self.Mesh[loop].name);
+                          //writeln('Apply to mesh: '+self.Mesh[loop].name);
                           for loop2:=0 to tsl2.count-1 do
                           begin
                             self.Mesh[loop].BoneId[strtoint(tsl2[loop2]),0]:=j;
@@ -719,7 +798,7 @@ begin
                   begin
                     if self.Skeleton[0].Bone[k].Id=strtoint(tsl[2]) then
                     begin
-                      writeln('Found parent bone');
+                      //writeln('Found parent bone');
                       self.Skeleton[0].Bone[j].ParentName:=self.Skeleton[0].Bone[k].Name;
                     end;
                   end;
@@ -727,6 +806,218 @@ begin
                 end;
               end;
             end;
+          end;
+
+          if fbxversion>=7100 then
+          begin
+            //map animation layer to stack
+            //writeln('Map Animation Start');
+
+            i:=fbxkeyvaluestoreA.IndexOfName(tsl[1]+'LAYER');
+            if i>=0 then
+            begin
+              writeln(tsl[1]);
+              j:=fbxkeyvaluestoreA.IndexOfName(tsl[2]+'STACK');
+              if j>=0 then
+              begin
+                writeln(tsl[2]);
+                writeln(fbxkeyvaluestoreA.ValueFromIndex[j]);
+                for loop:=0 to length(self.fAnimation)-1 do
+                begin
+                  writeln(self.fAnimation[loop].Name);
+                  if self.fAnimation[loop].Name=fbxkeyvaluestoreA.ValueFromIndex[j] then
+                  begin
+                    fbxkeyvaluestoreA.Values[tsl[1]+'LAYER']:=inttostr(loop);
+                    writeln('Found animation: '+self.fAnimation[loop].Name);
+                    for loop2:=0 to self.Skeleton[0].NumBones-1 do
+                    begin
+                      writeln(loop2);
+                      self.fAnimation[loop].AddElement();
+                    end;
+                  end;
+                end;
+              end;
+            end;
+
+            //map node to layer (to fanimation);
+
+            i:=fbxkeyvaluestoreA.IndexOfName(tsl[1]+'TNODE');
+            if i>=0 then
+            begin
+
+              j:=fbxkeyvaluestoreA.IndexOfName(tsl[2]+'LAYER');
+              if j>=0 then
+              begin
+                writeln(fbxkeyvaluestoreA.Values[tsl[1]+'TNODE']);
+                fbxkeyvaluestoreA.Values[tsl[1]+'TNODE']:=fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'];
+                //writeln('animid '+fbxkeyvaluestoreA.Values[tsl[2]+'LAYER']);
+                //self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'])].AddElement();
+
+                if fbxkeyvaluestoreA.Values[tsl[1]+'BNODE'] <> '' then
+                begin
+                  //writeln('NumElements+'+inttostr(self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'])].NumElements));
+                  writeln('BoneId'+fbxkeyvaluestoreA.Values[tsl[1]+'BNODE']);
+                  //self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'])].Element[self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'])].NumElements-1{strtoint(fbxkeyvaluestoreA.Values[tsl[1]+'BNODE'])}].BoneId:=strtoint(fbxkeyvaluestoreA.Values[tsl[1]+'BNODE']);
+                  self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'])].Element[currentelement{strtoint(fbxkeyvaluestoreA.Values[tsl[1]+'BNODE'])}].BoneId:=strtoint(fbxkeyvaluestoreA.Values[tsl[1]+'BNODE']);
+                  currentelement:=currentelement+1;
+                end;
+
+              end;
+
+              //find bone
+              j:=fbxkeyvaluestoreB.IndexOfName(tsl[2]);
+              if j>=0 then
+              begin
+                //writeln('Found Bone: '+fbxkeyvaluestoreB.Values[tsl[2]]);
+                for loop:=0 to self.Skeleton[0].NumBones-1 do
+                begin
+                   if self.Skeleton[0].Bone[loop].Id=strtoint(tsl[2]) then
+                    begin
+                      //found bone
+                      writeln('Found Bone Id: '+inttostr(loop));
+                      ///writeln('ID: '+tsl[1]);
+                      fbxkeyvaluestoreA.Values[tsl[1]+'BNODE']:=inttostr(loop);
+
+                    end;
+                end;
+
+              end;
+
+            end;
+
+            i:=fbxkeyvaluestoreA.IndexOfName(tsl[1]+'RNODE');
+            if i>=0 then
+            begin
+
+              j:=fbxkeyvaluestoreA.IndexOfName(tsl[2]+'LAYER');
+              if j>=0 then
+              begin
+                //writeln('RNODE: '+fbxkeyvaluestoreA.Values[tsl[1]+'RNODE']);
+                fbxkeyvaluestoreA.Values[tsl[1]+'RNODE']:=fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'];
+                //self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'])].AddElement();
+
+                if fbxkeyvaluestoreA.Values[tsl[1]+'BNODE'] <> '' then
+                begin
+                  //writeln('NumElements+'+inttostr(self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'])].NumElements));
+                  //writeln('BoneId'+fbxkeyvaluestoreA.Values[tsl[1]+'BNODE']);
+                  self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'LAYER'])].Element[ strtoint(fbxkeyvaluestoreA.Values[tsl[1]+'BNODE']) ].BoneId:=strtoint(fbxkeyvaluestoreA.Values[tsl[1]+'BNODE']);
+                end;
+
+              end;
+
+              //find bone
+              j:=fbxkeyvaluestoreB.IndexOfName(tsl[2]);
+              if j>=0 then
+              begin
+                //writeln('Found Bone: '+fbxkeyvaluestoreB.Values[tsl[2]]);
+                for loop:=0 to self.Skeleton[0].NumBones-1 do
+                begin
+                   if self.Skeleton[0].Bone[loop].Id=strtoint(tsl[2]) then
+                    begin
+                      //found bone
+                      //writeln('Found Bone Id: '+inttostr(loop));
+                      //writeln('ID: '+tsl[1]);
+                      fbxkeyvaluestoreA.Values[tsl[1]+'BNODE']:=inttostr(loop);
+
+                    end;
+                end;
+              end;
+            end;
+
+            //map curve to node
+            i:=fbxkeyvaluestoreA.IndexOfName(tsl[1]+'CURVE');
+            if i>=0 then
+            begin
+
+              j:=fbxkeyvaluestoreA.IndexOfName(tsl[2]+'TNODE');
+              if j>=0 then
+              begin
+                //writeln('curve: '+fbxkeyvaluestoreA.Values[tsl[1]+'CURVE']);
+               // writeln('ID: '+tsl[2]);
+               // writeln('Bone/Element Id: '+fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']);
+
+                if fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']<>'' then
+                begin
+
+                  //if fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'] <> '' then
+                  //begin
+                    //loop:=self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[loop].BoneId;
+              //    writeln('*****************************************************');
+              //    writeln(fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']);
+             //     writeln(self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[loop].BoneId);
+                  loop:=strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']);
+
+                 (*   for loop:=0 to self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].NumElements-1 do
+                    begin
+                      if self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[loop].BoneId=strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']) then break;
+                    end;
+                   *)
+                   self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].BoneId:=loop;
+
+                   self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].Name:=self.Skeleton[0].Bone[loop].Name;
+                   self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].NumTranslateFrames:=1;
+
+               //     writeln(fbxKeyvaluestoreA.Values[tsl[2]+tsl[3]]);
+
+                 //   writeln(self.fAnimation[strtoint(fbxKeyvaluestoreA.Values[tsl[2]+'TNODE'])].Name);
+                    tempkeyframe:=self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].TranslateFrame[0];
+                    tempkeyframe.time:=0;
+                    if tsl[3] = 'd|X' then tempkeyframe.Value.x:=strtofloat(fbxKeyvaluestoreA.Values[tsl[2]+tsl[3]]){-self.Skeleton[0].Bone[loop].Translate.x};
+                    if tsl[3] = 'd|Y' then tempkeyframe.Value.y:=strtofloat(fbxKeyvaluestoreA.Values[tsl[2]+tsl[3]]){-self.Skeleton[0].Bone[loop].Translate.y};
+                    if tsl[3] = 'd|Z' then tempkeyframe.Value.z:=strtofloat(fbxKeyvaluestoreA.Values[tsl[2]+tsl[3]]){-self.Skeleton[0].Bone[loop].Translate.z};
+                    self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].TranslateFrame[0]:=tempkeyframe;
+                  //end;
+                end;
+              end;
+
+              j:=fbxkeyvaluestoreA.IndexOfName(tsl[2]+'RNODE');
+              if j>=0 then
+              begin
+                //writeln('curve: '+fbxkeyvaluestoreA.Values[tsl[1]+'CURVE']);
+                //writeln('ID: '+tsl[2]);
+               // writeln('Bone/Element Id: '+fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']);
+
+                if fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']<>'' then
+                begin
+
+                  //if fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'] <> '' then
+                  //begin
+                 //   writeln('---------------------------------------------------------------');
+                    //loop:=self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[loop].BoneId;
+                    //writeln(self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[loop].BoneId);
+            //        writeln(fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']);
+                    loop:=strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']);
+
+
+          (*          for loop:=0 to self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].NumElements-1 do
+                    begin
+                      writeln(fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']);
+                      writeln(self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[loop].BoneId);
+                      if self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[loop].BoneId=strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'BNODE']) then break;
+                    end;
+            *)
+                    self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].BoneId:=loop;
+
+                    self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].Name:=self.Skeleton[0].Bone[loop].Name;
+
+                    self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].NumRotateFrames:=1;
+              //      writeln(fbxKeyvaluestoreA.Values[tsl[2]+tsl[3]]);
+             //       writeln(self.fAnimation[strtoint(fbxKeyvaluestoreA.Values[tsl[2]+'RNODE'])].Name);
+                    tempkeyframe:=self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].RotateFrame[0];
+                    tempkeyframe.time:=0;
+                    if tsl[3] = 'd|X' then tempkeyframe.Value.x:=degtorad(strtofloat(fbxKeyvaluestoreA.Values[tsl[2]+tsl[3]])){-self.Skeleton[0].Bone[loop].Rotate.x};
+                    if tsl[3] = 'd|Y' then tempkeyframe.Value.y:=degtorad(strtofloat(fbxKeyvaluestoreA.Values[tsl[2]+tsl[3]])){-self.Skeleton[0].Bone[loop].Rotate.y};
+                    if tsl[3] = 'd|Z' then tempkeyframe.Value.z:=degtorad(strtofloat(fbxKeyvaluestoreA.Values[tsl[2]+tsl[3]])){-self.Skeleton[0].Bone[loop].Rotate.z};
+                    self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].RotateFrame[0]:=tempkeyframe;
+                  //end;
+                end;
+              end;
+
+            end;
+
+            //TODO: read frame 0 from animationcurve and add that to base values from node?
+
+            //writeln('Map Animation End');
           end;
 
           if fbxversion>=7100 then
@@ -843,6 +1134,7 @@ begin
           //parentkey:= key;
           key:=trim(copy(line,0,pos(':',line)-1));
           value:=trim(copy(line,pos(':',line)+1,length(line)-1));
+
           //do actions on key here
           if key = 'FBXVersion' then
             begin
@@ -887,6 +1179,15 @@ begin
               tsl.free;
 
             end;
+
+          (*
+          if (key= 'KeyTime') and (fbxversion>=7100) then
+          begin
+            writeln('KeyTime');
+            fbxtime:=true
+          end;// else fbxtime:=false;
+          *)
+
           if (key = 'Model') and (fbxversion>=7100) then
           begin
             tsl := TStringList.Create;
@@ -934,6 +1235,7 @@ begin
               end;
               tsl.free;
             end;
+
           if (key='Vertices') and ((fbxversion>=7100) and (fbxmesh)) then
             begin
               //set number of vetrices in mesh
@@ -987,6 +1289,7 @@ begin
         begin
           //also read remainder of value
           value:=value+line;
+
         end;
 
 
@@ -1025,6 +1328,7 @@ begin
   fbxkeyvaluestoreT.Free;
   fbxkeyvaluestoreB.Free;
   fbxkeyvaluestoreD.Free;
+  fbxkeyvaluestoreA.Free;
   fbxindexinfo.Free;
 
   //Skeleton Sanity Check

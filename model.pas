@@ -380,17 +380,18 @@ end;
 
 procedure TBaseModel.Init;
 var
-    i: integer;
+    i,j: integer;
 begin
   if self.NumSkeletons=1 then
   begin
     self.Skeleton[0].InitBones;
     //link each animation to a bone
-    for i:=0 to self.animation[0].NumElements-1 do
-      begin
-        self.Animation[0].Element[i].Item:=self.Skeleton[0].Bone[self.Animation[0].Element[i].BoneId];
-      end;
-  end;
+    for j:=0 to length(self.fAnimation)-1 do
+      for i:=0 to self.animation[j].NumElements-1 do
+        begin
+          self.Animation[j].Element[i].Item:=self.Skeleton[0].Bone[self.Animation[j].Element[i].BoneId];
+        end;
+    end;
 end;
 
 procedure TBaseModel.InitSkin;
@@ -445,7 +446,7 @@ var
   i: integer;
 begin
   //increase the currentframe
-  self.Animation[0].AdvanceAnimation(time); //first advance the animation
+  self.Animation[1].AdvanceAnimation(time); //first advance the animation
 
   //pass new calculated positions and rotations on to the bone
   (* //or set animation element to the bone in model.init call
