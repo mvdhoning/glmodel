@@ -68,7 +68,7 @@ begin
   camera.xangle := 0;//45;//45.0; //10
   camera.yangle := 0;//-90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 150.0; //250  //500
+  camera.dist := 100.0; //250  //500
 
   angle_speed := 0.5;
   dist_speed := 0.5;
@@ -90,6 +90,8 @@ begin
   scene1 := TglRender.Create(nil);
   scene1.AddModel();
 
+  writeln('current directory: '+GetCurrentDir());
+
   //scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2006\testgr2014.fbx'); //TODO: this model has less normals then normal indices suggest
 
   scene1.Models[0].LoadFromFile('D:\Reallusion\export\FBX 2013\testgr2.fbx');
@@ -103,9 +105,10 @@ begin
   //scene1.Models[0].LoadFromFile('C:\Projecten\assets\Scorpion\scorpid2013.fbx');
   //scene1.Models[0].LoadFromFile('C:\Projecten\assets\Scorpion\scorpid.ms3d');
 
-  //scene1.Models[0].LoadFromFile('..\..\Models\msa-test1.txt'); //24fps?
-  //scene1.Models[0].LoadFromFile('..\..\Models\hog2.txt'); //24fps?
-//  scene1.Models[0].LoadFromFile('..\..\Models\ninjat.ms3d');
+  //scene1.Models[0].LoadFromFile('c:\Projecten\glModel\Models\msa-test1.txt'); //24fps?
+  //scene1.Models[0].LoadFromFile('c:\Projecten\glModel\Models\hog2.txt'); //24fps?
+
+  //scene1.Models[0].LoadFromFile('c:\Projecten\glModel\Models\ninjat.ms3d');
 
   //scene1.Models[0].InitSkin; //bind mesh to bones
 
@@ -147,11 +150,13 @@ begin
   writeln('Skeleton');
   for i:=0 to scene1.Models[0].Skeleton[0].NumBones-1 do
     writeln(inttostr(i)+' '+scene1.Models[0].Skeleton[0].Bone[i].Name);
-  writeln();
 
 
   writeln('Animation');
-  writeln(scene1.Models[0].Animation[0].Name);
+  if scene1.Models[0].NumSkeletons>=1 then
+    writeln(scene1.Models[0].Animation[0].Name);
+
+  (*
   writeln(scene1.Models[0].Animation[1].Name);
   writeln(scene1.Models[0].Animation[1].NumElements);
 
@@ -180,13 +185,13 @@ begin
   scene1.Models[0].Animation[1].NumFrames:=1;
   scene1.Models[0].Animation[1].AnimFps:=24;
   scene1.Models[0].Animation[1].CurrentFrame:=0;
-
-
-  (*
-  scene1.Models[0].Skeleton[0].AnimFps:=24;
-  scene1.Models[0].Skeleton[0].NumFrames:=10;
-  scene1.Models[0].Skeleton[0].CurrentFrame:=1;
   *)
+
+
+  //scene1.Models[0].Animation[0].AnimFps:=24;
+  //scene1.Models[0].Animation[0].NumFrames:=10;
+  //scene1.Models[0].Animation[0].CurrentFrame:=1;
+
 
   (*
   scene1.Models[0].Skeleton[0].Bone[41].Animation[0].NumTranslateFrames:=1;
@@ -214,7 +219,7 @@ begin
   scene1.Models[0].Skeleton[0].Bone[39].Animation[0].RotateFrame[1]:=tempkeyframe;
   *)
 
-  scene1.Models[0].AdvanceAnimation(0);
+  //scene1.Models[0].AdvanceAnimation(0);
 
   QueryPerformanceCounter(fLastTick); //lasttime
   QueryPerformanceFrequency(PerformanceFrequency) //frequency
@@ -249,15 +254,19 @@ end;
 procedure Update();
 begin
   QueryPerformanceCounter(ftick); //currentime
-  (*
+
   //advance the animation in accordance to
   //elapsed time since last call
   //elapsed time = currentime - lasttime
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
   if scene1.Models[0].NumSkeletons>=1 then
-    scene1.Models[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Animation[0].AnimFps);
-  *)
+    begin
+      //scene1.Models[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Animation[0].AnimFps);
+      scene1.Models[0].AdvanceAnimation(1);
+    end;
+
+
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;

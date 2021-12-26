@@ -43,3 +43,8 @@ test/
 
 #exclude models folder
 models/
+
+*.tga
+Example/ReadModel/*.txt
+Example/ReadModel/*.bvh
+Example/ModelViewer/*.txt

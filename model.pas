@@ -446,7 +446,7 @@ var
   i: integer;
 begin
   //increase the currentframe
-  self.Animation[1].AdvanceAnimation(time); //first advance the animation
+  self.Animation[0].AdvanceAnimation(time); //first advance the animation
 
   //pass new calculated positions and rotations on to the bone
   (* //or set animation element to the bone in model.init call
