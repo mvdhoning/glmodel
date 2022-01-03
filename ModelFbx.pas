@@ -984,22 +984,26 @@ begin
                   writeln('values for '+TSL[1]+'TIME : '+fbxkeyvaluestoreA.Values[TSL[1]+'TIME']);
                   writeln('values for '+TSL[1]+'FLOAT : '+fbxkeyvaluestoreA.Values[TSL[1]+'FLOAT']);
 
-                  tempkeyframe:=self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].TranslateFrame[0];
-
-
-                  tempkeyframe.time:=0; //TODO: use time from current frame
 
                   tsl2 := TStringList.Create;
                   tsl2.CommaText := fbxKeyvaluestoreA.Values[tsl[1]+'FLOAT'];
                   writeln(tsl2.Count);
 
-                  if tsl[3] = 'd|X' then tempkeyframe.Value.x:=strtofloat(tsl2[0])-self.Skeleton[0].Bone[loop].Translate.x;
-                  if tsl[3] = 'd|Y' then tempkeyframe.Value.y:=strtofloat(tsl2[0])-self.Skeleton[0].Bone[loop].Translate.y;
-                  if tsl[3] = 'd|Z' then tempkeyframe.Value.z:=strtofloat(tsl2[0])-self.Skeleton[0].Bone[loop].Translate.z;
+                  self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].NumTranslateFrames:=tsl2.count;
 
+                  for k:=0 to tsl2.Count-1 do
+                    begin
+                      tempkeyframe:=self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].TranslateFrame[k];
+
+                      tempkeyframe.time:=k; //TODO: use time from current frame
+
+                      if tsl[3] = 'd|X' then tempkeyframe.Value.x:=strtofloat(tsl2[k])-self.Skeleton[0].Bone[loop].Translate.x;
+                      if tsl[3] = 'd|Y' then tempkeyframe.Value.y:=strtofloat(tsl2[k])-self.Skeleton[0].Bone[loop].Translate.y;
+                      if tsl[3] = 'd|Z' then tempkeyframe.Value.z:=strtofloat(tsl2[k])-self.Skeleton[0].Bone[loop].Translate.z;
+
+                      self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].TranslateFrame[k]:=tempkeyframe;
+                   end;
                   tsl2.Free;
-
-                  self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'TNODE'])].Element[ loop ].TranslateFrame[0]:=tempkeyframe;
 
 
                 end;
@@ -1017,16 +1021,27 @@ begin
                   self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].Name:=self.Skeleton[0].Bone[loop].Name;
                   self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].NumRotateFrames:=1;
 
-                  tempkeyframe:=self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].RotateFrame[0];
-                  tempkeyframe.time:=0;
                   tsl2 := TStringList.Create;
                   tsl2.CommaText := fbxKeyvaluestoreA.Values[tsl[1]+'FLOAT'];
-                  if tsl[3] = 'd|X' then tempkeyframe.Value.x:=degtorad(strtofloat(tsl2[0]))-self.Skeleton[0].Bone[loop].Rotate.x;
-                  if tsl[3] = 'd|Y' then tempkeyframe.Value.y:=degtorad(strtofloat(tsl2[0]))-self.Skeleton[0].Bone[loop].Rotate.y;
-                  if tsl[3] = 'd|Z' then tempkeyframe.Value.z:=degtorad(strtofloat(tsl2[0]))-self.Skeleton[0].Bone[loop].Rotate.z;
-                  tsl2.Free;
-                  self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].RotateFrame[0]:=tempkeyframe;
+                  writeln(tsl2.Count);
+                  self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].NumRotateFrames:=tsl2.count;
 
+                  for k:=0 to tsl2.Count-1 do
+                    begin
+                      tempkeyframe:=self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].RotateFrame[k];
+                      tempkeyframe.time:=k;
+
+                      if tsl[3] = 'd|X' then tempkeyframe.Value.x:=degtorad(strtofloat(tsl2[k]))-self.Skeleton[0].Bone[loop].Rotate.x;
+                      if tsl[3] = 'd|Y' then tempkeyframe.Value.y:=degtorad(strtofloat(tsl2[k]))-self.Skeleton[0].Bone[loop].Rotate.y;
+                      if tsl[3] = 'd|Z' then tempkeyframe.Value.z:=degtorad(strtofloat(tsl2[k]))-self.Skeleton[0].Bone[loop].Rotate.z;
+
+                      if tsl[3] = 'd|X' then writeln(tempkeyframe.Value.x);
+                      if tsl[3] = 'd|Y' then writeln(tempkeyframe.Value.y);
+                      if tsl[3] = 'd|Z' then writeln(tempkeyframe.Value.z);
+
+                      self.fAnimation[strtoint(fbxkeyvaluestoreA.Values[tsl[2]+'RNODE'])].Element[ loop ].RotateFrame[k]:=tempkeyframe;
+                    end;
+                  tsl2.Free;
                 end;
               end;
 
@@ -1222,6 +1237,8 @@ begin
               self.Skeleton[0].AddBone;
               self.Skeleton[0].Bone[self.Skeleton[0].NumBones-1].Id:=strtoint(tsl[0]);
               self.Skeleton[0].Bone[self.Skeleton[0].NumBones-1].Name:=tsl[1];
+              writeln(tsl[1]);
+              writeln(self.Skeleton[0].NumBones);
               fbxmesh:=false;
               fbxbone:=true;
             end else

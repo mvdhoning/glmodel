@@ -108,6 +108,7 @@ end;
 destructor TBaseAnimationController.Destroy;
 begin
   inherited Destroy;
+  fNumElements:=0;
   setlength(fAnimation,0);
 end;
 
@@ -155,10 +156,12 @@ begin
 
   for i:=0 to length(fanimation)-1 do
     begin
-      writeln(i);
       Element[i].CurrentFrame := fCurrentFrame;
       Element[i].AdvanceAnimation;
     end;
+
+  //writeln('CF = '+FloatToStr(fCurrentFrame));
+
 end;
 
 destructor TBaseAnimation.Destroy;
@@ -223,13 +226,13 @@ begin
   begin
     if FNumTranslateFrames>0 then
     begin
-      writeln('set translate');
+      //writeln('set translate');
       fPosition[0] := FTransLateFrame[i].Value.x;
       fPosition[1] := FTransLateFrame[i].Value.y;
       fPosition[2] := FTransLateFrame[i].Value.z;
     end else
     begin
-      writeln('no translate');
+      //writeln('no translate');
       fPosition[0] := 0;
       fPosition[1] := 0;
       fPosition[2] := 0;
@@ -268,14 +271,14 @@ begin
   begin
     if FNumRotateFrames>0 then
     begin
-      writeln('set rotate');
+      //writeln('set rotate');
       fRotation[0] := FRotateFrame[i].Value.x;
       fRotation[1] := FRotateFrame[i].Value.y;
       fRotation[2] := FRotateFrame[i].Value.z;
     end
     else
     begin
-      writeln('no rotate');
+      //writeln('no rotate');
       fRotation[0] := 0;
       fRotation[1] := 0;
       fRotation[2] := 0;
@@ -283,8 +286,9 @@ begin
   end;
 
   if self.Item<>nil then self.Item.Rotation:=fRotation;
+
   // Now we know the position and rotation for this animation frame.
-  if self.Item<>nil then writeln('Has Item '+self.Item.Name + ' id: ' +inttostr(fboneid));
+  //if self.Item<>nil then writeln('Has Item '+self.Item.Name + ' id: ' +inttostr(fboneid));
 end;
 
 procedure TBaseAnimation.SetRotateFrame(Index: Integer; Value: TKeyFrame);

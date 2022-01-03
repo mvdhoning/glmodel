@@ -65,8 +65,8 @@ var
   i: integer;
   tempkeyframe: TKeyFrame;
 begin
-  camera.xangle := 0;//45;//45;//45.0; //10
-  camera.yangle := 0;//45; //-90+45.0; //90
+  camera.xangle := 0; //45;//45;//45.0; //10
+  camera.yangle := 0; //45; //-90+45.0; //90
   camera.zangle := 0.0; //0
   camera.dist := 100.0; //5 //250  //500
 
@@ -182,7 +182,8 @@ begin
       writeln('RZ = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Value.z));
     end;
   end;
-  scene1.Models[0].Animation[1].NumFrames:=1;
+
+  scene1.Models[0].Animation[1].NumFrames:=20; //TODO: should be read from file
   scene1.Models[0].Animation[1].AnimFps:=24;
   scene1.Models[0].Animation[1].CurrentFrame:=0;
 
@@ -221,6 +222,7 @@ begin
 
   scene1.Models[0].CurrentAnimation:=1; //0 is T-Pose
   scene1.Models[0].AdvanceAnimation(0);
+  writeln('---------------------------------------');
 
   QueryPerformanceCounter(fLastTick); //lasttime
   QueryPerformanceFrequency(PerformanceFrequency) //frequency
@@ -261,15 +263,11 @@ begin
   //elapsed time = currentime - lasttime
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
-
-  (*
-  if scene1.Models[0].NumSkeletons>=1 then
+   if scene1.Models[0].NumSkeletons>=1 then
     begin
       //scene1.Models[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Animation[0].AnimFps);
-      scene1.Models[0].AdvanceAnimation(0.05);
+      scene1.Models[0].AdvanceAnimation(1);
     end;
-  *)
-
 
   QueryPerformanceCounter(fLastTick); //lasttime
 end;
