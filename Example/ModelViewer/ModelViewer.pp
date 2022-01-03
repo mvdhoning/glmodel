@@ -65,10 +65,10 @@ var
   i: integer;
   tempkeyframe: TKeyFrame;
 begin
-  camera.xangle := 0;//45;//45.0; //10
-  camera.yangle := 0;//-90+45.0; //90
+  camera.xangle := 0;//45;//45;//45.0; //10
+  camera.yangle := 0;//45; //-90+45.0; //90
   camera.zangle := 0.0; //0
-  camera.dist := 100.0; //250  //500
+  camera.dist := 100.0; //5 //250  //500
 
   angle_speed := 0.5;
   dist_speed := 0.5;
@@ -154,11 +154,11 @@ begin
 
   writeln('Animation');
   if scene1.Models[0].NumSkeletons>=1 then
-    writeln(scene1.Models[0].Animation[0].Name);
+    writeln(scene1.Models[0].Animation[1].Name);
 
-  (*
-  writeln(scene1.Models[0].Animation[1].Name);
-  writeln(scene1.Models[0].Animation[1].NumElements);
+
+  writeln(scene1.Models[0].Animation[0].Name);
+  writeln(scene1.Models[0].Animation[0].NumElements);
 
 
 
@@ -169,23 +169,23 @@ begin
     writeln(scene1.Models[0].Animation[1].Element[i].NumRotateFrames);
     if scene1.Models[0].Animation[1].Element[i].NumTranslateFrames>0 then
     begin
-      writeln(scene1.Models[0].Animation[1].Element[i].TranslateFrame[0].Time);
-      writeln(scene1.Models[0].Animation[1].Element[i].TranslateFrame[0].Value.x);
-      writeln(scene1.Models[0].Animation[1].Element[i].TranslateFrame[0].Value.y);
-      writeln(scene1.Models[0].Animation[1].Element[i].TranslateFrame[0].Value.z);
+      writeln('TT = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].TranslateFrame[0].Time));
+      writeln('TX = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].TranslateFrame[0].Value.x));
+      writeln('TY = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].TranslateFrame[0].Value.y));
+      writeln('TZ = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].TranslateFrame[0].Value.z));
     end;
     if scene1.Models[0].Animation[1].Element[i].NumRotateFrames>0 then
     begin
-      writeln(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Time);
-      writeln(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Value.x);
-      writeln(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Value.y);
-      writeln(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Value.z);
+      writeln('RT = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Time));
+      writeln('RX = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Value.x));
+      writeln('RY = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Value.y));
+      writeln('RZ = '+FloatToStr(scene1.Models[0].Animation[1].Element[i].RotateFrame[0].Value.z));
     end;
   end;
   scene1.Models[0].Animation[1].NumFrames:=1;
   scene1.Models[0].Animation[1].AnimFps:=24;
   scene1.Models[0].Animation[1].CurrentFrame:=0;
-  *)
+
 
 
   //scene1.Models[0].Animation[0].AnimFps:=24;
@@ -219,7 +219,8 @@ begin
   scene1.Models[0].Skeleton[0].Bone[39].Animation[0].RotateFrame[1]:=tempkeyframe;
   *)
 
-  //scene1.Models[0].AdvanceAnimation(0);
+  scene1.Models[0].CurrentAnimation:=1; //0 is T-Pose
+  scene1.Models[0].AdvanceAnimation(0);
 
   QueryPerformanceCounter(fLastTick); //lasttime
   QueryPerformanceFrequency(PerformanceFrequency) //frequency
@@ -260,12 +261,14 @@ begin
   //elapsed time = currentime - lasttime
   //adjust elapsed time with performancefrequency
   //call AdvanceAnimation with elapsedtime * fps
+
+  (*
   if scene1.Models[0].NumSkeletons>=1 then
     begin
       //scene1.Models[0].AdvanceAnimation(((fTick-fLastTick)/PerformanceFrequency)*scene1.Models[0].Animation[0].AnimFps);
-      scene1.Models[0].AdvanceAnimation(1);
+      scene1.Models[0].AdvanceAnimation(0.05);
     end;
-
+  *)
 
 
   QueryPerformanceCounter(fLastTick); //lasttime
@@ -295,6 +298,7 @@ begin
 
   // Set camera position
   glTranslatef ( 0.0, -95.0, -camera.dist);
+  //glTranslatef ( 0.0, 0.0, -camera.dist);
   glRotatef (camera.xangle, 1.0, 0.0, 0.0);
   glRotatef (camera.yangle, 0.0, 1.0, 0.0);
   glRotatef (camera.zangle, 0.0, 0.0, 1.0);

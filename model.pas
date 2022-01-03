@@ -111,6 +111,7 @@ type
     property MaterialClass: TbaseMaterialClass read FMaterialClass write FMaterialClass;
     property SkeletonClass: TbaseSkeletonClass read FSkeletonClass write FSkeletonClass;
 
+    property CurrentAnimation: Integer read fCurrentAnimation write fCurrentAnimation;
     property CurrentSkeleton: Integer read FCurrentSkeleton write FCurrentSkeleton;
     property FileType: Integer read FType write FType;
     property MasterScale: Single read FMasterScale write FMasterScale;
@@ -355,9 +356,14 @@ begin
       self.FTexturePath := FTexturePath;
       self.FType := FType;
 
+
+      writeln('assign anims: ');
       setlength(self.fAnimation,length(FAnimation));
-      for I := 0 to length(FAnimation)-1 do
+      for i := 0 to length(FAnimation)-1 do
         begin
+          writeln(fAnimation[i].Name);
+          writeln(Animation[i].Name);
+
           self.FAnimation[i] := TBaseAnimationController.Create(self);
           self.FAnimation[i].Assign(FAnimation[i]);
         end;
@@ -446,14 +452,15 @@ var
   i: integer;
 begin
   //increase the currentframe
-  self.Animation[0].AdvanceAnimation(time); //first advance the animation
+  self.Animation[fCurrentAnimation].AdvanceAnimation(time); //first advance the animation
 
   //pass new calculated positions and rotations on to the bone
-  (* //or set animation element to the bone in model.init call
-  for i:=0 to self.Animation[0].NumElements-1 do
+  //or set animation element to the bone in model.init call
+  (*
+  for i:=0 to self.Animation[1].NumElements-1 do
   begin
-    self.Skeleton[0].Bone[self.Animation[0].Element[i].BoneId].Position:=self.Animation[0].Element[i].Position;
-    self.Skeleton[0].Bone[self.Animation[0].Element[i].BoneId].Rotation:=self.Animation[0].Element[i].Rotation;
+    self.Skeleton[0].Bone[self.Animation[1].Element[i].BoneId].Position:=self.Animation[1].Element[i].Position;
+    self.Skeleton[0].Bone[self.Animation[1].Element[i].BoneId].Rotation:=self.Animation[1].Element[i].Rotation;
   end;
   *)
 

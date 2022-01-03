@@ -102,6 +102,7 @@ constructor TBaseAnimationController.Create(AOwner: TComponent);
 begin
   inherited;
   fNumElements:=0;
+  fName:='Bork';
 end;
 
 destructor TBaseAnimationController.Destroy;
@@ -118,6 +119,7 @@ begin
   begin
     with TBaseAnimationController(Source) do
     begin
+      self.fName:=fName;
       self.FCurrentFrame := FCurrentFrame;
       self.FAnimFps:= FAnimFps;
       self.FNumFrames :=FNumFrames;
